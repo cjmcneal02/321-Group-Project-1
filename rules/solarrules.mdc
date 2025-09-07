@@ -1,0 +1,325 @@
+# Solar Chauffeur Project Development Rules - Vanilla JavaScript + Bootstrap
+
+## **Tech Stack Constraints (Enforced)**
+
+### Allowed Technologies
+- **HTML5** with semantic markup
+- **CSS3** for custom styling (minimal, prefer Bootstrap utilities)
+- **Vanilla JavaScript** (ES modules or classic scripts)
+- **Bootstrap 5.3.x** via official CDN (CSS + bundled JS)
+- **Bootstrap Icons** via CDN when icons are needed
+
+### Strictly Disallowed
+- No Node/NPM, package managers, bundlers, transpilers
+- No frameworks (React/Vue/Angular), no jQuery
+- No Tailwind or other utility CSS frameworks
+- No component libraries besides Bootstrap
+- No server-side code - static assets only
+
+## **Project Structure & File Organization**
+
+### Required Folder Structure
+```
+solar-chauffeur/
+  index.html                 # Main entry point
+  driver.html               # Driver dashboard page
+  rider.html                # Rider interface page
+  admin.html                # Admin panel page
+  styles/
+    main.css                # Global styles
+    driver.css              # Driver-specific styles
+    rider.css               # Rider-specific styles
+    admin.css               # Admin-specific styles
+  scripts/
+    main.js                 # Shared utilities
+    shortest-path.js        # Algorithm implementation
+    driver-matching.js      # Driver assignment logic
+    location-services.js    # GPS and mapping functions
+    driver-dashboard.js     # Driver page functionality
+    rider-interface.js      # Rider page functionality
+    admin-panel.js          # Admin page functionality
+```
+
+### File Naming Conventions
+- Use kebab-case for all files: `driver-matching.js`, `location-services.js`
+- HTML pages should be descriptive: `driver.html`, `rider.html`, `admin.html`
+- Keep file names specific to their purpose
+
+## **HTML Structure Standards**
+
+### Required Bootstrap CDN Setup
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Solar Chauffeur</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <!-- Bootstrap Icons (when needed) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <!-- Content here -->
+    <!-- Bootstrap JS bundle -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Custom JS -->
+    <script src="./scripts/main.js"></script>
+  </body>
+</html>
+```
+
+### Semantic HTML Requirements
+- Use proper semantic elements: `<nav>`, `<main>`, `<section>`, `<article>`
+- Implement proper heading hierarchy (h1 → h2 → h3)
+- Use Bootstrap components before creating custom elements
+- Ensure accessibility with proper ARIA labels and roles
+
+## **CSS Guidelines**
+
+### Bootstrap-First Approach
+- **Always** use Bootstrap utilities before writing custom CSS
+- Prefer Bootstrap grid system: `container`, `row`, `col-*`
+- Use Bootstrap spacing: `p-*`, `m-*`, `gap-*`
+- Utilize Bootstrap components: `card`, `btn`, `nav`, `modal`, `alert`
+
+### Custom CSS Rules
+- Keep custom CSS minimal and place in `styles/` folder
+- Use CSS custom properties for theme colors:
+```css
+:root {
+  --solar-primary: #ffd700;
+  --solar-secondary: #4a90e2;
+  --campus-green: #228B22;
+}
+```
+- Follow mobile-first responsive design
+- Maintain Bootstrap's design language consistency
+
+## **JavaScript Implementation Standards**
+
+### Algorithm Implementation
+- Implement shortest path algorithm in `scripts/shortest-path.js`:
+```javascript
+// Use vanilla JavaScript classes and modules
+class ShortestPathFinder {
+  constructor(campusMap) {
+    this.graph = campusMap;
+  }
+  
+  findClosestDriver(riderLocation, availableDrivers) {
+    // Dijkstra or A* implementation
+  }
+}
+```
+
+### Driver-Rider Matching Service
+- Create `scripts/driver-matching.js` with:
+```javascript
+class DriverMatchingService {
+  static async assignClosestDriver(riderRequest) {
+    // Algorithm logic using shortest-path.js
+  }
+}
+```
+
+### Location Services
+- Implement in `scripts/location-services.js`:
+```javascript
+class LocationService {
+  static async getCurrentPosition() {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    });
+  }
+}
+```
+
+### State Management (Vanilla JS)
+- Use localStorage for persistence (user sessions, preferences)
+- Implement simple state management with JavaScript objects
+- Use custom events for component communication:
+```javascript
+// Dispatch custom events
+document.dispatchEvent(new CustomEvent('rideRequested', { 
+  detail: { riderId, location } 
+}));
+
+// Listen for events
+document.addEventListener('rideRequested', handleRideRequest);
+```
+
+## **User Interface Requirements**
+
+### Mobile-First Design
+- Design for mobile screens first using Bootstrap's responsive utilities
+- Use Bootstrap's breakpoint classes: `col-sm-*`, `col-md-*`, `col-lg-*`
+- Implement touch-friendly buttons (Bootstrap's default button sizes)
+- Test on actual mobile devices
+
+### Page-Specific Requirements
+
+#### Rider Interface (`rider.html`)
+- Bootstrap card components for ride status
+- Modal dialogs for ride confirmation
+- Progress bars for ride tracking
+- Alert components for notifications
+
+#### Driver Dashboard (`driver.html`)
+- Bootstrap list groups for ride queue
+- Button groups for availability status
+- Badge components for ride counts
+- Accordion for ride history
+
+#### Admin Panel (`admin.html`)
+- Bootstrap tables for data display
+- Tab navigation for different admin sections
+- Form components for driver/rider management
+- Chart area using HTML5 Canvas (no external chart libraries)
+
+## **Real-Time Features Implementation**
+
+### Simulated Real-Time Updates
+- Use `setInterval()` for polling updates every 5-10 seconds
+- Implement WebSocket connections if available (optional)
+- Use browser notifications API for ride alerts
+- Store real-time data in localStorage with timestamps
+
+### Live Location Tracking
+```javascript
+// Update location every 10 seconds
+setInterval(() => {
+  LocationService.getCurrentPosition()
+    .then(position => {
+      updateDriverLocation(position);
+    });
+}, 10000);
+```
+
+## **Data Management**
+
+### Local Storage Schema
+```javascript
+// Store structured data in localStorage
+const rideData = {
+  currentRide: { id, status, driverId, riderId },
+  rideHistory: [{ id, timestamp, route }],
+  userProfile: { id, role, preferences }
+};
+localStorage.setItem('solarChauffeurData', JSON.stringify(rideData));
+```
+
+### Mock Data for Development
+- Create sample campus map data in `scripts/campus-data.js`
+- Include sample driver/rider profiles for testing
+- Implement mock API responses using JavaScript objects
+
+## **Algorithm Specifications**
+
+### Campus Map Representation
+```javascript
+// Represent campus as graph with weighted edges
+const campusMap = {
+  nodes: {
+    'library': { lat: 33.2098, lng: -87.5692 },
+    'union': { lat: 33.2108, lng: -87.5695 },
+    'quad': { lat: 33.2118, lng: -87.5698 }
+  },
+  edges: [
+    { from: 'library', to: 'union', weight: 300 }, // distance in meters
+    { from: 'union', to: 'quad', weight: 250 }
+  ]
+};
+```
+
+### Distance Calculation
+- Implement Haversine formula for GPS coordinate distance
+- Account for campus pathways and restrictions
+- Prioritize actual travel routes over straight-line distance
+
+## **Testing & Debugging**
+
+### Browser Testing
+- Test in Chrome, Firefox, Safari, and Edge
+- Use browser developer tools for debugging
+- Test offline functionality with service workers (optional)
+- Validate HTML using W3C validator
+
+### Local Development
+- Use simple static file server: `python -m http.server 8000`
+- No build step required - direct file modification
+- Use browser's refresh for changes
+
+## **Security & Performance**
+
+### Security (Client-Side Focus)
+- Validate all form inputs with HTML5 validation + JavaScript
+- Sanitize user input before displaying
+- Use HTTPS for geolocation API access
+- Implement basic rate limiting for API calls
+
+### Performance Optimization
+- Minimize DOM manipulations
+- Use event delegation for dynamic content
+- Lazy load images and non-critical resources
+- Implement efficient algorithms (O(n log n) or better for pathfinding)
+
+## **Deployment**
+
+### Static File Deployment
+- All files can be served from any static web server
+- No build process required
+- Include all dependencies via CDN
+- Ensure proper MIME types for `.js` and `.css` files
+
+### File Organization for Deployment
+```
+deploy/
+  index.html
+  driver.html
+  rider.html
+  admin.html
+  styles/
+  scripts/
+  assets/
+    images/
+    icons/
+```
+
+## **Error Handling**
+
+### User Experience
+- Use Bootstrap alert components for error messages
+- Implement fallback for geolocation failures
+- Provide clear feedback for network issues
+- Show loading states with Bootstrap spinners
+
+### Algorithm Fallbacks
+- Handle cases with no available drivers
+- Implement manual assignment option for admin
+- Graceful degradation when GPS is unavailable
+- Backup routing when shortest path fails
+
+## **Documentation Requirements**
+
+### Code Documentation
+- Add JSDoc comments for all functions
+- Document algorithm complexity and design decisions
+- Include usage examples for reusable functions
+
+### User Documentation
+- Create simple HTML help pages
+- Include campus map with pickup/dropoff locations
+- Provide driver and rider user guides

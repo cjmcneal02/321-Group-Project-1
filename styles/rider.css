@@ -1,0 +1,574 @@
+/* Rider-specific styles */
+#campus-map {
+    border-radius: 0.375rem;
+    overflow: hidden;
+    cursor: grab;
+}
+
+#campus-map.leaflet-drag-target {
+    cursor: grabbing !important;
+}
+
+.leaflet-container {
+    cursor: grab;
+    transition: cursor 0.1s ease;
+}
+
+.leaflet-container:active {
+    cursor: grabbing;
+}
+
+.leaflet-container.leaflet-dragging {
+    cursor: grabbing !important;
+    user-select: none;
+}
+
+.leaflet-container.leaflet-touch-drag {
+    cursor: grabbing;
+}
+
+.leaflet-clickable {
+    cursor: pointer;
+}
+
+/* Marker interactions */
+.leaflet-marker-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.leaflet-marker-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Disable text selection during drag */
+.leaflet-container.leaflet-dragging * {
+    user-select: none !important;
+}
+
+.leaflet-popup-content {
+    margin: 8px 12px;
+    line-height: 1.4;
+}
+
+.leaflet-popup-content h6 {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.leaflet-popup-content .btn {
+    margin-top: 4px;
+}
+
+.custom-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Location Input Styling */
+.location-input-container {
+    position: relative;
+}
+
+.input-validation-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.input-validation-icon.valid {
+    color: var(--primary-green);
+}
+
+.input-validation-icon.invalid {
+    color: #dc3545;
+}
+
+.input-validation-icon.neutral {
+    color: #6c757d;
+}
+
+/* Location Suggestions Dropdown */
+.location-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    margin-top: 2px;
+}
+
+.location-suggestions.show {
+    display: block;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.location-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.location-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.location-suggestion-item:hover {
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+.location-suggestion-item.selected {
+    background-color: rgba(45, 90, 39, 0.1);
+}
+
+.location-suggestion-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.location-suggestion-icon.academic {
+    background-color: var(--primary-green);
+}
+
+.location-suggestion-icon.residential {
+    background-color: var(--secondary-green);
+}
+
+.location-suggestion-icon.dining {
+    background-color: var(--accent-yellow);
+    color: var(--primary-green);
+}
+
+.location-suggestion-icon.recreation {
+    background-color: #e74c3c;
+}
+
+.location-suggestion-icon.parking {
+    background-color: #95a5a6;
+}
+
+.location-suggestion-icon.hub {
+    background-color: #3498db;
+}
+
+.location-suggestion-icon.landmark {
+    background-color: #9b59b6;
+}
+
+.location-suggestion-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.location-suggestion-name {
+    font-weight: 600;
+    color: var(--primary-green);
+    margin-bottom: 2px;
+    font-size: 0.95rem;
+}
+
+.location-suggestion-type {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-transform: capitalize;
+}
+
+/* Popular Locations Chips */
+.popular-locations {
+    margin-top: 8px;
+    display: none;
+}
+
+.popular-locations.show {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.popular-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.popular-chip {
+    background-color: rgba(45, 90, 39, 0.1);
+    color: var(--primary-green);
+    border: 1px solid rgba(45, 90, 39, 0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.popular-chip:hover {
+    background-color: rgba(45, 90, 39, 0.2);
+    transform: translateY(-1px);
+}
+
+.popular-chip i {
+    font-size: 0.7rem;
+}
+
+/* Form validation states */
+.form-control.is-valid {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 39, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control:focus {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .location-suggestions {
+        max-height: 250px;
+    }
+    
+    .location-suggestion-item {
+        padding: 10px 12px;
+    }
+    
+    .popular-chips {
+        gap: 4px;
+    }
+    
+    .popular-chip {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .location-suggestions {
+        max-height: 200px;
+    }
+    
+    .location-suggestion-item {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+    
+    .location-suggestion-icon {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .location-suggestion-name {
+        font-size: 0.9rem;
+    }
+    
+    .location-suggestion-type {
+        font-size: 0.75rem;
+    }
+}
+
+/* Form enhancements */
+.form-floating > label {
+    color: var(--primary-green);
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+/* Ride type selection styling */
+.form-check-label {
+    cursor: pointer;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    display: block;
+}
+
+.form-check-input:checked + .form-check-label {
+    border-color: var(--primary-green);
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Status card animations */
+#ride-status-card {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Progress bar styling */
+.progress {
+    background-color: rgba(45, 90, 39, 0.1);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+}
+
+/* Driver info styling */
+#driver-info {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* List group styling */
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Modal styling */
+.modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+/* Notification positioning */
+.position-fixed {
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Environmental impact styling */
+.text-success {
+    color: var(--primary-green) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .map-placeholder {
+        height: 200px;
+    }
+    
+    .map-icon {
+        font-size: 2rem;
+    }
+    
+    .btn-custom {
+        padding: 0.6rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-check-label {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .map-placeholder {
+        height: 150px;
+    }
+    
+    .position-fixed {
+        right: 10px !important;
+        left: 10px !important;
+        top: 80px !important;
+    }
+}
+
+/* Loading spinner customization */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+    border-width: 0.2rem;
+}
+
+/* Button group styling */
+.d-grid .btn {
+    border-radius: 0.5rem;
+}
+
+/* Form validation styling */
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control.is-valid {
+    border-color: var(--primary-green);
+}
+
+/* Accessibility improvements */
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 39, 0.25);
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);
+}
+
+/* Custom scrollbar for textarea */
+textarea.form-control {
+    resize: vertical;
+}
+
+/* Enhanced card headers */
+.card-header.bg-light {
+    background-color: rgba(45, 90, 39, 0.05) !important;
+    border-bottom: 1px solid rgba(45, 90, 39, 0.1);
+}
+
+/* Error message styling */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.location-error-message {
+    animation: slideDown 0.3s ease-out;
+    border-left: 3px solid var(--bs-danger);
+    padding-left: 0.5rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.location-error-message i {
+    color: var(--bs-danger);
+}
+
+/* Enhanced validation states */
+.form-control.is-valid {
+    border-color: var(--bs-success);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+.form-control.is-invalid {
+    border-color: var(--bs-danger);
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Input validation icon enhancements */
+.input-validation-icon {
+    transition: all 0.3s ease;
+}
+
+.input-validation-icon.valid {
+    color: var(--bs-success);
+    transform: scale(1.1);
+}
+
+.input-validation-icon.invalid {
+    color: var(--bs-danger);
+    transform: scale(1.1);
+}
+
+.input-validation-icon.neutral {
+    color: var(--bs-secondary);
+    transform: scale(1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .location-error-message {
+        font-size: 0.75rem;
+        padding: 0.375rem;
+    }
+}
