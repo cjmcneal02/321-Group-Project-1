@@ -437,16 +437,10 @@ class CampusData {
      * @returns {number} Base fare in dollars
      */
     calculateBaseFare(from, to, passengerCount = 2) {
-        const pathWeight = this.paths[from] && this.paths[from][to] ? this.paths[from][to] : 5;
+        // Standard rate: $5 per person
+        const ratePerPassenger = 5.00;
         
-        // Base rate per passenger
-        const baseRatePerPassenger = 1.25; // $1.25 per passenger
-        const timeRate = 0.75; // $0.75 per minute
-        
-        // Calculate base rate based on passenger count
-        const baseRate = baseRatePerPassenger * passengerCount;
-        
-        return baseRate + (pathWeight * timeRate);
+        return ratePerPassenger * passengerCount;
     }
 
     /**

@@ -679,7 +679,7 @@ class RiderInterface {
         document.getElementById('modal-dropoff').textContent = dropoff;
         document.getElementById('modal-passenger-count').textContent = passengerCount;
         document.getElementById('modal-cart-size').textContent = fareCalculation.cartSize;
-        document.getElementById('estimated-fare').textContent = `$${fareCalculation.totalFare}`;
+        document.getElementById('estimated-fare').textContent = `$${fareCalculation.totalFare.toFixed(2)}`;
     }
 
     /**
@@ -891,7 +891,7 @@ class RiderInterface {
             try {
                 const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, passengerCount);
                 // Could update a fare estimate display here
-                console.log(`Estimated fare: $${fareCalculation.totalFare} for ${passengerCount} passengers`);
+                console.log(`Estimated fare: $${fareCalculation.totalFare.toFixed(2)} for ${passengerCount} passengers ($5 per person)`);
             } catch (error) {
                 console.warn('Could not calculate fare estimate:', error.message);
             }

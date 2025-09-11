@@ -913,6 +913,7 @@ textarea.form-control {
     background: linear-gradient(135deg, rgba(45, 90, 39, 0.05) 0%, rgba(45, 90, 39, 0.1) 100%);
 }
 
+
 .form-select:focus {
     border-color: var(--accent-yellow);
     box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);

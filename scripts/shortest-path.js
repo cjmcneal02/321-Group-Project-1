@@ -233,29 +233,24 @@ class ShortestPathAlgorithm {
             throw new Error('No valid route found');
         }
         
-        const baseFare = this.campusData.calculateBaseFare(from, to, passengerCount);
-        const timeMultiplier = Math.max(1, pathResult.time / 5); // Minimum 5 minutes
-        const distanceMultiplier = Math.max(1, pathResult.distance * 2); // $2 per km
+        // Simple fare calculation: $5 per person
+        const totalFare = this.campusData.calculateBaseFare(from, to, passengerCount);
         
-        // Get cart size recommendation and multiplier
+        // Get cart size recommendation
         const cartInfo = this.campusData.getCartSizeRecommendation(passengerCount);
-        const cartMultiplier = cartInfo.multiplier;
-        
-        const totalFare = baseFare * timeMultiplier * distanceMultiplier * cartMultiplier;
         
         return {
-            baseFare: baseFare,
-            timeMultiplier: timeMultiplier,
-            distanceMultiplier: distanceMultiplier,
-            cartMultiplier: cartMultiplier,
-            totalFare: Math.round(totalFare * 100) / 100, // Round to 2 decimal places
+            baseFare: totalFare,
+            totalFare: totalFare,
             estimatedTime: pathResult.time,
             distance: pathResult.distance,
             route: pathResult.route,
             passengerCount: passengerCount,
             cartSize: cartInfo.size,
             cartCapacity: cartInfo.capacity,
-            cartDescription: cartInfo.description
+            cartDescription: cartInfo.description,
+            ratePerPassenger: 5.00,
+            paymentNote: "Payment collected after ride completion"
         };
     }
 
