@@ -65,6 +65,339 @@
     border: none !important;
 }
 
+/* Enhanced Pin Styles */
+.pin-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+}
+
+.pin-container:hover {
+    transform: scale(1.15) translateY(-2px);
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3));
+}
+
+.pin-shadow {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 0;
+}
+
+.pin-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid white;
+    position: relative;
+    z-index: 3;
+    background: linear-gradient(135deg, var(--pin-color-start) 0%, var(--pin-color-end) 100%);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.pin-icon i {
+    transform: rotate(45deg);
+    font-size: 16px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pin-label {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--label-color-start) 0%, var(--label-color-end) 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 4;
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.pin-text {
+    display: block;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pin-arrow {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--label-color-end);
+    z-index: 5;
+}
+
+.pin-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    z-index: 1;
+    animation: pulse 2s infinite;
+}
+
+.pin-glow {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    z-index: 0;
+    animation: glow 3s ease-in-out infinite alternate;
+}
+
+/* Pickup Pin Styles */
+.pickup-container {
+    --pin-color-start: #ff6b6b;
+    --pin-color-end: #ee5a52;
+    --label-color-start: #ff6b6b;
+    --label-color-end: #ee5a52;
+}
+
+.pickup-icon {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.pickup-label {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.pickup-pulse {
+    background: rgba(255, 107, 107, 0.4);
+}
+
+.pickup-glow {
+    background: radial-gradient(circle, rgba(255, 107, 107, 0.3) 0%, transparent 70%);
+}
+
+/* Dropoff Pin Styles */
+.dropoff-container {
+    --pin-color-start: #4ecdc4;
+    --pin-color-end: #44a08d;
+    --label-color-start: #4ecdc4;
+    --label-color-end: #44a08d;
+}
+
+.dropoff-icon {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.dropoff-label {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+}
+
+.dropoff-pulse {
+    background: rgba(78, 205, 196, 0.4);
+}
+
+.dropoff-glow {
+    background: radial-gradient(circle, rgba(78, 205, 196, 0.3) 0%, transparent 70%);
+}
+
+/* User Location Pin Styles */
+.user-location-icon {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    width: 28px;
+    height: 28px;
+}
+
+.user-location-icon i {
+    font-size: 12px;
+}
+
+.user-location-label {
+    background: #3498db;
+    top: 30px;
+}
+
+.user-location-pulse {
+    background: rgba(52, 152, 219, 0.3);
+    width: 28px;
+    height: 28px;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        transform: rotate(-45deg) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: rotate(-45deg) scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: rotate(-45deg) scale(1.4);
+        opacity: 0;
+    }
+}
+
+@keyframes glow {
+    0% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0.3;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Pin Hover Effects */
+.pickup-container:hover .pickup-icon {
+    box-shadow: 
+        0 8px 20px rgba(255, 107, 107, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    animation: bounce 0.6s ease-in-out;
+}
+
+.dropoff-container:hover .dropoff-icon {
+    box-shadow: 
+        0 8px 20px rgba(78, 205, 196, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    animation: bounce 0.6s ease-in-out;
+}
+
+.pickup-container:hover .pickup-label {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 
+        0 6px 16px rgba(255, 107, 107, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.dropoff-container:hover .dropoff-label {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 
+        0 6px 16px rgba(78, 205, 196, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.user-location-pin:hover .user-location-icon {
+    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* Pin Selection States */
+.pin-container.selected {
+    transform: scale(1.15);
+}
+
+.pin-container.selected .pin-icon {
+    box-shadow: 0 0 0 4px rgba(244, 208, 63, 0.5);
+}
+
+/* Responsive Pin Adjustments */
+@media (max-width: 768px) {
+    .pin-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .pin-icon i {
+        font-size: 12px;
+    }
+    
+    .pin-label {
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+    
+    .user-location-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .user-location-icon i {
+        font-size: 10px;
+    }
+    
+    .user-location-pulse {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pin-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .pin-icon i {
+        font-size: 10px;
+    }
+    
+    .pin-label {
+        font-size: 8px;
+        padding: 2px 5px;
+        top: 28px;
+    }
+    
+    .user-location-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .user-location-icon i {
+        font-size: 8px;
+    }
+    
+    .user-location-pulse {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .user-location-label {
+        top: 24px;
+    }
+}
+
 /* Location Input Styling */
 .location-input-container {
     position: relative;
@@ -565,10 +898,51 @@ textarea.form-control {
     transform: scale(1);
 }
 
+/* Passenger Count Controls */
+.alert-warning {
+    border-left: 4px solid #ffc107;
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 193, 7, 0.1) 100%);
+}
+
+#cart-size-info {
+    animation: slideDown 0.3s ease-out;
+}
+
+#cart-size-info .alert {
+    border-left: 4px solid var(--primary-green);
+    background: linear-gradient(135deg, rgba(45, 90, 39, 0.05) 0%, rgba(45, 90, 39, 0.1) 100%);
+}
+
+.form-select:focus {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);
+}
+
+.form-select option {
+    padding: 0.5rem;
+}
+
+/* Enhanced form styling */
+.form-floating > .form-select {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+}
+
+.form-floating > .form-select:focus ~ label,
+.form-floating > .form-select:not(:placeholder-shown) ~ label {
+    opacity: 0.65;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .location-error-message {
         font-size: 0.75rem;
         padding: 0.375rem;
+    }
+    
+    #cart-size-info .alert {
+        font-size: 0.875rem;
+        padding: 0.5rem;
     }
 }

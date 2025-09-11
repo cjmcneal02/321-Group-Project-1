@@ -94,11 +94,57 @@ class RiderInterface {
         // Location input autocomplete
         this.setupLocationAutocomplete();
 
-        // Ride type change handler
-        const rideTypeInputs = document.querySelectorAll('input[name="ride-type"]');
-        rideTypeInputs.forEach(input => {
-            input.addEventListener('change', () => this.updateFareEstimate());
-        });
+        // Passenger count controls
+        this.setupPassengerCountControls();
+    }
+
+    /**
+     * Setup passenger count controls
+     */
+    setupPassengerCountControls() {
+        const selectElement = document.getElementById('passenger-count-select');
+        
+        if (selectElement) {
+            selectElement.addEventListener('change', () => {
+                const value = parseInt(selectElement.value);
+                this.updatePassengerCountDisplay(value);
+            });
+        }
+        
+        // Initialize display
+        this.updatePassengerCountDisplay(2);
+    }
+
+    /**
+     * Update passenger count display and cart size info
+     * @param {number} count - Number of passengers
+     */
+    updatePassengerCountDisplay(count) {
+        const cartInfo = this.campusData.getCartSizeRecommendation(count);
+        const cartSizeInfo = document.getElementById('cart-size-info');
+        const cartSizeText = document.getElementById('cart-size-text');
+        
+        if (cartSizeInfo && cartSizeText) {
+            cartSizeText.textContent = `${cartInfo.size} Golf Cart (${cartInfo.capacity})`;
+            cartSizeInfo.style.display = 'block';
+        }
+        
+        // Update fare estimate
+        this.updateFareEstimate();
+    }
+
+    /**
+     * Get current passenger count
+     * @returns {number} Number of passengers
+     */
+    getPassengerCount() {
+        const selectElement = document.getElementById('passenger-count-select');
+        
+        if (selectElement) {
+            return parseInt(selectElement.value) || 2;
+        }
+        
+        return 2; // Default
     }
 
     /**
@@ -576,7 +622,7 @@ class RiderInterface {
             // Validate form
             const pickup = document.getElementById('pickup-location').value.trim();
             const dropoff = document.getElementById('dropoff-location').value.trim();
-            const rideType = document.querySelector('input[name="ride-type"]:checked').value;
+            const passengerCount = this.getPassengerCount();
 
             if (!pickup || !dropoff) {
                 this.showNotification('Please fill in both pickup and dropoff locations', 'warning');
@@ -606,10 +652,10 @@ class RiderInterface {
             }
 
             // Calculate fare
-            const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, rideType);
+            const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, passengerCount);
             
             // Update modal with calculated data
-            this.updateRideConfirmationModal(pickup, dropoff, rideType, fareCalculation);
+            this.updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation);
             
             // Show confirmation modal
             const modal = new bootstrap.Modal(document.getElementById('rideConfirmationModal'));
@@ -625,13 +671,14 @@ class RiderInterface {
      * Update ride confirmation modal
      * @param {string} pickup - Pickup location
      * @param {string} dropoff - Dropoff location
-     * @param {string} rideType - Ride type
+     * @param {number} passengerCount - Number of passengers
      * @param {Object} fareCalculation - Fare calculation result
      */
-    updateRideConfirmationModal(pickup, dropoff, rideType, fareCalculation) {
+    updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation) {
         document.getElementById('modal-pickup').textContent = pickup;
         document.getElementById('modal-dropoff').textContent = dropoff;
-        document.getElementById('modal-ride-type').textContent = rideType.charAt(0).toUpperCase() + rideType.slice(1);
+        document.getElementById('modal-passenger-count').textContent = passengerCount;
+        document.getElementById('modal-cart-size').textContent = fareCalculation.cartSize;
         document.getElementById('estimated-fare').textContent = `$${fareCalculation.totalFare}`;
     }
 
@@ -642,7 +689,7 @@ class RiderInterface {
         try {
             const pickup = document.getElementById('modal-pickup').textContent;
             const dropoff = document.getElementById('modal-dropoff').textContent;
-            const rideType = document.getElementById('modal-ride-type').textContent.toLowerCase();
+            const passengerCount = parseInt(document.getElementById('modal-passenger-count').textContent);
 
             // Find closest driver
             const driver = this.shortestPath.findClosestDriver(pickup);
@@ -658,11 +705,12 @@ class RiderInterface {
                 id: rideId,
                 pickup: pickup,
                 dropoff: dropoff,
-                rideType: rideType,
+                passengerCount: passengerCount,
+                cartSize: document.getElementById('modal-cart-size').textContent,
                 driver: driver,
                 status: 'requested',
                 timestamp: Date.now(),
-                estimatedFare: this.shortestPath.calculateFare(pickup, dropoff, rideType).totalFare,
+                estimatedFare: this.shortestPath.calculateFare(pickup, dropoff, passengerCount).totalFare,
                 estimatedTime: driver.estimatedArrival + this.shortestPath.findShortestPath(pickup, dropoff).time
             };
 
@@ -834,16 +882,16 @@ class RiderInterface {
     updateFareEstimate() {
         const pickup = document.getElementById('pickup-location').value.trim();
         const dropoff = document.getElementById('dropoff-location').value.trim();
-        const rideType = document.querySelector('input[name="ride-type"]:checked')?.value;
-
-        if (pickup && dropoff && rideType && 
+        const passengerCount = this.getPassengerCount();
+        
+        if (pickup && dropoff && 
             this.locationServices.isValidLocation(pickup) && 
             this.locationServices.isValidLocation(dropoff)) {
             
             try {
-                const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, rideType);
+                const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, passengerCount);
                 // Could update a fare estimate display here
-                console.log(`Estimated fare: $${fareCalculation.totalFare}`);
+                console.log(`Estimated fare: $${fareCalculation.totalFare} for ${passengerCount} passengers`);
             } catch (error) {
                 console.warn('Could not calculate fare estimate:', error.message);
             }

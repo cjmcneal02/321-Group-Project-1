@@ -433,22 +433,65 @@ class CampusData {
      * Calculate base fare for route
      * @param {string} from - Starting location
      * @param {string} to - Destination location
-     * @param {string} rideType - Type of ride (standard, premium, group)
+     * @param {number} passengerCount - Number of passengers
      * @returns {number} Base fare in dollars
      */
-    calculateBaseFare(from, to, rideType = 'standard') {
+    calculateBaseFare(from, to, passengerCount = 2) {
         const pathWeight = this.paths[from] && this.paths[from][to] ? this.paths[from][to] : 5;
         
-        const baseRates = {
-            'standard': 2.50,
-            'premium': 3.50,
-            'group': 4.50
-        };
-
+        // Base rate per passenger
+        const baseRatePerPassenger = 1.25; // $1.25 per passenger
         const timeRate = 0.75; // $0.75 per minute
-        const baseRate = baseRates[rideType] || baseRates.standard;
+        
+        // Calculate base rate based on passenger count
+        const baseRate = baseRatePerPassenger * passengerCount;
         
         return baseRate + (pathWeight * timeRate);
+    }
+
+    /**
+     * Get golf cart size recommendation based on passenger count
+     * @param {number} passengerCount - Number of passengers
+     * @returns {Object} Cart size information
+     */
+    getCartSizeRecommendation(passengerCount) {
+        if (passengerCount <= 2) {
+            return {
+                size: 'Small',
+                capacity: '1-2 passengers',
+                description: 'Compact golf cart for 1-2 people',
+                multiplier: 1.0
+            };
+        } else if (passengerCount <= 4) {
+            return {
+                size: 'Medium',
+                capacity: '3-4 passengers',
+                description: 'Standard golf cart for 3-4 people',
+                multiplier: 1.2
+            };
+        } else if (passengerCount <= 6) {
+            return {
+                size: 'Large',
+                capacity: '5-6 passengers',
+                description: 'Large golf cart for 5-6 people',
+                multiplier: 1.5
+            };
+        } else if (passengerCount <= 8) {
+            return {
+                size: 'Extra Large',
+                capacity: '7-8 passengers',
+                description: 'Extra large golf cart for 7-8 people',
+                multiplier: 2.0
+            };
+        } else {
+            // This shouldn't happen with the new UI, but handle gracefully
+            return {
+                size: 'Not Available',
+                capacity: 'Maximum 8 passengers',
+                description: 'Please submit multiple requests for groups larger than 8',
+                multiplier: 0
+            };
+        }
     }
 
     /**
