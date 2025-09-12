@@ -1,0 +1,53 @@
+:root {
+    --primary-green: #2d5a27;
+    --secondary-green: #4a7c59;
+    --accent-yellow: #f4d03f;
+    --light-green: #a9d18e;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+    color: white;
+    padding: 4rem 0;
+}
+
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.icon-large {
+    font-size: 3rem;
+    color: var(--primary-green);
+}
+
+.btn-custom {
+    background-color: var(--accent-yellow);
+    border: none;
+    color: var(--primary-green);
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+    background-color: #e6c235;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(244, 208, 63, 0.3);
+}
+
+.navbar-custom {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+
+.footer-custom {
+    background-color: var(--primary-green);
+    color: white;
+}

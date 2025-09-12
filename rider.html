@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider - Solar Chauffeur</title>
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="crossorigin=""/>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="styles/rider.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="index.html" style="color: var(--primary-green);">
+                <i class="bi bi-sun-fill me-2"></i>Solar Chauffeur
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold active" href="rider.html">
+                            <i class="bi bi-person me-1"></i>Rider
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="driver.html">
+                            <i class="bi bi-car-front me-1"></i>Driver
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="admin.html">
+                            <i class="bi bi-gear me-1"></i>Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-5 pt-4">
+        <div class="row">
+            <!-- Left Column - Main Interface -->
+            <div class="col-lg-8">
+                <!-- Welcome Header -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h2 class="card-title mb-1 fw-bold" style="color: var(--primary-green);">
+                                            Welcome, <span id="rider-name">John Doe</span>
+                                        </h2>
+                                        <p class="text-muted mb-0">
+                                            <i class="bi bi-geo-alt-fill me-1"></i>
+                                            Current Location: <span id="current-location">Ferguson Student Center</span>
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="badge bg-success fs-6 mb-2">
+                                            <i class="bi bi-check-circle me-1"></i>Verified Rider
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ride Request Form -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light border-0">
+                                <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                                    <i class="bi bi-map me-2"></i>Request a Ride
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="ride-request-form">
+                                    <div class="row g-3">
+                                        <!-- Pickup Location -->
+                                        <div class="col-md-6">
+                                            <div class="location-input-container">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="pickup-location" 
+                                                           placeholder="Enter pickup location" required autocomplete="off"
+                                                           aria-describedby="pickup-location-help">
+                                                    <label for="pickup-location">
+                                                        <i class="bi bi-geo-alt me-1"></i>Pickup Location
+                                                    </label>
+                                                    <div class="input-validation-icon" id="pickup-validation-icon"></div>
+                                                </div>
+                                                <div class="location-suggestions" id="pickup-suggestions" role="listbox" aria-label="Pickup location suggestions"></div>
+                                                <div class="popular-locations" id="pickup-popular">
+                                                    <small class="text-muted mb-2 d-block">Popular locations:</small>
+                                                    <div class="popular-chips" id="pickup-popular-chips"></div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="use-current-location-btn">
+                                                <i class="bi bi-crosshair me-1"></i>Use Current Location
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Dropoff Location -->
+                                        <div class="col-md-6">
+                                            <div class="location-input-container">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="dropoff-location" 
+                                                           placeholder="Enter destination" required autocomplete="off"
+                                                           aria-describedby="dropoff-location-help">
+                                                    <label for="dropoff-location">
+                                                        <i class="bi bi-geo-alt-fill me-1"></i>Destination
+                                                    </label>
+                                                    <div class="input-validation-icon" id="dropoff-validation-icon"></div>
+                                                </div>
+                                                <div class="location-suggestions" id="dropoff-suggestions" role="listbox" aria-label="Dropoff location suggestions"></div>
+                                                <div class="popular-locations" id="dropoff-popular">
+                                                    <small class="text-muted mb-2 d-block">Popular locations:</small>
+                                                    <div class="popular-chips" id="dropoff-popular-chips"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Passenger Count Selection -->
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-people me-1"></i>Number of Passengers
+                                            </label>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <select class="form-select" id="passenger-count-select" aria-describedby="passenger-count-help">
+                                                            <option value="1">1 Passenger</option>
+                                                            <option value="2" selected>2 Passengers</option>
+                                                            <option value="3">3 Passengers</option>
+                                                            <option value="4">4 Passengers</option>
+                                                            <option value="5">5 Passengers</option>
+                                                            <option value="6">6 Passengers</option>
+                                                            <option value="7">7 Passengers</option>
+                                                            <option value="8">8 Passengers (Maximum)</option>
+                                                        </select>
+                                                        <label for="passenger-count-select">Select Passenger Count</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="alert alert-warning py-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Large Groups:</strong> For groups larger than 8 people, please submit multiple ride requests. Each golf cart can accommodate a maximum of 8 passengers.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small id="passenger-count-help" class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Golf cart sizes: 1-2 (Small), 3-4 (Medium), 5-6 (Large), 7-8 (Extra Large)
+                                                </small>
+                                            </div>
+                                            <div class="mt-2" id="cart-size-info" style="display: none;">
+                                                <div class="alert alert-info py-2">
+                                                    <i class="bi bi-car-front me-1"></i>
+                                                    <strong>Recommended:</strong> <span id="cart-size-text"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Special Requests -->
+                                        <div class="col-12">
+                                            <div class="form-floating">
+                                                <textarea class="form-control" id="special-requests" 
+                                                          style="height: 80px" placeholder="Special requests or notes"></textarea>
+                                                <label for="special-requests">
+                                                    <i class="bi bi-chat-text me-1"></i>Special Requests (Optional)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Campus Map -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light border-0">
+                                <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                                    <i class="bi bi-map me-2"></i>Campus Map
+                                </h5>
+                                <small class="text-muted">Click on the map to set pickup and dropoff locations</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div id="campus-map" style="height: 400px; width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ride Request Button -->
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <button type="button" class="btn btn-custom btn-lg px-5" id="request-ride-btn">
+                            <i class="bi bi-car-front me-2"></i>Request Solar Ride
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Status & Info -->
+            <div class="col-lg-4">
+                <!-- Current Ride Status Card (Initially Hidden) -->
+                <div class="card border-0 shadow-sm mb-4" id="ride-status-card" style="display: none;">
+                    <div class="card-header bg-success text-white border-0">
+                        <h5 class="mb-0">
+                            <i class="bi bi-car-front me-2"></i>Current Ride
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <div class="spinner-border text-success mb-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h6 class="fw-bold">Finding your driver...</h6>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Requested</span>
+                                <span>Driver Assigned</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: 25%" id="ride-progress"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Driver Info -->
+                        <div class="border-top pt-3" id="driver-info" style="display: none;">
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="https://via.placeholder.com/40x40/4a7c59/ffffff?text=JD" 
+                                     class="rounded-circle me-3" alt="Driver">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">John Driver</h6>
+                                    <small class="text-muted">Rating: 4.9 ⭐</small>
+                                </div>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-car-front me-1"></i>Solar Vehicle #SC-001<br>
+                                <i class="bi bi-clock me-1"></i>ETA: 5 minutes
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-outline-success btn-sm" id="track-ride-btn">
+                                <i class="bi bi-geo-alt me-1"></i>Track Ride
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" id="cancel-ride-btn">
+                                <i class="bi bi-x-circle me-1"></i>Cancel Ride
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Rides -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                            <i class="bi bi-clock-history me-2"></i>Recent Rides
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Library → Dorm</h6>
+                                        <small class="text-muted">Yesterday, 2:30 PM</small>
+                                    </div>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                            </div>
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">Campus Center → Gym</h6>
+                                        <small class="text-muted">2 days ago, 6:15 PM</small>
+                                    </div>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ride Statistics -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                            <i class="bi bi-graph-up me-2"></i>Your Rides
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <h4 class="fw-bold text-success mb-1" id="total-rides">12</h4>
+                                <small class="text-muted">Total Rides</small>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%" id="ride-progress-bar"></div>
+                            </div>
+                            <small class="text-muted">75% to next milestone</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ride Confirmation Modal -->
+    <div class="modal fade" id="rideConfirmationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold" style="color: var(--primary-green);">
+                        <i class="bi bi-check-circle me-2"></i>Confirm Your Ride
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Estimated Fare:</strong> <span id="estimated-fare">$10.00</span>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-credit-card me-1"></i>
+                                    Payment collected after ride completion
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <strong>From:</strong><br>
+                            <span id="modal-pickup">Campus Center</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>To:</strong><br>
+                            <span id="modal-dropoff">Library</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Passengers:</strong><br>
+                            <span id="modal-passenger-count">2</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Cart Size:</strong><br>
+                            <span id="modal-cart-size">Medium</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-custom" id="confirm-ride-btn">
+                        <i class="bi bi-check me-2"></i>Confirm Ride
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Alert -->
+    <div class="alert alert-success alert-dismissible fade show position-fixed" 
+         style="top: 100px; right: 20px; z-index: 1050; display: none;" id="notification-alert">
+        <i class="bi bi-check-circle me-2"></i>
+        <span id="notification-message">Ride request submitted successfully!</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Core JavaScript Modules -->
+    <script src="./scripts/campus-data.js"></script>
+    <script src="./scripts/shortest-path.js"></script>
+    <script src="./scripts/location-services.js"></script>
+    <script src="./scripts/map-integration.js"></script>
+    <script src="./scripts/rider-interface.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof RiderInterface !== 'undefined') {
+                    window.riderInterface = new RiderInterface();
+                }
+            }, 200);
+        });
+    </script>
+</body>
+</html>
