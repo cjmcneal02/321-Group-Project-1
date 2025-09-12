@@ -1,53 +1,180 @@
 :root {
-    --primary-green: #2d5a27;
-    --secondary-green: #4a7c59;
-    --accent-yellow: #f4d03f;
-    --light-green: #a9d18e;
+    /* University of Alabama Brand Colors */
+    --alabama-crimson: #9E1B32;
+    --alabama-crimson-dark: #A6192E;
+    --alabama-white: #FFFFFF;
+    --alabama-gray: #58595B;
+    --alabama-gray-light: #8A8A8A;
+    --alabama-gray-dark: #2C2C2C;
+    
+    /* Alabama Theme Accents */
+    --alabama-accent: #C8102E;
+    --alabama-light: #F5F5F5;
+    --alabama-dark: #1C1C1C;
 }
 
+/* Joyride Hero Section */
 .hero-section {
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
-    color: white;
-    padding: 4rem 0;
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%);
+    color: var(--alabama-white);
+    padding: 5rem 0;
+    position: relative;
+    overflow: hidden;
 }
 
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="joyride-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23joyride-pattern)"/></svg>');
+    animation: joyrideFloat 20s linear infinite;
+}
+
+@keyframes joyrideFloat {
+    0% { transform: translateX(-100px); }
+    100% { transform: translateX(100px); }
+}
+
+/* Joyride Card Animations */
 .card-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
 }
 
 .card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(158, 27, 50, 0.2);
+    border-color: var(--alabama-gray);
 }
 
+/* Alabama Branded Icons */
 .icon-large {
-    font-size: 3rem;
-    color: var(--primary-green);
+    font-size: 3.5rem;
+    color: var(--alabama-crimson);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    animation: joyridePulse 2s ease-in-out infinite alternate;
 }
 
+@keyframes joyridePulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+/* Joyride Buttons */
 .btn-custom {
-    background-color: var(--accent-yellow);
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%);
     border: none;
-    color: var(--primary-green);
-    font-weight: 600;
-    padding: 0.75rem 2rem;
+    color: var(--alabama-white);
+    font-weight: 700;
+    padding: 1rem 2.5rem;
     border-radius: 50px;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.3);
 }
 
 .btn-custom:hover {
-    background-color: #e6c235;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(244, 208, 63, 0.3);
+    background: linear-gradient(135deg, var(--alabama-crimson-dark) 0%, #8B1530 100%);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(158, 27, 50, 0.4);
+    color: var(--alabama-white);
 }
 
+.btn-custom:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* Alabama Navigation */
 .navbar-custom {
-    background-color: rgba(255, 255, 255, 0.95);
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%);
     backdrop-filter: blur(10px);
-    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(158, 27, 50, 0.3);
+    border-bottom: 3px solid var(--alabama-white);
 }
 
+.navbar-custom .navbar-brand {
+    color: var(--alabama-white) !important;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.navbar-custom .nav-link {
+    color: var(--alabama-white) !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.navbar-custom .nav-link:hover {
+    color: var(--alabama-white) !important;
+    transform: translateY(-2px);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.navbar-custom .nav-link.active {
+    color: var(--alabama-white) !important;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.navbar-custom .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--alabama-white);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-custom .nav-link:hover::after,
+.navbar-custom .nav-link.active::after {
+    width: 100%;
+}
+
+/* Alabama Footer */
 .footer-custom {
-    background-color: var(--primary-green);
-    color: white;
+    background: linear-gradient(135deg, var(--alabama-gray-dark) 0%, var(--alabama-gray) 100%);
+    color: var(--alabama-white);
+    border-top: 4px solid var(--alabama-crimson);
+}
+
+/* Joyride Animations */
+@keyframes joyrideBounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+.joyride-bounce {
+    animation: joyrideBounce 2s infinite;
+}
+
+/* Alabama Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--alabama-crimson);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.joyride-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
 }

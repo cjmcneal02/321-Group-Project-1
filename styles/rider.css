@@ -1,3 +1,18 @@
+/* Alabama Joyride Brand Colors */
+:root {
+    --alabama-crimson: #9E1B32;
+    --alabama-crimson-dark: #A6192E;
+    --alabama-white: #FFFFFF;
+    --alabama-gray: #58595B;
+    --alabama-gray-light: #8A8A8A;
+    --alabama-gray-dark: #2C2C2C;
+    
+    /* Alabama Theme Accents */
+    --alabama-accent: #C8102E;
+    --alabama-light: #F5F5F5;
+    --alabama-dark: #1C1C1C;
+}
+
 /* Rider-specific styles */
 #campus-map {
     border-radius: 0.375rem;
