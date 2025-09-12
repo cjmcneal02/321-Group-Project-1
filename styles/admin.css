@@ -1,34 +1,134 @@
-:root {
-  --solar-primary: #ffd700;
-  --solar-secondary: #4a90e2;
-  --campus-green: #228b22;
-}
+/* Admin-specific styles that extend the main theme */
 
 body {
-  background: #f8f9fa;
+    background-color: #f8f9fa;
 }
 
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Enhanced card headers */
+.card-header.bg-light {
+    background-color: rgba(45, 90, 39, 0.05) !important;
+    border-bottom: 1px solid rgba(45, 90, 39, 0.1);
+}
+
+/* Summary banner styling */
 #summary-banner {
-  border-left: 6px solid var(--campus-green);
+    border-left: 4px solid var(--primary-green);
+    background: linear-gradient(135deg, rgba(45, 90, 39, 0.05) 0%, rgba(45, 90, 39, 0.1) 100%);
 }
 
+/* Action buttons */
 #actions .btn {
-  min-width: 180px;
+    min-width: 180px;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
 }
 
+/* List group styling */
 #driver-list .list-group-item,
 #rider-list .list-group-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.2s ease;
+    border-left: none;
+    border-right: none;
 }
 
+#driver-list .list-group-item:hover,
+#rider-list .list-group-item:hover {
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+#driver-list .list-group-item:first-child,
+#rider-list .list-group-item:first-child {
+    border-top: none;
+}
+
+#driver-list .list-group-item:last-child,
+#rider-list .list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Stat pill styling */
 .stat-pill {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #344767;
-  font-weight: 600;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(45, 90, 39, 0.1) 0%, rgba(45, 90, 39, 0.2) 100%);
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: 1px solid rgba(45, 90, 39, 0.2);
+}
+
+/* Form styling */
+.form-select:focus {
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(244, 208, 63, 0.25);
+}
+
+.form-label {
+    color: var(--primary-green);
+    font-weight: 500;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Alert styling */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.2) 100%);
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    
+    #actions .btn {
+        min-width: 150px;
+        font-size: 0.9rem;
+    }
+    
+    .stat-pill {
+        font-size: 0.8rem;
+        padding: 3px 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 0.75rem !important;
+    }
+    
+    #actions .btn {
+        min-width: 120px;
+        font-size: 0.85rem;
+    }
+    
+    .d-flex.gap-3 {
+        gap: 0.5rem !important;
+    }
 }
 
