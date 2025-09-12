@@ -132,39 +132,44 @@
                                             </div>
                                         </div>
                                         
-                                        <!-- Ride Type Selection -->
+                                        <!-- Passenger Count Selection -->
                                         <div class="col-12">
-                                            <label class="form-label fw-semibold">Ride Type</label>
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="ride-type" 
-                                                               id="standard-ride" value="standard" checked>
-                                                        <label class="form-check-label" for="standard-ride">
-                                                            <i class="bi bi-car-front me-1"></i>Standard
-                                                            <small class="d-block text-muted">$8-12</small>
-                                                        </label>
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-people me-1"></i>Number of Passengers
+                                            </label>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <div class="form-floating">
+                                                        <select class="form-select" id="passenger-count-select" aria-describedby="passenger-count-help">
+                                                            <option value="1">1 Passenger</option>
+                                                            <option value="2" selected>2 Passengers</option>
+                                                            <option value="3">3 Passengers</option>
+                                                            <option value="4">4 Passengers</option>
+                                                            <option value="5">5 Passengers</option>
+                                                            <option value="6">6 Passengers</option>
+                                                            <option value="7">7 Passengers</option>
+                                                            <option value="8">8 Passengers (Maximum)</option>
+                                                        </select>
+                                                        <label for="passenger-count-select">Select Passenger Count</label>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="ride-type" 
-                                                               id="premium-ride" value="premium">
-                                                        <label class="form-check-label" for="premium-ride">
-                                                            <i class="bi bi-car-front-fill me-1"></i>Premium
-                                                            <small class="d-block text-muted">$12-18</small>
-                                                        </label>
+                                                <div class="col-md-6">
+                                                    <div class="alert alert-warning py-3">
+                                                        <i class="bi bi-info-circle me-2"></i>
+                                                        <strong>Large Groups:</strong> For groups larger than 8 people, please submit multiple ride requests. Each golf cart can accommodate a maximum of 8 passengers.
                                                     </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="ride-type" 
-                                                               id="group-ride" value="group">
-                                                        <label class="form-check-label" for="group-ride">
-                                                            <i class="bi bi-people me-1"></i>Group
-                                                            <small class="d-block text-muted">$15-25</small>
-                                                        </label>
-                                                    </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small id="passenger-count-help" class="text-muted">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Golf cart sizes: 1-2 (Small), 3-4 (Medium), 5-6 (Large), 7-8 (Extra Large)
+                                                </small>
+                                            </div>
+                                            <div class="mt-2" id="cart-size-info" style="display: none;">
+                                                <div class="alert alert-info py-2">
+                                                    <i class="bi bi-car-front me-1"></i>
+                                                    <strong>Recommended:</strong> <span id="cart-size-text"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -342,7 +347,12 @@
                         <div class="col-12">
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <strong>Estimated Fare:</strong> <span id="estimated-fare">$10.50</span>
+                                <strong>Estimated Fare:</strong> <span id="estimated-fare">$10.00</span>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-credit-card me-1"></i>
+                                    Payment collected after ride completion
+                                </small>
                             </div>
                         </div>
                         <div class="col-6">
@@ -353,9 +363,13 @@
                             <strong>To:</strong><br>
                             <span id="modal-dropoff">Library</span>
                         </div>
-                        <div class="col-12">
-                            <strong>Ride Type:</strong><br>
-                            <span id="modal-ride-type">Standard</span>
+                        <div class="col-6">
+                            <strong>Passengers:</strong><br>
+                            <span id="modal-passenger-count">2</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Cart Size:</strong><br>
+                            <span id="modal-cart-size">Medium</span>
                         </div>
                     </div>
                 </div>

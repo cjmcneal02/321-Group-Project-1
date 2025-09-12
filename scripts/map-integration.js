@@ -286,10 +286,23 @@ class MapIntegration {
         this.pickupMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: '<div style="background-color: #e74c3c; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div><div style="color: #e74c3c; font-weight: bold; margin-top: 5px;">PICKUP</div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                className: 'custom-div-icon pickup-pin',
+                html: `
+                    <div class="pin-container pickup-container">
+                        <div class="pin-shadow"></div>
+                        <div class="pin-icon pickup-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <div class="pin-label pickup-label">
+                            <span class="pin-text">PICKUP</span>
+                            <div class="pin-arrow"></div>
+                        </div>
+                        <div class="pin-pulse pickup-pulse"></div>
+                        <div class="pin-glow pickup-glow"></div>
+                    </div>
+                `,
+                iconSize: [50, 60],
+                iconAnchor: [25, 55]
             })
         }).addTo(this.map);
 
@@ -324,10 +337,23 @@ class MapIntegration {
         this.dropoffMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: '<div style="background-color: #27ae60; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div><div style="color: #27ae60; font-weight: bold; margin-top: 5px;">DROPOFF</div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                className: 'custom-div-icon dropoff-pin',
+                html: `
+                    <div class="pin-container dropoff-container">
+                        <div class="pin-shadow"></div>
+                        <div class="pin-icon dropoff-icon">
+                            <i class="bi bi-flag-fill"></i>
+                        </div>
+                        <div class="pin-label dropoff-label">
+                            <span class="pin-text">DROPOFF</span>
+                            <div class="pin-arrow"></div>
+                        </div>
+                        <div class="pin-pulse dropoff-pulse"></div>
+                        <div class="pin-glow dropoff-glow"></div>
+                    </div>
+                `,
+                iconSize: [50, 60],
+                iconAnchor: [25, 55]
             })
         }).addTo(this.map);
 
@@ -361,10 +387,18 @@ class MapIntegration {
             // Add user location marker
             this.userLocationMarker = L.marker([locationData.lat, locationData.lng], {
                 icon: L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<div style="background-color: #3498db; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div><div style="color: #3498db; font-weight: bold; margin-top: 5px;">YOU</div>',
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8]
+                    className: 'custom-div-icon user-location-pin',
+                    html: `
+                        <div class="pin-container">
+                            <div class="pin-icon user-location-icon">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div class="pin-label user-location-label">YOU</div>
+                            <div class="pin-pulse user-location-pulse"></div>
+                        </div>
+                    `,
+                    iconSize: [35, 45],
+                    iconAnchor: [17, 40]
                 })
             }).addTo(this.map);
             

@@ -223,39 +223,34 @@ class ShortestPathAlgorithm {
      * Calculate fare for a ride
      * @param {string} from - Starting location
      * @param {string} to - Destination location
-     * @param {string} rideType - Type of ride
+     * @param {number} passengerCount - Number of passengers
      * @returns {Object} Fare calculation result
      */
-    calculateFare(from, to, rideType = 'standard') {
+    calculateFare(from, to, passengerCount = 2) {
         const pathResult = this.findShortestPath(from, to);
         
         if (!pathResult.valid) {
             throw new Error('No valid route found');
         }
         
-        const baseFare = this.campusData.calculateBaseFare(from, to, rideType);
-        const timeMultiplier = Math.max(1, pathResult.time / 5); // Minimum 5 minutes
-        const distanceMultiplier = Math.max(1, pathResult.distance * 2); // $2 per km
+        // Simple fare calculation: $5 per person
+        const totalFare = this.campusData.calculateBaseFare(from, to, passengerCount);
         
-        const multipliers = {
-            'standard': 1.0,
-            'premium': 1.5,
-            'group': 2.0
-        };
-        
-        const typeMultiplier = multipliers[rideType] || multipliers.standard;
-        
-        const totalFare = baseFare * timeMultiplier * distanceMultiplier * typeMultiplier;
+        // Get cart size recommendation
+        const cartInfo = this.campusData.getCartSizeRecommendation(passengerCount);
         
         return {
-            baseFare: baseFare,
-            timeMultiplier: timeMultiplier,
-            distanceMultiplier: distanceMultiplier,
-            typeMultiplier: typeMultiplier,
-            totalFare: Math.round(totalFare * 100) / 100, // Round to 2 decimal places
+            baseFare: totalFare,
+            totalFare: totalFare,
             estimatedTime: pathResult.time,
             distance: pathResult.distance,
-            route: pathResult.route
+            route: pathResult.route,
+            passengerCount: passengerCount,
+            cartSize: cartInfo.size,
+            cartCapacity: cartInfo.capacity,
+            cartDescription: cartInfo.description,
+            ratePerPassenger: 5.00,
+            paymentNote: "Payment collected after ride completion"
         };
     }
 
