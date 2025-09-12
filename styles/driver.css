@@ -1,0 +1,266 @@
+/* Driver Portal Custom Styles */
+
+
+/* Map Container */
+.map-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-container .leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Status Indicator Animation */
+.driver-status-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.driver-status-indicator .bi-circle-fill {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Offline state */
+.driver-status-indicator.offline .bi-circle-fill {
+  color: #dc3545 !important;
+  animation: none;
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Driver stats styling */
+.stat-item {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.stat-item:hover {
+  background-color: #e9ecef;
+}
+
+/* Map placeholder styling */
+.map-placeholder {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.map-placeholder:hover {
+  background-color: #f1f3f4 !important;
+}
+
+/* Ride request cards */
+.ride-request-card {
+  border-left: 4px solid #0d6efd;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.ride-request-card:hover {
+  border-left-color: #0a58ca;
+  transform: translateX(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ride-request-card.accepted {
+  border-left-color: #198754;
+  background-color: #f8fff9;
+}
+
+.ride-request-card.declined {
+  border-left-color: #dc3545;
+  background-color: #fff8f8;
+  opacity: 0.7;
+}
+
+/* Button animations */
+.btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Status text animations */
+#statusText {
+  transition: color 0.3s ease-in-out;
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .driver-status-indicator .bi-circle-fill {
+    font-size: 2.5rem !important;
+  }
+  
+  .map-placeholder {
+    min-height: 150px;
+  }
+  
+  .ride-request-card:hover {
+    transform: none;
+  }
+}
+
+/* Custom scrollbar for request list */
+.requests-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.requests-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.requests-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.requests-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.requests-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Notification badges */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Fade in animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Success/Error states */
+.success-flash {
+  animation: successFlash 0.6s ease-in-out;
+}
+
+@keyframes successFlash {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #d1edff;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.error-flash {
+  animation: errorFlash 0.6s ease-in-out;
+}
+
+@keyframes errorFlash {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: #f8d7da;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
