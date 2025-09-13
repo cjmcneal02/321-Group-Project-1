@@ -34,7 +34,7 @@ class AppState {
             drivers: [
                 {
                     id: 'SC-001',
-                    name: 'John Driver',
+                    name: 'Stacy Streets',
                     rating: 4.9,
                     vehicle: 'Solar Golf Cart Alpha',
                     location: 'Hewson Hall',

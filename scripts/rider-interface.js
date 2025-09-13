@@ -91,11 +91,6 @@ class RiderInterface {
             trackBtn.addEventListener('click', () => this.trackRide());
         }
 
-        // Debug button (temporary)
-        const debugBtn = document.getElementById('debug-btn');
-        if (debugBtn) {
-            debugBtn.addEventListener('click', () => this.debugAppState());
-        }
 
         // Use current location button
         const useCurrentLocationBtn = document.getElementById('use-current-location-btn');
@@ -1100,25 +1095,6 @@ class RiderInterface {
         this.showNotification('Ride request cancelled', 'info');
     }
 
-    /**
-     * Debug AppState (temporary method)
-     */
-    debugAppState() {
-        if (typeof appState === 'undefined') {
-            alert('AppState is not available');
-            return;
-        }
-        
-        const state = appState.getState();
-        const activeRide = appState.getActiveRide();
-        const requests = appState.getRideRequests();
-        
-        alert(`AppState Debug:
-Active Ride: ${activeRide ? activeRide.id : 'None'}
-Requests: ${requests.length}
-Current Request ID: ${this.currentRequestId || 'None'}
-Expected Ride ID: ${this.currentRequestId ? 'RIDE-' + this.currentRequestId : 'None'}`);
-    }
 
     /**
      * Show ride status card
