@@ -1,4 +1,4 @@
-// Driver Portal Interface - Integrated with CampusData
+// Driver Portal Interface - Integrated with AppState
 class DriverPortal {
   constructor() {
     this.campusData = new CampusData();
@@ -8,15 +8,23 @@ class DriverPortal {
     this.ridesCompleted = 0;
     this.earnings = 0;
     this.rating = this.currentDriver ? this.currentDriver.rating : 4.9;
-    this.requests = [];
     this.rideHistory = [];
     this.currentRide = null;
     this.rideMap = null;
+    this.lastRequestCount = 0; // Track request count for polling
+    
+    // Check for AppState availability
+    if (typeof appState === 'undefined') {
+      console.warn('AppState not available. Some features may not work properly.');
+    }
     
     this.initializeElements();
     this.bindEvents();
     this.updateUI();
     this.initializeMap();
+    
+    // Start real-time polling for requests
+    this.startRequestPolling();
   }
 
   initializeElements() {
@@ -59,7 +67,6 @@ class DriverPortal {
     // Request elements
     this.noRequestsState = document.getElementById('noRequestsState');
     this.requestsList = document.getElementById('requestsList');
-    this.demoRequestBtn = document.getElementById('demoRequestBtn');
     
     // History elements
     this.rideHistoryTable = document.getElementById('rideHistoryTable');
@@ -76,9 +83,6 @@ class DriverPortal {
     this.arrivedBtn.addEventListener('click', () => this.arrivedAtPickup());
     this.startTripBtn.addEventListener('click', () => this.startTrip());
     this.completeRideBtn.addEventListener('click', () => this.completeRide());
-    
-    // Demo request
-    this.demoRequestBtn.addEventListener('click', () => this.generateDemoRequest());
   }
 
   initializeMap() {
@@ -180,11 +184,11 @@ class DriverPortal {
   updateActiveRideDisplay() {
     if (!this.currentRide) return;
 
-    this.passengerName.textContent = this.currentRide.passengerName;
+    this.passengerName.textContent = this.currentRide.riderName;
     this.pickupLocation.textContent = this.currentRide.pickupLocation;
     this.dropoffLocation.textContent = this.currentRide.dropoffLocation;
     this.rideDistance.textContent = `${this.currentRide.distance} min`;
-    this.rideFare.textContent = `$${this.currentRide.fare.toFixed(2)}`;
+    this.rideFare.textContent = `$${this.currentRide.estimatedFare.toFixed(2)}`;
     this.rideETA.textContent = `${this.currentRide.distance} min`;
   }
 
@@ -226,20 +230,26 @@ class DriverPortal {
 
     // Update stats
     this.ridesCompleted++;
-    this.earnings += this.currentRide.fare;
+    this.earnings += this.currentRide.estimatedFare;
     
     // Add to ride history
     this.rideHistory.unshift({
-      time: this.currentRide.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      passenger: this.currentRide.passengerName,
+      time: new Date(this.currentRide.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      passenger: this.currentRide.riderName,
       route: `${this.currentRide.pickupLocation} → ${this.currentRide.dropoffLocation}`,
       distance: `${this.currentRide.distance} min`,
-      fare: `$${this.currentRide.fare.toFixed(2)}`,
+      fare: `$${this.currentRide.estimatedFare.toFixed(2)}`,
       status: 'Completed'
     });
 
-    // Update campus data
-    this.campusData.updateDriverAvailability(this.currentDriver.id, true, null);
+    // Update AppState - clear active ride and make driver available
+    if (typeof appState !== 'undefined') {
+      appState.setActiveRide(null);
+      appState.updateDriver(this.currentDriver.id, {
+        available: true,
+        currentRide: null
+      });
+    }
     
     // Reset ride state
     this.hasActiveRide = false;
@@ -261,72 +271,104 @@ class DriverPortal {
     
     this.updateUI();
     this.updateRideHistory();
-    this.showNotification(`Ride completed! Earned $${this.currentRide?.fare.toFixed(2) || '0.00'}`, 'success');
+    this.showNotification(`Ride completed! Earned $${this.currentRide?.estimatedFare.toFixed(2) || '0.00'}`, 'success');
   }
 
-  generateDemoRequest() {
-    const locations = Object.keys(this.campusData.getLocations());
-    const names = [
-      'Alex Chen', 'Maria Rodriguez', 'Jordan Smith', 'Taylor Johnson',
-      'Casey Brown', 'Riley Davis', 'Morgan Wilson', 'Avery Miller'
-    ];
+  /**
+   * Start real-time polling for ride requests
+   */
+  startRequestPolling() {
+    // Check for requests every 2 seconds
+    this.requestPollingInterval = setInterval(() => {
+      this._checkForRequests();
+    }, 2000);
+  }
+
+  /**
+   * Check for new ride requests from AppState
+   * @private
+   */
+  _checkForRequests() {
+    if (typeof appState === 'undefined') return;
     
-    const pickup = locations[Math.floor(Math.random() * locations.length)];
-    let dropoff = locations[Math.floor(Math.random() * locations.length)];
+    const requests = appState.getRideRequests();
+    const currentRequestCount = requests.length;
     
-    // Ensure different pickup and dropoff
-    while (dropoff === pickup) {
-      dropoff = locations[Math.floor(Math.random() * locations.length)];
+    // Check if requests have changed
+    if (currentRequestCount !== this.lastRequestCount) {
+      this.lastRequestCount = currentRequestCount;
+      this.updateRequestsUI();
+      
+      // Show notification for new requests
+      if (currentRequestCount > 0) {
+        this.showNotification('New ride request received!', 'info');
+      }
     }
-    
-    const request = {
-      id: Date.now(),
-      passengerName: names[Math.floor(Math.random() * names.length)],
-      pickupLocation: pickup,
-      dropoffLocation: dropoff,
-      distance: this.calculateDistance(pickup, dropoff),
-      fare: this.campusData.calculateBaseFare(pickup, dropoff),
-      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    };
-    
-    this.requests.push(request);
-    this.updateRequestsUI();
-    this.showNotification('New ride request received!', 'info');
   }
 
   acceptRequest(requestId) {
-    const requestIndex = this.requests.findIndex(req => req.id === requestId);
-    if (requestIndex === -1) return;
+    if (typeof appState === 'undefined') {
+      this.showNotification('System unavailable. Please try again later.', 'danger');
+      return;
+    }
     
-    const request = this.requests[requestIndex];
+    // Find the request in AppState
+    const requests = appState.getRideRequests();
+    const request = requests.find(req => req.id === requestId);
     
-    // Update request status
-    request.status = 'accepted';
+    if (!request) {
+      this.showNotification('Request not found or already processed', 'warning');
+      return;
+    }
     
-    // Start the ride with this request's details
-    this.currentRide = {
+    // Create new active ride object
+    const newActiveRide = {
       id: 'RIDE-' + requestId,
-      passengerName: request.passengerName,
+      riderName: request.riderName,
       pickupLocation: request.pickupLocation,
       dropoffLocation: request.dropoffLocation,
-      distance: request.distance,
-      fare: request.fare,
-      startTime: new Date()
+      passengerCount: request.passengerCount,
+      cartSize: request.cartSize,
+      estimatedFare: request.estimatedFare,
+      driverId: this.currentDriver.id,
+      driverName: this.currentDriver.name,
+      status: 'accepted',
+      startTime: new Date().toISOString(),
+      distance: this.calculateDistance(request.pickupLocation, request.dropoffLocation)
     };
     
+    // Set as active ride in AppState
+    appState.setActiveRide(newActiveRide);
+    
+    // Update driver status to unavailable
+    appState.updateDriver(this.currentDriver.id, {
+      available: false,
+      currentRide: newActiveRide.id
+    });
+    
+    // Remove the request from the list
+    appState.removeRideRequest(requestId);
+    
+    // Update local state
+    this.currentRide = newActiveRide;
     this.hasActiveRide = true;
     this.updateActiveRideDisplay();
     this.updateUI();
     this.updateRequestsUI();
     this.showMapRoute();
-    this.showNotification(`Accepted ride for ${request.passengerName}`, 'success');
+    this.showNotification(`Accepted ride for ${request.riderName}`, 'success');
   }
 
   declineRequest(requestId) {
-    const requestIndex = this.requests.findIndex(req => req.id === requestId);
-    if (requestIndex === -1) return;
+    if (typeof appState === 'undefined') {
+      this.showNotification('System unavailable. Please try again later.', 'danger');
+      return;
+    }
     
-    this.requests[requestIndex].status = 'declined';
+    // Remove the request from AppState
+    appState.removeRideRequest(requestId);
+    
+    // Update UI
     this.updateRequestsUI();
     this.showNotification('Ride request declined', 'warning');
   }
@@ -377,7 +419,15 @@ class DriverPortal {
   }
 
   updateRequestsUI() {
-    if (this.requests.length === 0) {
+    if (typeof appState === 'undefined') {
+      this.noRequestsState.classList.remove('d-none');
+      this.requestsList.classList.add('d-none');
+      return;
+    }
+    
+    const requests = appState.getRideRequests();
+    
+    if (requests.length === 0) {
       this.noRequestsState.classList.remove('d-none');
       this.requestsList.classList.add('d-none');
       return;
@@ -386,18 +436,18 @@ class DriverPortal {
     this.noRequestsState.classList.add('d-none');
     this.requestsList.classList.remove('d-none');
     
-    this.requestsList.innerHTML = this.requests.map(request => {
-      const statusClass = request.status === 'accepted' ? 'accepted' : 
-                         request.status === 'declined' ? 'declined' : '';
+    this.requestsList.innerHTML = requests.map(request => {
+      const requestTime = new Date(request.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      const distance = this.calculateDistance(request.pickupLocation, request.dropoffLocation);
       
       return `
-        <div class="ride-request-card card mb-3 ${statusClass} fade-in">
+        <div class="ride-request-card card mb-3 fade-in">
           <div class="card-body">
             <div class="row align-items-center">
               <div class="col-md-8">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                  <h6 class="card-title mb-0">${request.passengerName}</h6>
-                  <span class="badge bg-secondary">${request.time}</span>
+                  <h6 class="card-title mb-0">${request.riderName}</h6>
+                  <span class="badge bg-secondary">${requestTime}</span>
                 </div>
                 <div class="row text-muted small">
                   <div class="col-6">
@@ -409,27 +459,30 @@ class DriverPortal {
                 </div>
                 <div class="row text-muted small mt-1">
                   <div class="col-6">
-                    <i class="bi bi-arrow-right me-1"></i>${request.distance} min
+                    <i class="bi bi-people me-1"></i>${request.passengerCount} passengers
                   </div>
                   <div class="col-6">
-                    <i class="bi bi-currency-dollar me-1"></i>$${request.fare.toFixed(2)}
+                    <i class="bi bi-currency-dollar me-1"></i>$${request.estimatedFare.toFixed(2)}
+                  </div>
+                </div>
+                <div class="row text-muted small mt-1">
+                  <div class="col-6">
+                    <i class="bi bi-car-front me-1"></i>${request.cartSize}
+                  </div>
+                  <div class="col-6">
+                    <i class="bi bi-arrow-right me-1"></i>${distance} min
                   </div>
                 </div>
               </div>
               <div class="col-md-4 text-end">
-                ${request.status === 'accepted' ? 
-                  '<span class="badge bg-success">Accepted</span>' :
-                  request.status === 'declined' ?
-                  '<span class="badge bg-danger">Declined</span>' :
-                  `<div class="btn-group">
-                    <button class="btn btn-success btn-sm" onclick="driverPortal.acceptRequest(${request.id})">
-                      <i class="bi bi-check"></i> Accept
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm" onclick="driverPortal.declineRequest(${request.id})">
-                      <i class="bi bi-x"></i> Decline
-                    </button>
-                  </div>`
-                }
+                <div class="btn-group">
+                  <button class="btn btn-success btn-sm" onclick="driverPortal.acceptRequest('${request.id}')">
+                    <i class="bi bi-check"></i> Accept
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" onclick="driverPortal.declineRequest('${request.id}')">
+                    <i class="bi bi-x"></i> Decline
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -487,15 +540,6 @@ class DriverPortal {
 let driverPortal;
 document.addEventListener('DOMContentLoaded', () => {
   driverPortal = new DriverPortal();
-  
-  // Add some demo data
-  setTimeout(() => {
-    driverPortal.generateDemoRequest();
-  }, 2000);
-  
-  setTimeout(() => {
-    driverPortal.generateDemoRequest();
-  }, 5000);
 });
 
 // Make driverPortal globally available

@@ -1,5 +1,5 @@
 /**
- * Rider Interface Module for Solar Chauffeur
+ * Rider Interface Module for Tide Rides
  * Enhanced functionality for ride requests and real-time updates
  */
 
@@ -19,6 +19,11 @@ class RiderInterface {
             this.campusData = null;
             return;
         }
+
+        // Check for AppState availability
+        if (typeof appState === 'undefined') {
+            console.warn('AppState not available. Some features may not work properly.');
+        }
         
         if (this.campusData) {
             try {
@@ -36,6 +41,7 @@ class RiderInterface {
         this.currentRide = null;
         this.rideHistory = this.loadRideHistory();
         this.locationWatchId = null;
+        this.statusPollingInterval = null; // For checking ride status
         
         if (this.campusData && this.locationServices) {
             this.initializeInterface();
@@ -651,11 +657,19 @@ class RiderInterface {
                 return;
             }
 
+            // Find closest driver for ETA estimation
+            const closestDriver = this.shortestPath.findClosestDriver(pickup);
+            let estimatedDriverArrival = null;
+            
+            if (closestDriver) {
+                estimatedDriverArrival = closestDriver.estimatedArrival;
+            }
+
             // Calculate fare
             const fareCalculation = this.shortestPath.calculateFare(pickup, dropoff, passengerCount);
             
-            // Update modal with calculated data
-            this.updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation);
+            // Update modal with calculated data and driver ETA
+            this.updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation, estimatedDriverArrival);
             
             // Show confirmation modal
             const modal = new bootstrap.Modal(document.getElementById('rideConfirmationModal'));
@@ -673,13 +687,27 @@ class RiderInterface {
      * @param {string} dropoff - Dropoff location
      * @param {number} passengerCount - Number of passengers
      * @param {Object} fareCalculation - Fare calculation result
+     * @param {number|null} estimatedDriverArrival - Estimated driver arrival time in minutes
      */
-    updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation) {
+    updateRideConfirmationModal(pickup, dropoff, passengerCount, fareCalculation, estimatedDriverArrival) {
         document.getElementById('modal-pickup').textContent = pickup;
         document.getElementById('modal-dropoff').textContent = dropoff;
         document.getElementById('modal-passenger-count').textContent = passengerCount;
         document.getElementById('modal-cart-size').textContent = fareCalculation.cartSize;
         document.getElementById('estimated-fare').textContent = `$${fareCalculation.totalFare.toFixed(2)}`;
+        
+        // Update driver ETA if available
+        const etaElement = document.getElementById('driver-eta');
+        const etaSection = document.getElementById('driver-eta-section');
+        
+        if (etaElement && etaSection) {
+            if (estimatedDriverArrival !== null) {
+                etaElement.textContent = `${estimatedDriverArrival} minutes`;
+                etaSection.style.display = 'block';
+            } else {
+                etaSection.style.display = 'none';
+            }
+        }
     }
 
     /**
@@ -690,47 +718,40 @@ class RiderInterface {
             const pickup = document.getElementById('modal-pickup').textContent;
             const dropoff = document.getElementById('modal-dropoff').textContent;
             const passengerCount = parseInt(document.getElementById('modal-passenger-count').textContent);
+            const riderName = document.getElementById('rider-name').textContent || 'Anonymous Rider';
 
-            // Find closest driver
-            const driver = this.shortestPath.findClosestDriver(pickup);
-            
-            if (!driver) {
-                this.showNotification('No available drivers found. Please try again later.', 'warning');
+            // Check if AppState is available
+            if (typeof appState === 'undefined') {
+                this.showNotification('System unavailable. Please try again later.', 'danger');
                 return;
             }
 
-            // Create ride object
-            const rideId = this.generateRideId();
-            const ride = {
-                id: rideId,
-                pickup: pickup,
-                dropoff: dropoff,
+            // Create ride request object
+            const rideRequest = {
+                riderName: riderName,
+                pickupLocation: pickup,
+                dropoffLocation: dropoff,
                 passengerCount: passengerCount,
                 cartSize: document.getElementById('modal-cart-size').textContent,
-                driver: driver,
-                status: 'requested',
-                timestamp: Date.now(),
                 estimatedFare: this.shortestPath.calculateFare(pickup, dropoff, passengerCount).totalFare,
-                estimatedTime: driver.estimatedArrival + this.shortestPath.findShortestPath(pickup, dropoff).time
+                status: 'pending'
             };
 
-            this.currentRide = ride;
-            
-            // Update driver availability
-            this.campusData.updateDriverAvailability(driver.id, false, rideId);
+            // Add ride request to shared state
+            const requestId = appState.addRideRequest(rideRequest);
 
             // Hide modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('rideConfirmationModal'));
             modal.hide();
 
             // Show success notification
-            this.showNotification('Ride request submitted successfully!', 'success');
+            this.showNotification('Ride request submitted successfully! Searching for a driver...', 'success');
 
-            // Show ride status card
-            this.showRideStatusCard(ride);
-
-            // Start ride simulation
-            this.simulateRideProgress(ride);
+            // Show searching status
+            this.showSearchingStatus(requestId, rideRequest);
+            
+            // Start polling for driver assignment
+            this.startStatusPolling();
 
         } catch (error) {
             console.error('Ride confirmation error:', error);
@@ -739,24 +760,153 @@ class RiderInterface {
     }
 
     /**
-     * Show ride status card
-     * @param {Object} ride - Ride object
+     * Check ride status for driver assignment
+     * @private
      */
-    showRideStatusCard(ride) {
+    _checkRideStatus() {
+        if (typeof appState === 'undefined' || !this.currentRequestId) return;
+        
+        const activeRide = appState.getActiveRide();
+        
+        if (activeRide && activeRide.id === 'RIDE-' + this.currentRequestId) {
+            // Driver has accepted the request!
+            this.stopStatusPolling();
+            
+            // Get driver details
+            const driverDetails = appState.getDrivers().find(driver => driver.id === activeRide.driverId);
+            
+            if (driverDetails) {
+                // Update UI with driver information
+                this.showRideStatusCard(activeRide, driverDetails);
+                this.showNotification(`Driver ${driverDetails.name} has accepted your ride!`, 'success');
+            } else {
+                this.showNotification('Driver assigned!', 'success');
+                this.showRideStatusCard(activeRide, null);
+            }
+            
+            // Clear current request ID since we now have an active ride
+            this.currentRequestId = null;
+        }
+    }
+
+    /**
+     * Start polling for ride status updates
+     */
+    startStatusPolling() {
+        if (this.statusPollingInterval) {
+            clearInterval(this.statusPollingInterval);
+        }
+        
+        this.statusPollingInterval = setInterval(() => {
+            this._checkRideStatus();
+        }, 2000);
+    }
+
+    /**
+     * Stop polling for ride status updates
+     */
+    stopStatusPolling() {
+        if (this.statusPollingInterval) {
+            clearInterval(this.statusPollingInterval);
+            this.statusPollingInterval = null;
+        }
+    }
+
+    /**
+     * Show searching status for ride request
+     * @param {string} requestId - Ride request ID
+     * @param {Object} rideRequest - Ride request object
+     */
+    showSearchingStatus(requestId, rideRequest) {
         const statusCard = document.getElementById('ride-status-card');
         if (statusCard) {
             statusCard.style.display = 'block';
-            this.updateRideStatusDisplay(ride);
+            
+            // Update status card to show searching state
+            const statusTitle = statusCard.querySelector('.card-title');
+            const statusText = statusCard.querySelector('.card-text');
+            const driverInfo = document.getElementById('driver-info');
+            
+            if (statusTitle) {
+                statusTitle.textContent = 'Searching for Driver...';
+            }
+            
+            if (statusText) {
+                statusText.innerHTML = `
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Finding the best driver for your ride</span>
+                    </div>
+                    <div class="small text-muted">
+                        <strong>From:</strong> ${rideRequest.pickupLocation}<br>
+                        <strong>To:</strong> ${rideRequest.dropoffLocation}<br>
+                        <strong>Passengers:</strong> ${rideRequest.passengerCount}<br>
+                        <strong>Estimated Fare:</strong> $${rideRequest.estimatedFare.toFixed(2)}
+                    </div>
+                `;
+            }
+            
+            // Hide driver info section
+            if (driverInfo) {
+                driverInfo.style.display = 'none';
+            }
+            
+            // Store current request for potential cancellation
+            this.currentRequestId = requestId;
+        }
+    }
+
+    /**
+     * Show ride status card
+     * @param {Object} ride - Ride object
+     * @param {Object|null} driverDetails - Driver details object
+     */
+    showRideStatusCard(ride, driverDetails = null) {
+        const statusCard = document.getElementById('ride-status-card');
+        if (statusCard) {
+            statusCard.style.display = 'block';
+            this.updateRideStatusDisplay(ride, driverDetails);
         }
     }
 
     /**
      * Update ride status display
      * @param {Object} ride - Ride object
+     * @param {Object|null} driverDetails - Driver details object
      */
-    updateRideStatusDisplay(ride) {
+    updateRideStatusDisplay(ride, driverDetails = null) {
+        const statusCard = document.getElementById('ride-status-card');
         const driverInfo = document.getElementById('driver-info');
-        if (driverInfo && ride.driver) {
+        
+        if (!statusCard) return;
+        
+        // Update status card title
+        const statusTitle = statusCard.querySelector('.card-title');
+        if (statusTitle) {
+            statusTitle.textContent = 'Driver Assigned!';
+        }
+        
+        // Update status text
+        const statusText = statusCard.querySelector('.card-text');
+        if (statusText) {
+            statusText.innerHTML = `
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    <span>Your driver is on the way!</span>
+                </div>
+                <div class="small text-muted">
+                    <strong>From:</strong> ${ride.pickupLocation}<br>
+                    <strong>To:</strong> ${ride.dropoffLocation}<br>
+                    <strong>Passengers:</strong> ${ride.passengerCount}<br>
+                    <strong>Estimated Fare:</strong> $${ride.estimatedFare.toFixed(2)}
+                </div>
+            `;
+        }
+        
+        // Show driver info if available
+        if (driverInfo && driverDetails) {
             driverInfo.style.display = 'block';
             
             // Update driver details
@@ -765,16 +915,21 @@ class RiderInterface {
             const driverRating = driverInfo.querySelector('small');
             const vehicleInfo = driverInfo.querySelector('.small');
 
-            if (driverImg) driverImg.src = `https://via.placeholder.com/40x40/4a7c59/ffffff?text=${ride.driver.name.charAt(0)}`;
-            if (driverName) driverName.textContent = ride.driver.name;
-            if (driverRating) driverRating.textContent = `Rating: ${ride.driver.rating} ⭐`;
+            if (driverImg) driverImg.src = `https://via.placeholder.com/40x40/4a7c59/ffffff?text=${driverDetails.name.charAt(0)}`;
+            if (driverName) driverName.textContent = driverDetails.name;
+            if (driverRating) driverRating.textContent = `Rating: ${driverDetails.rating} ⭐`;
             if (vehicleInfo) {
                 vehicleInfo.innerHTML = `
-                    <i class="bi bi-car-front me-1"></i>${ride.driver.vehicle}<br>
-                    <i class="bi bi-clock me-1"></i>ETA: ${ride.driver.estimatedArrival} minutes
+                    <i class="bi bi-car-front me-1"></i>${driverDetails.vehicle}<br>
+                    <i class="bi bi-clock me-1"></i>ETA: ${ride.distance || 5} minutes
                 `;
             }
+        } else if (driverInfo) {
+            driverInfo.style.display = 'none';
         }
+        
+        // Set current ride for tracking
+        this.currentRide = ride;
     }
 
     /**
@@ -846,23 +1001,45 @@ class RiderInterface {
      * Cancel ride
      */
     cancelRide() {
-        if (!this.currentRide) return;
+        // Check if we have an active ride request
+        if (this.currentRequestId && typeof appState !== 'undefined') {
+            if (confirm('Are you sure you want to cancel this ride request?')) {
+                // Remove ride request from shared state
+                appState.removeRideRequest(this.currentRequestId);
 
-        if (confirm('Are you sure you want to cancel this ride?')) {
-            // Update driver availability
-            this.campusData.updateDriverAvailability(this.currentRide.driver.id, true, null);
+                // Hide ride status card
+                const statusCard = document.getElementById('ride-status-card');
+                if (statusCard) {
+                    statusCard.style.display = 'none';
+                }
 
-            // Hide ride status card
-            const statusCard = document.getElementById('ride-status-card');
-            if (statusCard) {
-                statusCard.style.display = 'none';
+                // Show cancellation notification
+                this.showNotification('Ride request cancelled successfully', 'info');
+
+                // Clear current request
+                this.currentRequestId = null;
+                
+                // Stop polling
+                this.stopStatusPolling();
             }
+        } else if (this.currentRide) {
+            // Legacy support for active rides
+            if (confirm('Are you sure you want to cancel this ride?')) {
+                // Update driver availability
+                this.campusData.updateDriverAvailability(this.currentRide.driver.id, true, null);
 
-            // Show cancellation notification
-            this.showNotification('Ride cancelled successfully', 'info');
+                // Hide ride status card
+                const statusCard = document.getElementById('ride-status-card');
+                if (statusCard) {
+                    statusCard.style.display = 'none';
+                }
 
-            // Clear current ride
-            this.currentRide = null;
+                // Show cancellation notification
+                this.showNotification('Ride cancelled successfully', 'info');
+
+                // Clear current ride
+                this.currentRide = null;
+            }
         }
     }
 

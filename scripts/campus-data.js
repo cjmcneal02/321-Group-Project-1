@@ -1,6 +1,9 @@
 /**
- * Campus Data Module for Solar Chauffeur
+ * Campus Data Module for Tide Rides
  */
+
+// Import shared state management
+// Note: This will be loaded via script tag in HTML, so appState will be available globally
 
 class CampusData {
     constructor() {
@@ -248,59 +251,8 @@ class CampusData {
             }
         };
 
-        // Sample driver locations and availability
-        this.drivers = [
-            {
-                id: 'SC-001',
-                name: 'John Driver',
-                rating: 4.9,
-                vehicle: 'Solar Golf Cart Alpha',
-                location: 'Ferguson Student Center',
-                available: true,
-                batteryLevel: 85,
-                currentRide: null
-            },
-            {
-                id: 'SC-002',
-                name: 'Sarah Smith',
-                rating: 4.8,
-                vehicle: 'Solar Golf Cart Beta',
-                location: 'Gorgas Library',
-                available: true,
-                batteryLevel: 92,
-                currentRide: null
-            },
-            {
-                id: 'SC-003',
-                name: 'Mike Johnson',
-                rating: 4.7,
-                vehicle: 'Solar Golf Cart Gamma',
-                location: 'Tutwiler Hall',
-                available: false,
-                batteryLevel: 45,
-                currentRide: 'Ride-12345'
-            },
-            {
-                id: 'SC-004',
-                name: 'Emily Davis',
-                rating: 4.9,
-                vehicle: 'Solar Golf Cart Delta',
-                location: 'Student Recreation Center',
-                available: true,
-                batteryLevel: 78,
-                currentRide: null
-            },
-            {
-                id: 'SC-005',
-                name: 'David Wilson',
-                rating: 4.6,
-                vehicle: 'Solar Golf Cart Epsilon',
-                location: 'Burke Dining Hall',
-                available: true,
-                batteryLevel: 88,
-                currentRide: null
-            }
-        ];
+        // Drivers are now managed by the shared AppState instance
+        // No longer maintaining a local drivers array
 
         // Popular pickup/dropoff combinations (Real UA routes)
         this.popularRoutes = [
@@ -352,7 +304,11 @@ class CampusData {
      * @returns {Array} Available drivers
      */
     getAvailableDrivers() {
-        return this.drivers.filter(driver => driver.available);
+        if (typeof appState !== 'undefined') {
+            return appState.getDrivers().filter(driver => driver.available);
+        }
+        console.warn('AppState not available, returning empty array');
+        return [];
     }
 
     /**
@@ -361,7 +317,11 @@ class CampusData {
      * @returns {Object|null} Driver object or null
      */
     getDriverById(driverId) {
-        return this.drivers.find(driver => driver.id === driverId) || null;
+        if (typeof appState !== 'undefined') {
+            return appState.getDrivers().find(driver => driver.id === driverId) || null;
+        }
+        console.warn('AppState not available, returning null');
+        return null;
     }
 
     /**
@@ -371,10 +331,13 @@ class CampusData {
      * @param {string|null} rideId - Current ride ID
      */
     updateDriverAvailability(driverId, available, rideId = null) {
-        const driver = this.getDriverById(driverId);
-        if (driver) {
-            driver.available = available;
-            driver.currentRide = rideId;
+        if (typeof appState !== 'undefined') {
+            appState.updateDriver(driverId, {
+                available: available,
+                currentRide: rideId
+            });
+        } else {
+            console.warn('AppState not available, cannot update driver availability');
         }
     }
 

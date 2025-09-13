@@ -371,6 +371,12 @@
                             <strong>Cart Size:</strong><br>
                             <span id="modal-cart-size">Medium</span>
                         </div>
+                        <div class="col-12" id="driver-eta-section" style="display: none;">
+                            <div class="alert alert-success">
+                                <i class="bi bi-clock me-2"></i>
+                                <strong>Estimated Driver Arrival:</strong> <span id="driver-eta">5 minutes</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -397,6 +403,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <!-- Core JavaScript Modules -->
+    <script src="./scripts/app-state.js"></script>
     <script src="./scripts/campus-data.js"></script>
     <script src="./scripts/shortest-path.js"></script>
     <script src="./scripts/location-services.js"></script>
