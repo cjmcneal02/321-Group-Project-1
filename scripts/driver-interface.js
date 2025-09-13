@@ -21,7 +21,9 @@ class DriverPortal {
     this.initializeElements();
     this.bindEvents();
     this.updateUI();
-    this.initializeMap();
+    
+    // Update requests UI immediately on load
+    this.updateRequestsUI();
     
     // Start real-time polling for requests
     this.startRequestPolling();
@@ -43,7 +45,6 @@ class DriverPortal {
     this.startRideBtn = document.getElementById('startRideBtn');
     this.noRideState = document.getElementById('noRideState');
     this.activeRideState = document.getElementById('activeRideState');
-    this.demoRideBtn = document.getElementById('demoRideBtn');
     
     // Active ride elements
     this.passengerName = document.getElementById('passengerName');
@@ -76,23 +77,14 @@ class DriverPortal {
     // Status toggle
     this.toggleStatusBtn.addEventListener('click', () => this.toggleStatus());
     
-    // Demo ride
-    this.demoRideBtn.addEventListener('click', () => this.startDemoRide());
-    
     // Active ride controls
     this.arrivedBtn.addEventListener('click', () => this.arrivedAtPickup());
     this.startTripBtn.addEventListener('click', () => this.startTrip());
     this.completeRideBtn.addEventListener('click', () => this.completeRide());
   }
 
-  initializeMap() {
-    if (typeof L !== 'undefined') {
-      this.rideMap = L.map('rideMap').setView([33.209717, -87.546836], 16);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(this.rideMap);
-    }
+  initializeChatInterface() {
+    // Chat interface will be created dynamically when ride is accepted
   }
 
   toggleStatus() {
@@ -110,75 +102,82 @@ class DriverPortal {
     }
   }
 
-  startDemoRide() {
-    if (!this.isAvailable) {
-      this.showNotification('Please go available first to start a ride', 'warning');
-      return;
-    }
-
-    // Create a demo ride with real campus locations
-    const locations = Object.keys(this.campusData.getLocations());
-    const pickup = locations[Math.floor(Math.random() * locations.length)];
-    let dropoff = locations[Math.floor(Math.random() * locations.length)];
-    
-    // Ensure different pickup and dropoff
-    while (dropoff === pickup) {
-      dropoff = locations[Math.floor(Math.random() * locations.length)];
-    }
-
-    this.currentRide = {
-      id: 'RIDE-' + Date.now(),
-      passengerName: 'Demo Passenger',
-      pickupLocation: pickup,
-      dropoffLocation: dropoff,
-      distance: this.calculateDistance(pickup, dropoff),
-      fare: this.campusData.calculateBaseFare(pickup, dropoff),
-      startTime: new Date()
-    };
-
-    this.hasActiveRide = true;
-    this.updateActiveRideDisplay();
-    this.updateUI();
-    this.showMapRoute();
-    this.showNotification('Demo ride started!', 'success');
-  }
 
   calculateDistance(from, to) {
     const paths = this.campusData.getPaths();
     return paths[from] && paths[from][to] ? paths[from][to] : 5;
   }
 
-  showMapRoute() {
-    if (!this.rideMap || !this.currentRide) return;
-
-    const pickupCoords = this.campusData.getLocationCoordinates(this.currentRide.pickupLocation);
-    const dropoffCoords = this.campusData.getLocationCoordinates(this.currentRide.dropoffLocation);
-
-    if (pickupCoords && dropoffCoords) {
-      // Clear existing markers
-      this.rideMap.eachLayer(layer => {
-        if (layer instanceof L.Marker) {
-          this.rideMap.removeLayer(layer);
-        }
-      });
-
-      // Add pickup marker
-      L.marker([pickupCoords.lat, pickupCoords.lng])
-        .addTo(this.rideMap)
-        .bindPopup(`Pickup: ${this.currentRide.pickupLocation}`);
-
-      // Add dropoff marker
-      L.marker([dropoffCoords.lat, dropoffCoords.lng])
-        .addTo(this.rideMap)
-        .bindPopup(`Dropoff: ${this.currentRide.dropoffLocation}`);
-
-      // Fit map to show both markers
-      const group = new L.featureGroup([
-        L.marker([pickupCoords.lat, pickupCoords.lng]),
-        L.marker([dropoffCoords.lat, dropoffCoords.lng])
-      ]);
-      this.rideMap.fitBounds(group.getBounds().pad(0.1));
+  showChatInterface(rideId) {
+    // Create chat interface if it doesn't exist
+    let chatContainer = document.getElementById('driver-chat-container');
+    if (!chatContainer) {
+      chatContainer = document.createElement('div');
+      chatContainer.id = 'driver-chat-container';
+      chatContainer.className = 'chat-container mt-3';
+      chatContainer.innerHTML = `
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Rider Communication</h6>
+            <button class="btn btn-sm btn-outline-secondary" onclick="driverPortal.hideChatInterface()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+          <div class="card-body p-0">
+            <div class="quick-chat-buttons p-3 border-bottom">
+              <div class="row g-2">
+                <div class="col-6">
+                  <button class="btn btn-outline-primary btn-sm w-100" onclick="driverPortal.sendQuickMessage('${rideId}', 'On my way!')">
+                    <i class="bi bi-car-front me-1"></i>On my way!
+                  </button>
+                </div>
+                <div class="col-6">
+                  <button class="btn btn-outline-primary btn-sm w-100" onclick="driverPortal.sendQuickMessage('${rideId}', '2 minutes away')">
+                    <i class="bi bi-clock me-1"></i>2 min away
+                  </button>
+                </div>
+                <div class="col-6">
+                  <button class="btn btn-outline-primary btn-sm w-100" onclick="driverPortal.sendQuickMessage('${rideId}', 'I have arrived')">
+                    <i class="bi bi-geo-alt me-1"></i>I have arrived
+                  </button>
+                </div>
+                <div class="col-6">
+                  <button class="btn btn-outline-primary btn-sm w-100" onclick="driverPortal.sendQuickMessage('${rideId}', 'Starting trip now')">
+                    <i class="bi bi-play me-1"></i>Starting trip
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div id="driver-chat-messages" class="chat-messages p-3" style="height: 200px; overflow-y: auto;">
+              <!-- Messages will be loaded here -->
+            </div>
+            <div class="chat-input p-3 border-top">
+              <div class="input-group">
+                <input type="text" id="driver-chat-input" class="form-control" placeholder="Type a message...">
+                <button class="btn btn-primary" id="driver-send-message-btn">
+                  <i class="bi bi-send"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Insert after active ride state
+      const activeRideState = document.getElementById('activeRideState');
+      if (activeRideState) {
+        activeRideState.appendChild(chatContainer);
+      }
+      
+      // Bind chat events
+      this.bindDriverChatEvents(rideId);
     }
+    
+    // Load existing messages
+    this.loadDriverChatMessages(rideId);
+    
+    // Start polling for new messages
+    this.startDriverChatPolling(rideId);
   }
 
   updateActiveRideDisplay() {
@@ -244,12 +243,27 @@ class DriverPortal {
 
     // Update AppState - clear active ride and make driver available
     if (typeof appState !== 'undefined') {
+      // Log completed ride to history before clearing
+      appState.addRideToHistory(this.currentRide);
+      
+      // Send completion message to rider
+      const completionMessage = {
+        rideId: this.currentRide.id,
+        sender: 'driver',
+        senderName: this.currentDriver.name,
+        content: 'Ride completed! Please confirm completion.'
+      };
+      appState.addChatMessage(completionMessage);
+      
       appState.setActiveRide(null);
       appState.updateDriver(this.currentDriver.id, {
         available: true,
         currentRide: null
       });
     }
+    
+    // Hide chat interface
+    this.hideChatInterface();
     
     // Reset ride state
     this.hasActiveRide = false;
@@ -278,10 +292,10 @@ class DriverPortal {
    * Start real-time polling for ride requests
    */
   startRequestPolling() {
-    // Check for requests every 2 seconds
+    // Check for requests every 1 second for faster updates
     this.requestPollingInterval = setInterval(() => {
       this._checkForRequests();
-    }, 2000);
+    }, 1000);
   }
 
   /**
@@ -355,7 +369,7 @@ class DriverPortal {
     this.updateActiveRideDisplay();
     this.updateUI();
     this.updateRequestsUI();
-    this.showMapRoute();
+    this.showChatInterface(newActiveRide.id);
     this.showNotification(`Accepted ride for ${request.riderName}`, 'success');
   }
 
@@ -436,7 +450,15 @@ class DriverPortal {
     this.noRequestsState.classList.add('d-none');
     this.requestsList.classList.remove('d-none');
     
-    this.requestsList.innerHTML = requests.map(request => {
+    // Clear the list completely before rebuilding
+    this.requestsList.innerHTML = '';
+    
+    // Deduplicate requests by ID to prevent duplicates
+    const uniqueRequests = requests.filter((request, index, self) => 
+      index === self.findIndex(r => r.id === request.id)
+    );
+    
+    this.requestsList.innerHTML = uniqueRequests.map(request => {
       const requestTime = new Date(request.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
       const distance = this.calculateDistance(request.pickupLocation, request.dropoffLocation);
       
@@ -513,6 +535,123 @@ class DriverPortal {
         <td><span class="badge bg-success">${ride.status}</span></td>
       </tr>
     `).join('');
+  }
+
+  /**
+   * Hide chat interface
+   */
+  hideChatInterface() {
+    const chatContainer = document.getElementById('driver-chat-container');
+    if (chatContainer) {
+      chatContainer.remove();
+    }
+    this.stopDriverChatPolling();
+  }
+
+  /**
+   * Bind driver chat events
+   * @param {string} rideId - Active ride ID
+   */
+  bindDriverChatEvents(rideId) {
+    const sendBtn = document.getElementById('driver-send-message-btn');
+    const chatInput = document.getElementById('driver-chat-input');
+    
+    if (sendBtn && chatInput) {
+      sendBtn.addEventListener('click', () => this.sendDriverMessage(rideId));
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.sendDriverMessage(rideId);
+        }
+      });
+    }
+  }
+
+  /**
+   * Send a quick message
+   * @param {string} rideId - Active ride ID
+   * @param {string} message - Quick message content
+   */
+  sendQuickMessage(rideId, message) {
+    const messageObj = {
+      rideId: rideId,
+      sender: 'driver',
+      senderName: this.currentDriver.name,
+      content: message
+    };
+    
+    appState.addChatMessage(messageObj);
+    this.loadDriverChatMessages(rideId);
+  }
+
+  /**
+   * Send a driver chat message
+   * @param {string} rideId - Active ride ID
+   */
+  sendDriverMessage(rideId) {
+    const chatInput = document.getElementById('driver-chat-input');
+    if (!chatInput || !chatInput.value.trim()) return;
+    
+    const message = {
+      rideId: rideId,
+      sender: 'driver',
+      senderName: this.currentDriver.name,
+      content: chatInput.value.trim()
+    };
+    
+    appState.addChatMessage(message);
+    chatInput.value = '';
+    this.loadDriverChatMessages(rideId);
+  }
+
+  /**
+   * Load driver chat messages
+   * @param {string} rideId - Active ride ID
+   */
+  loadDriverChatMessages(rideId) {
+    const messagesContainer = document.getElementById('driver-chat-messages');
+    if (!messagesContainer) return;
+    
+    const messages = appState.getChatMessages(rideId);
+    messagesContainer.innerHTML = messages.map(msg => `
+      <div class="message ${msg.sender === 'driver' ? 'text-end' : 'text-start'} mb-2">
+        <div class="d-inline-block p-2 rounded ${msg.sender === 'driver' ? 'bg-primary text-white' : 'bg-light'}">
+          <small class="d-block text-muted">${msg.senderName}</small>
+          ${msg.content}
+        </div>
+      </div>
+    `).join('');
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  /**
+   * Start polling for driver chat messages
+   * @param {string} rideId - Active ride ID
+   */
+  startDriverChatPolling(rideId) {
+    this.stopDriverChatPolling();
+    this.driverChatPollingInterval = setInterval(() => {
+      this.loadDriverChatMessages(rideId);
+    }, 1000);
+  }
+
+  /**
+   * Stop polling for driver chat messages
+   */
+  stopDriverChatPolling() {
+    if (this.driverChatPollingInterval) {
+      clearInterval(this.driverChatPollingInterval);
+      this.driverChatPollingInterval = null;
+    }
+  }
+
+  /**
+   * Manually refresh requests list
+   */
+  refreshRequests() {
+    this.updateRequestsUI();
+    this.showNotification('Requests refreshed', 'info');
   }
 
   showNotification(message, type = 'info') {

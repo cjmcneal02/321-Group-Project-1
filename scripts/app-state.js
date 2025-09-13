@@ -60,7 +60,9 @@ class AppState {
                 }
             ],
             rideRequests: [],
-            activeRide: null
+            activeRide: null,
+            rideHistory: [],
+            chatMessages: []
         };
     }
 
@@ -111,6 +113,22 @@ class AppState {
      * @param {Object} request - Ride request object
      */
     addRideRequest(request) {
+        // Check if a similar request already exists (same rider, pickup, dropoff within last 30 seconds)
+        const now = new Date();
+        const thirtySecondsAgo = new Date(now.getTime() - 30000);
+        
+        const duplicateRequest = this.state.rideRequests.find(existingRequest => 
+            existingRequest.riderName === request.riderName &&
+            existingRequest.pickupLocation === request.pickupLocation &&
+            existingRequest.dropoffLocation === request.dropoffLocation &&
+            new Date(existingRequest.timestamp) > thirtySecondsAgo
+        );
+        
+        if (duplicateRequest) {
+            console.log('Duplicate request prevented for:', request.riderName);
+            return duplicateRequest.id;
+        }
+        
         const requestWithId = {
             ...request,
             id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -160,6 +178,60 @@ class AppState {
      */
     removeRideRequest(requestId) {
         this.state.rideRequests = this.state.rideRequests.filter(req => req.id !== requestId);
+        this.saveState();
+    }
+
+    /**
+     * Add a completed ride to history
+     * @param {Object} rideData - Completed ride data object
+     */
+    addRideToHistory(rideData) {
+        const rideWithTimestamp = {
+            ...rideData,
+            completedAt: new Date().toISOString()
+        };
+        this.state.rideHistory.push(rideWithTimestamp);
+        this.saveState();
+    }
+
+    /**
+     * Get ride history
+     * @returns {Array} Array of completed ride objects
+     */
+    getRideHistory() {
+        return this.state.rideHistory;
+    }
+
+    /**
+     * Add a chat message
+     * @param {Object} message - Chat message object with sender, content, timestamp
+     */
+    addChatMessage(message) {
+        const messageWithId = {
+            ...message,
+            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date().toISOString()
+        };
+        this.state.chatMessages.push(messageWithId);
+        this.saveState();
+        return messageWithId.id;
+    }
+
+    /**
+     * Get chat messages for a specific ride
+     * @param {string} rideId - Ride ID to get messages for
+     * @returns {Array} Array of chat messages
+     */
+    getChatMessages(rideId) {
+        return this.state.chatMessages.filter(msg => msg.rideId === rideId);
+    }
+
+    /**
+     * Clear chat messages for a specific ride
+     * @param {string} rideId - Ride ID to clear messages for
+     */
+    clearChatMessages(rideId) {
+        this.state.chatMessages = this.state.chatMessages.filter(msg => msg.rideId !== rideId);
         this.saveState();
     }
 

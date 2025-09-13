@@ -91,6 +91,12 @@ class RiderInterface {
             trackBtn.addEventListener('click', () => this.trackRide());
         }
 
+        // Debug button (temporary)
+        const debugBtn = document.getElementById('debug-btn');
+        if (debugBtn) {
+            debugBtn.addEventListener('click', () => this.debugAppState());
+        }
+
         // Use current location button
         const useCurrentLocationBtn = document.getElementById('use-current-location-btn');
         if (useCurrentLocationBtn) {
@@ -722,7 +728,8 @@ class RiderInterface {
 
             // Check if AppState is available
             if (typeof appState === 'undefined') {
-                this.showNotification('System unavailable. Please try again later.', 'danger');
+                console.error('AppState is undefined in confirmRide method');
+                this.showNotification('System unavailable. Please refresh the page and try again.', 'danger');
                 return;
             }
 
@@ -747,8 +754,8 @@ class RiderInterface {
             // Show success notification
             this.showNotification('Ride request submitted successfully! Searching for a driver...', 'success');
 
-            // Show searching status
-            this.showSearchingStatus(requestId, rideRequest);
+            // Show full-screen loading modal
+            this.showFullScreenLoadingModal(requestId, rideRequest);
             
             // Start polling for driver assignment
             this.startStatusPolling();
@@ -767,25 +774,56 @@ class RiderInterface {
         if (typeof appState === 'undefined' || !this.currentRequestId) return;
         
         const activeRide = appState.getActiveRide();
+        const rideRequests = appState.getRideRequests();
         
-        if (activeRide && activeRide.id === 'RIDE-' + this.currentRequestId) {
-            // Driver has accepted the request!
+        // Check if our request was removed (driver declined or accepted)
+        const ourRequest = rideRequests.find(req => req.id === this.currentRequestId);
+        
+        if (!ourRequest) {
+            // Our request was removed - check if it became an active ride
+            const expectedRideId = 'RIDE-' + this.currentRequestId;
+            
+            if (activeRide && activeRide.id === expectedRideId) {
+                // Driver accepted! Redirect to active ride page
             this.stopStatusPolling();
-            
-            // Get driver details
-            const driverDetails = appState.getDrivers().find(driver => driver.id === activeRide.driverId);
-            
-            if (driverDetails) {
-                // Update UI with driver information
-                this.showRideStatusCard(activeRide, driverDetails);
-                this.showNotification(`Driver ${driverDetails.name} has accepted your ride!`, 'success');
+                this.hideFullScreenLoadingModal();
+                
+                // Show success message before redirect
+                this.showNotification('Driver found! Redirecting to ride page...', 'success');
+                
+                // Small delay to show the notification
+                setTimeout(() => {
+                    window.location.href = `./active-ride.html?rideId=${activeRide.id}`;
+                }, 1000);
+                
+                // Clear current request ID since we now have an active ride
+                this.currentRequestId = null;
             } else {
-                this.showNotification('Driver assigned!', 'success');
-                this.showRideStatusCard(activeRide, null);
+                // Request was declined or removed
+                this.stopStatusPolling();
+                this.hideFullScreenLoadingModal();
+                this.showNotification('No driver was available for your ride request.', 'warning');
+                this.currentRequestId = null;
             }
+        } else {
+            // Request still exists, check if there's an active ride with our request ID
+            const expectedRideId = 'RIDE-' + this.currentRequestId;
+            if (activeRide && activeRide.id === expectedRideId) {
+                // Driver accepted! Redirect to active ride page
+                this.stopStatusPolling();
+                this.hideFullScreenLoadingModal();
+                
+                // Show success message before redirect
+                this.showNotification('Driver found! Redirecting to ride page...', 'success');
+                
+                // Small delay to show the notification
+                setTimeout(() => {
+                    window.location.href = `./active-ride.html?rideId=${activeRide.id}`;
+                }, 1000);
             
             // Clear current request ID since we now have an active ride
             this.currentRequestId = null;
+            }
         }
     }
 
@@ -813,49 +851,273 @@ class RiderInterface {
     }
 
     /**
-     * Show searching status for ride request
+     * Show full-screen loading modal for ride request
      * @param {string} requestId - Ride request ID
      * @param {Object} rideRequest - Ride request object
      */
-    showSearchingStatus(requestId, rideRequest) {
-        const statusCard = document.getElementById('ride-status-card');
-        if (statusCard) {
-            statusCard.style.display = 'block';
-            
-            // Update status card to show searching state
-            const statusTitle = statusCard.querySelector('.card-title');
-            const statusText = statusCard.querySelector('.card-text');
-            const driverInfo = document.getElementById('driver-info');
-            
-            if (statusTitle) {
-                statusTitle.textContent = 'Searching for Driver...';
-            }
-            
-            if (statusText) {
-                statusText.innerHTML = `
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
-                            <span class="visually-hidden">Loading...</span>
+    showFullScreenLoadingModal(requestId, rideRequest) {
+        // Create full-screen loading modal
+        const loadingModalHtml = `
+            <div class="modal fade" id="full-screen-loading-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content" style="background: linear-gradient(135deg, #9E1B32 0%, #C41E3A 50%, #FFFFFF 100%);">
+                        <div class="modal-body d-flex flex-column justify-content-center align-items-center text-white">
+                            <div class="text-center">
+                                <!-- Logo/Icon -->
+                                <div class="mb-4">
+                                    <i class="bi bi-car-front-fill" style="font-size: 4rem; opacity: 0.8;"></i>
+                                </div>
+                                
+                                <!-- Main Loading Animation -->
+                                <div class="mb-4">
+                                    <div class="spinner-border spinner-border-lg" role="status" style="width: 3rem; height: 3rem;">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Status Text -->
+                                <h3 class="mb-3 fw-bold">Finding Your Driver</h3>
+                                <p class="lead mb-4">We're searching for the best driver near you...</p>
+                                
+                                <!-- Ride Details Card -->
+                                <div class="card" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2);">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title mb-3">
+                                            <i class="bi bi-map me-2"></i>Your Ride Details
+                                        </h6>
+                                        <div class="row text-start">
+                                            <div class="col-6">
+                                                <div class="mb-2">
+                                                    <strong>From:</strong><br>
+                                                    <small>${rideRequest.pickupLocation}</small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <strong>Passengers:</strong><br>
+                                                    <small>${rideRequest.passengerCount}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-2">
+                                                    <strong>To:</strong><br>
+                                                    <small>${rideRequest.dropoffLocation}</small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <strong>Fare:</strong><br>
+                                                    <small>$${rideRequest.estimatedFare.toFixed(2)}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Indicators -->
+                                <div class="mt-4">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="loading-step active" id="step-1">
+                                                <i class="bi bi-search d-block mb-2"></i>
+                                                <small>Searching</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="loading-step" id="step-2">
+                                                <i class="bi bi-person-check d-block mb-2"></i>
+                                                <small>Driver Found</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="loading-step" id="step-3">
+                                                <i class="bi bi-car-front d-block mb-2"></i>
+                                                <small>Ride Active</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cancel Button -->
+                                <div class="mt-4">
+                                    <button class="btn btn-outline-light" onclick="riderInterface.cancelRideRequest('${requestId}')">
+                                        <i class="bi bi-x-circle me-2"></i>Cancel Request
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <span>Finding the best driver for your ride</span>
                     </div>
-                    <div class="small text-muted">
-                        <strong>From:</strong> ${rideRequest.pickupLocation}<br>
-                        <strong>To:</strong> ${rideRequest.dropoffLocation}<br>
-                        <strong>Passengers:</strong> ${rideRequest.passengerCount}<br>
-                        <strong>Estimated Fare:</strong> $${rideRequest.estimatedFare.toFixed(2)}
+                </div>
+            </div>
+        `;
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', loadingModalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('full-screen-loading-modal'));
+        modal.show();
+        
+        // Store current request for potential cancellation
+        this.currentRequestId = requestId;
+        
+        // Set timeout for driver search (30 seconds)
+        this.driverSearchTimeout = setTimeout(() => {
+            if (this.currentRequestId === requestId) {
+                this.showDriverSearchTimeout();
+            }
+        }, 30000);
+        
+        // Add CSS for loading steps
+        const style = document.createElement('style');
+        style.textContent = `
+            .loading-step {
+                opacity: 0.5;
+                transition: opacity 0.3s ease;
+            }
+            .loading-step.active {
+                opacity: 1;
+                color: #fff;
+            }
+            .loading-step i {
+                font-size: 1.5rem;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Hide full-screen loading modal
+     */
+    hideFullScreenLoadingModal() {
+        // Clear timeout
+        if (this.driverSearchTimeout) {
+            clearTimeout(this.driverSearchTimeout);
+            this.driverSearchTimeout = null;
+        }
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('full-screen-loading-modal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Remove modal from DOM
+        setTimeout(() => {
+            const modalElement = document.getElementById('full-screen-loading-modal');
+            if (modalElement) {
+                modalElement.remove();
+            }
+        }, 300);
+    }
+
+    /**
+     * Show driver search timeout message
+     */
+    showDriverSearchTimeout() {
+        this.stopStatusPolling();
+        this.hideFullScreenLoadingModal();
+        
+        // Show timeout message with options
+        const timeoutModalHtml = `
+            <div class="modal fade" id="driver-timeout-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">
+                                <i class="bi bi-clock-history me-2"></i>Still Searching for Driver
+                            </h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-car-front text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                            <h6>No driver has accepted your ride yet</h6>
+                            <p class="text-muted">This could mean:</p>
+                            <ul class="list-unstyled text-start">
+                                <li><i class="bi bi-check-circle text-success me-2"></i>All drivers are currently busy</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Drivers may need to refresh their page</li>
+                                <li><i class="bi bi-check-circle text-success me-2"></i>Try requesting again in a few minutes</li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" onclick="riderInterface.cancelRideRequest('${this.currentRequestId}')">
+                                <i class="bi bi-x-circle me-2"></i>Cancel Request
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="riderInterface.keepSearching()">
+                                <i class="bi bi-search me-2"></i>Keep Searching
+                            </button>
+                        </div>
+                    </div>
+                </div>
                     </div>
                 `;
-            }
-            
-            // Hide driver info section
-            if (driverInfo) {
-                driverInfo.style.display = 'none';
-            }
-            
-            // Store current request for potential cancellation
-            this.currentRequestId = requestId;
+        
+        document.body.insertAdjacentHTML('beforeend', timeoutModalHtml);
+        
+        const modal = new bootstrap.Modal(document.getElementById('driver-timeout-modal'));
+        modal.show();
+    }
+
+    /**
+     * Keep searching for driver
+     */
+    keepSearching() {
+        // Hide timeout modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('driver-timeout-modal'));
+        if (modal) {
+            modal.hide();
         }
+        
+        // Remove modal from DOM
+        setTimeout(() => {
+            const modalElement = document.getElementById('driver-timeout-modal');
+            if (modalElement) {
+                modalElement.remove();
+            }
+        }, 300);
+        
+        // Show loading modal again
+        if (this.currentRequestId) {
+            // Get the original request data from AppState
+            const requests = appState.getRideRequests();
+            const request = requests.find(req => req.id === this.currentRequestId);
+            if (request) {
+                this.showFullScreenLoadingModal(this.currentRequestId, request);
+                this.startStatusPolling();
+            }
+        }
+    }
+
+    /**
+     * Cancel ride request
+     * @param {string} requestId - Request ID to cancel
+     */
+    cancelRideRequest(requestId) {
+        if (typeof appState !== 'undefined') {
+            appState.removeRideRequest(requestId);
+        }
+        
+        this.stopStatusPolling();
+        this.hideFullScreenLoadingModal();
+        this.currentRequestId = null;
+        
+        this.showNotification('Ride request cancelled', 'info');
+    }
+
+    /**
+     * Debug AppState (temporary method)
+     */
+    debugAppState() {
+        if (typeof appState === 'undefined') {
+            alert('AppState is not available');
+            return;
+        }
+        
+        const state = appState.getState();
+        const activeRide = appState.getActiveRide();
+        const requests = appState.getRideRequests();
+        
+        alert(`AppState Debug:
+Active Ride: ${activeRide ? activeRide.id : 'None'}
+Requests: ${requests.length}
+Current Request ID: ${this.currentRequestId || 'None'}
+Expected Ride ID: ${this.currentRequestId ? 'RIDE-' + this.currentRequestId : 'None'}`);
     }
 
     /**
@@ -868,6 +1130,243 @@ class RiderInterface {
         if (statusCard) {
             statusCard.style.display = 'block';
             this.updateRideStatusDisplay(ride, driverDetails);
+        }
+    }
+
+    /**
+     * Hide ride status card
+     */
+    hideRideStatusCard() {
+        const statusCard = document.getElementById('ride-status-card');
+        if (statusCard) {
+            statusCard.style.display = 'none';
+        }
+    }
+
+    /**
+     * Show chat interface for active ride
+     * @param {string} rideId - Active ride ID
+     */
+    showChatInterface(rideId) {
+        // Create chat interface if it doesn't exist
+        let chatContainer = document.getElementById('chat-container');
+        if (!chatContainer) {
+            chatContainer = document.createElement('div');
+            chatContainer.id = 'chat-container';
+            chatContainer.className = 'chat-container mt-3';
+            chatContainer.innerHTML = `
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Driver Communication</h6>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="riderInterface.hideChatInterface()">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="chat-messages" class="chat-messages p-3" style="height: 200px; overflow-y: auto;">
+                            <!-- Messages will be loaded here -->
+                        </div>
+                        <div class="chat-input p-3 border-top">
+                            <div class="input-group">
+                                <input type="text" id="chat-input" class="form-control" placeholder="Type a message...">
+                                <button class="btn btn-primary" id="send-message-btn">
+                                    <i class="bi bi-send"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after ride status card
+            const statusCard = document.getElementById('ride-status-card');
+            if (statusCard) {
+                statusCard.parentNode.insertBefore(chatContainer, statusCard.nextSibling);
+            }
+            
+            // Bind chat events
+            this.bindChatEvents(rideId);
+        }
+        
+        // Load existing messages
+        this.loadChatMessages(rideId);
+        
+        // Start polling for new messages
+        this.startChatPolling(rideId);
+    }
+
+    /**
+     * Hide chat interface
+     */
+    hideChatInterface() {
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+            chatContainer.remove();
+        }
+        this.stopChatPolling();
+    }
+
+    /**
+     * Bind chat events
+     * @param {string} rideId - Active ride ID
+     */
+    bindChatEvents(rideId) {
+        const sendBtn = document.getElementById('send-message-btn');
+        const chatInput = document.getElementById('chat-input');
+        
+        if (sendBtn && chatInput) {
+            sendBtn.addEventListener('click', () => this.sendMessage(rideId));
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage(rideId);
+                }
+            });
+        }
+    }
+
+    /**
+     * Send a chat message
+     * @param {string} rideId - Active ride ID
+     */
+    sendMessage(rideId) {
+        const chatInput = document.getElementById('chat-input');
+        if (!chatInput || !chatInput.value.trim()) return;
+        
+        const message = {
+            rideId: rideId,
+            sender: 'rider',
+            senderName: 'You',
+            content: chatInput.value.trim()
+        };
+        
+        appState.addChatMessage(message);
+        chatInput.value = '';
+        this.loadChatMessages(rideId);
+    }
+
+    /**
+     * Load chat messages
+     * @param {string} rideId - Active ride ID
+     */
+    loadChatMessages(rideId) {
+        const messagesContainer = document.getElementById('chat-messages');
+        if (!messagesContainer) return;
+        
+        const messages = appState.getChatMessages(rideId);
+        messagesContainer.innerHTML = messages.map(msg => `
+            <div class="message ${msg.sender === 'rider' ? 'text-end' : 'text-start'} mb-2">
+                <div class="d-inline-block p-2 rounded ${msg.sender === 'rider' ? 'bg-primary text-white' : 'bg-light'}">
+                    <small class="d-block text-muted">${msg.senderName}</small>
+                    ${msg.content}
+                </div>
+            </div>
+        `).join('');
+        
+        // Check for ride completion message
+        const completionMessage = messages.find(msg => 
+            msg.sender === 'driver' && 
+            msg.content.includes('Ride completed! Please confirm completion.')
+        );
+        
+        if (completionMessage && !document.getElementById('ride-completion-modal')) {
+            this.showRideCompletionModal(rideId);
+        }
+        
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    /**
+     * Show ride completion confirmation modal
+     * @param {string} rideId - Active ride ID
+     */
+    showRideCompletionModal(rideId) {
+        const modalHtml = `
+            <div class="modal fade" id="ride-completion-modal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-check-circle me-2"></i>Ride Completed!
+                            </h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-car-front-fill text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h6>Your ride has been completed successfully!</h6>
+                            <p class="text-muted">Please confirm the ride completion to finalize your trip.</p>
+                            <div class="alert alert-info">
+                                <strong>Thank you for using Tide Rides!</strong><br>
+                                Your feedback helps us improve our service.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-success" onclick="riderInterface.confirmRideCompletion('${rideId}')">
+                                <i class="bi bi-check me-2"></i>Confirm Completion
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('ride-completion-modal'));
+        modal.show();
+    }
+
+    /**
+     * Confirm ride completion
+     * @param {string} rideId - Active ride ID
+     */
+    confirmRideCompletion(rideId) {
+        // Hide chat interface
+        this.hideChatInterface();
+        
+        // Hide ride status card
+        this.hideRideStatusCard();
+        
+        // Clear chat messages for this ride
+        appState.clearChatMessages(rideId);
+        
+        // Hide modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ride-completion-modal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Remove modal from DOM
+        setTimeout(() => {
+            const modalElement = document.getElementById('ride-completion-modal');
+            if (modalElement) {
+                modalElement.remove();
+            }
+        }, 300);
+        
+        this.showNotification('Ride completed successfully! Thank you for using Tide Rides.', 'success');
+    }
+
+    /**
+     * Start polling for chat messages
+     * @param {string} rideId - Active ride ID
+     */
+    startChatPolling(rideId) {
+        this.stopChatPolling();
+        this.chatPollingInterval = setInterval(() => {
+            this.loadChatMessages(rideId);
+        }, 1000);
+    }
+
+    /**
+     * Stop polling for chat messages
+     */
+    stopChatPolling() {
+        if (this.chatPollingInterval) {
+            clearInterval(this.chatPollingInterval);
+            this.chatPollingInterval = null;
         }
     }
 

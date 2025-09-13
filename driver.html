@@ -142,11 +142,8 @@
                         <!-- No Active Ride State -->
                         <div id="noRideState" class="text-center py-5">
                             <i class="bi bi-car-front text-muted" style="font-size: 4rem;"></i>
-                            <h4 class="text-muted mt-3">No Active Ride</h4>
-                            <p class="text-muted">You'll see ride requests and active rides here</p>
-                            <button class="btn btn-outline-primary" id="demoRideBtn">
-                                <i class="bi bi-play-circle me-2"></i>Start Demo Ride
-                            </button>
+                              <h4 class="text-muted mt-3">No Active Ride</h4>
+                              <p class="text-muted">You'll see ride requests and active rides here</p>
                         </div>
 
                         <!-- Active Ride State -->
@@ -217,19 +214,19 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light border-0">
+                    <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
                             <i class="bi bi-bell me-2"></i>Incoming Ride Requests
                         </h5>
+                        <button class="btn btn-outline-primary btn-sm" id="refreshRequestsBtn" onclick="driverPortal.refreshRequests()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                        </button>
                     </div>
                     <div class="card-body p-4">
                         <div id="noRequestsState" class="text-center py-4">
-                            <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
-                            <h5 class="text-muted mt-3">No Pending Requests</h5>
-                            <p class="text-muted">New ride requests will appear here</p>
-                            <button class="btn btn-outline-primary" id="demoRequestBtn">
-                                <i class="bi bi-plus-circle me-2"></i>Generate Demo Request
-                            </button>
+                              <i class="bi bi-bell-slash text-muted" style="font-size: 3rem;"></i>
+                              <h5 class="text-muted mt-3">No Pending Requests</h5>
+                             <p class="text-muted">New ride requests will appear here</p>
                         </div>
 
                         <div id="requestsList" class="d-none">
