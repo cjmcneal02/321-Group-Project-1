@@ -61,7 +61,55 @@ class AppState {
             ],
             rideRequests: [],
             activeRide: null,
-            rideHistory: [],
+            rideHistory: [
+                {
+                    id: 'RIDE-001',
+                    riderName: 'James Wilson',
+                    pickupLocation: 'Ferguson Center',
+                    dropoffLocation: 'Presidential Village',
+                    passengerCount: 1,
+                    cartSize: 'Standard',
+                    estimatedFare: 5.00,
+                    driverId: 'SC-001',
+                    driverName: 'Stacy Streets',
+                    status: 'completed',
+                    startTime: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+                    distance: '8 min',
+                    completedAt: new Date(Date.now() - 86400000 + 480000).toISOString() // Yesterday + 8 min
+                },
+                {
+                    id: 'RIDE-002',
+                    riderName: 'James Wilson',
+                    pickupLocation: 'Hewson Hall',
+                    dropoffLocation: 'Student Center',
+                    passengerCount: 2,
+                    cartSize: 'Standard',
+                    estimatedFare: 10.00,
+                    driverId: 'SC-002',
+                    driverName: 'Sarah Smith',
+                    status: 'completed',
+                    startTime: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                    distance: '6 min',
+                    completedAt: new Date(Date.now() - 172800000 + 360000).toISOString() // 2 days ago + 6 min
+                },
+                {
+                    id: 'RIDE-003',
+                    riderName: 'James Wilson',
+                    pickupLocation: 'Library',
+                    dropoffLocation: 'Dorm Complex',
+                    passengerCount: 1,
+                    cartSize: 'Standard',
+                    estimatedFare: 5.00,
+                    driverId: 'SC-001',
+                    driverName: 'Stacy Streets',
+                    status: 'completed',
+                    startTime: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+                    distance: '7 min',
+                    completedAt: new Date(Date.now() - 259200000 + 420000).toISOString() // 3 days ago + 7 min
+                }
+                // Note: In a real app, you'd have 15 rides total, but for demo purposes, 
+                // we'll start with 3 and let the system build up naturally
+            ],
             chatMessages: []
         };
     }
