@@ -27,7 +27,8 @@ class MapIntegration {
         this.retryCount = 0;
         this.maxRetries = 50; // 5 seconds max wait time
         
-        this.waitForLeaflet();
+        // Don't auto-initialize - let rider-interface.js control when to initialize
+        // this.waitForLeaflet();
     }
 
     /**
@@ -56,7 +57,7 @@ class MapIntegration {
             if (this.initialized || this.map) {
                 return;
             }
-
+            
             // Check if Leaflet is available
             if (typeof L === 'undefined') {
                 throw new Error('Leaflet is not loaded');
@@ -67,17 +68,45 @@ class MapIntegration {
             if (!mapContainer) {
                 throw new Error('Map container not found');
             }
+            
+            // Check if there's already a map instance in the container
+            if (mapContainer._leaflet_id) {
+                return;
+            }
+
+            // Ensure container has proper dimensions
+            if (mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
+                mapContainer.style.width = '100%';
+                mapContainer.style.height = '400px';
+            }
 
             if (mapContainer._leaflet_id) {
+                // Properly remove existing map instance
+                if (this.map) {
+                    this.map.remove();
+                    this.map = null;
+                }
                 mapContainer._leaflet_id = undefined;
                 mapContainer.innerHTML = '';
             }
 
+
             // University of Alabama campus center coordinates
             const campusCenter = this.campusData.getCampusCenter();
             
-            // Initialize map centered on UA campus
-            this.map = L.map('campus-map').setView([campusCenter.lat, campusCenter.lng], 16);
+            // Initialize map with proper interaction settings
+            this.map = L.map('campus-map', {
+                center: [campusCenter.lat, campusCenter.lng], 
+                zoom: 16,
+                dragging: true,        // Enable map dragging
+                touchZoom: true,       // Enable touch zoom
+                doubleClickZoom: true, // Enable double-click zoom
+                scrollWheelZoom: true, // Enable scroll wheel zoom
+                boxZoom: true,         // Enable box zoom
+                keyboard: true,        // Enable keyboard navigation
+                zoomControl: true      // Show zoom controls
+            });
+            
             
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -183,7 +212,25 @@ class MapIntegration {
      * Setup map click handlers
      */
     setupMapClickHandlers() {
+        // Prevent marker placement after a drag - Leaflet fires a click after moveend
+        let suppressNextClick = false;
+        this.map.on('movestart', () => {
+            suppressNextClick = true;
+            this.map.getContainer().style.cursor = 'grabbing';
+        });
+        this.map.on('moveend', () => {
+            setTimeout(() => {
+                suppressNextClick = false;
+            }, 150);
+            this.map.getContainer().style.cursor = 'grab';
+        });
+        
+        // Single-click to show location selection popup
         this.map.on('click', (e) => {
+            if (suppressNextClick) {
+                return;
+            }
+            
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
             
@@ -192,6 +239,44 @@ class MapIntegration {
             
             // Show location selection popup
             this.showLocationSelectionPopup(lat, lng, nearestBuilding);
+        });
+        
+        // Prevent context menu on right click
+        this.map.getContainer().addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        // Setup touch handlers for mobile
+        this.setupTouchHandlers();
+    }
+    
+    /**
+     * Setup touch event handlers for mobile devices
+     */
+    setupTouchHandlers() {
+        let touchStartTime = 0;
+        let touchMoved = false;
+        
+        this.map.on('touchstart', () => {
+            touchStartTime = Date.now();
+            touchMoved = false;
+        });
+        
+        this.map.on('touchmove', () => {
+            touchMoved = true;
+        });
+        
+        this.map.on('touchend', (e) => {
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Only treat as click if quick tap without movement
+            if (touchDuration < 300 && !touchMoved) {
+                // Handle as click
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                const nearestBuilding = this.locationServices.getNearestCampusBuildingName(lat, lng);
+                this.showLocationSelectionPopup(lat, lng, nearestBuilding);
+            }
         });
     }
 
@@ -202,7 +287,16 @@ class MapIntegration {
      * @param {string} nearestBuilding - Nearest building name
      */
     showLocationSelectionPopup(lat, lng, nearestBuilding) {
-        const popup = L.popup()
+        // Close any existing popups first
+        this.map.closePopup();
+        
+        // Add small delay to ensure drag has finished
+        setTimeout(() => {
+            const popup = L.popup({
+                closeOnClick: true,
+                autoClose: true,
+                closeButton: true
+            })
             .setLatLng([lat, lng])
             .setContent(`
                 <div class="text-center">
@@ -218,6 +312,7 @@ class MapIntegration {
                 </div>
             `)
             .openOn(this.map);
+        }, 100);
     }
 
     /**
