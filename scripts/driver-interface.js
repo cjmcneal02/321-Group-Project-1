@@ -390,7 +390,7 @@ class DriverPortal {
   updateUI() {
     // Update welcome message
     if (this.currentDriver) {
-      this.welcomeMessage.textContent = `Welcome, ${this.currentDriver.name}`;
+      this.welcomeMessage.textContent = `${this.currentDriver.name}`;
       this.vehicleInfo.textContent = `${this.currentDriver.vehicle} #${this.currentDriver.id}`;
     }
     
