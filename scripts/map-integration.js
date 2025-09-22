@@ -5,6 +5,8 @@
 
 class MapIntegration {
     constructor(campusData, locationServices) {
+        console.log('MapIntegration constructor called');
+        
         // Validate dependencies
         if (!campusData) {
             throw new Error('CampusData instance is required');
@@ -27,21 +29,30 @@ class MapIntegration {
         this.retryCount = 0;
         this.maxRetries = 50; // 5 seconds max wait time
         
-        this.waitForLeaflet();
+        // Always update global reference to the latest instance
+        window.mapIntegration = this;
+        
+        // Don't auto-initialize - let rider-interface.js control when to initialize
+        // this.waitForLeaflet();
     }
 
     /**
      * Wait for Leaflet to be available
      */
     waitForLeaflet() {
+        console.log('waitForLeaflet called');
         const checkLeaflet = () => {
             this.retryCount++;
+            console.log('Checking Leaflet availability, attempt:', this.retryCount, 'Leaflet available:', typeof L !== 'undefined');
             
             if (typeof L !== 'undefined') {
+                console.log('Leaflet found, initializing map');
                 this.initMap();
             } else if (this.retryCount < this.maxRetries) {
+                console.log('Leaflet not ready, retrying in 100ms');
                 setTimeout(checkLeaflet, 100);
             } else {
+                console.error('Leaflet failed to load after', this.maxRetries, 'attempts');
                 this.showMapError('Leaflet map library failed to load. Please refresh the page.');
             }
         };
@@ -53,10 +64,12 @@ class MapIntegration {
      */
     initMap() {
         try {
+            console.log('initMap called - initialized:', this.initialized, 'map exists:', !!this.map);
             if (this.initialized || this.map) {
+                console.log('Map already initialized, returning');
                 return;
             }
-
+            
             // Check if Leaflet is available
             if (typeof L === 'undefined') {
                 throw new Error('Leaflet is not loaded');
@@ -67,17 +80,46 @@ class MapIntegration {
             if (!mapContainer) {
                 throw new Error('Map container not found');
             }
+            
+            // Check if there's already a map in the container
+            if (mapContainer._leaflet_id) {
+                console.log('Map container already has a Leaflet instance, skipping initialization');
+                return;
+            }
+
+            // Ensure container has proper dimensions
+            if (mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
+                mapContainer.style.width = '100%';
+                mapContainer.style.height = '400px';
+            }
 
             if (mapContainer._leaflet_id) {
+                // Properly remove existing map instance
+                if (this.map) {
+                    this.map.remove();
+                    this.map = null;
+                }
                 mapContainer._leaflet_id = undefined;
                 mapContainer.innerHTML = '';
             }
 
+
             // University of Alabama campus center coordinates
             const campusCenter = this.campusData.getCampusCenter();
             
-            // Initialize map centered on UA campus
-            this.map = L.map('campus-map').setView([campusCenter.lat, campusCenter.lng], 16);
+            // Initialize map with proper interaction settings
+            this.map = L.map('campus-map', {
+                center: [campusCenter.lat, campusCenter.lng], 
+                zoom: 16,
+                dragging: true,        // Enable map dragging
+                touchZoom: true,       // Enable touch zoom
+                doubleClickZoom: true, // Enable double-click zoom
+                scrollWheelZoom: true, // Enable scroll wheel zoom
+                boxZoom: true,         // Enable box zoom
+                keyboard: true,        // Enable keyboard navigation
+                zoomControl: true      // Show zoom controls
+            });
+            
             
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -95,8 +137,10 @@ class MapIntegration {
             this.addMapControls();
             
             this.initialized = true;
+            console.log('Map initialization completed successfully');
             
         } catch (error) {
+            console.error('Map initialization failed:', error);
             this.showMapError(error.message);
         }
     }
@@ -183,7 +227,25 @@ class MapIntegration {
      * Setup map click handlers
      */
     setupMapClickHandlers() {
+        // Prevent marker placement after a drag - Leaflet fires a click after moveend
+        let suppressNextClick = false;
+        this.map.on('movestart', () => {
+            suppressNextClick = true;
+            this.map.getContainer().style.cursor = 'grabbing';
+        });
+        this.map.on('moveend', () => {
+            setTimeout(() => {
+                suppressNextClick = false;
+            }, 150);
+            this.map.getContainer().style.cursor = 'grab';
+        });
+        
+        // Single-click to show location selection popup
         this.map.on('click', (e) => {
+            if (suppressNextClick) {
+                return;
+            }
+            
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
             
@@ -192,6 +254,44 @@ class MapIntegration {
             
             // Show location selection popup
             this.showLocationSelectionPopup(lat, lng, nearestBuilding);
+        });
+        
+        // Prevent context menu on right click
+        this.map.getContainer().addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        // Setup touch handlers for mobile
+        this.setupTouchHandlers();
+    }
+    
+    /**
+     * Setup touch event handlers for mobile devices
+     */
+    setupTouchHandlers() {
+        let touchStartTime = 0;
+        let touchMoved = false;
+        
+        this.map.on('touchstart', () => {
+            touchStartTime = Date.now();
+            touchMoved = false;
+        });
+        
+        this.map.on('touchmove', () => {
+            touchMoved = true;
+        });
+        
+        this.map.on('touchend', (e) => {
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // Only treat as click if quick tap without movement
+            if (touchDuration < 300 && !touchMoved) {
+                // Handle as click
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                const nearestBuilding = this.locationServices.getNearestCampusBuildingName(lat, lng);
+                this.showLocationSelectionPopup(lat, lng, nearestBuilding);
+            }
         });
     }
 
@@ -202,7 +302,16 @@ class MapIntegration {
      * @param {string} nearestBuilding - Nearest building name
      */
     showLocationSelectionPopup(lat, lng, nearestBuilding) {
-        const popup = L.popup()
+        // Close any existing popups first
+        this.map.closePopup();
+        
+        // Add small delay to ensure drag has finished
+        setTimeout(() => {
+            const popup = L.popup({
+                closeOnClick: true,
+                autoClose: true,
+                closeButton: true
+            })
             .setLatLng([lat, lng])
             .setContent(`
                 <div class="text-center">
@@ -218,6 +327,7 @@ class MapIntegration {
                 </div>
             `)
             .openOn(this.map);
+        }, 100);
     }
 
     /**
@@ -253,6 +363,11 @@ class MapIntegration {
      * @param {string} buildingName - Building name
      */
     setPickupLocation(buildingName) {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot set pickup location');
+            return;
+        }
+        
         const coords = this.campusData.getLocationCoordinates(buildingName);
         if (coords) {
             this.setPickupFromCoords(coords.lat, coords.lng, buildingName);
@@ -264,6 +379,11 @@ class MapIntegration {
      * @param {string} buildingName - Building name
      */
     setDropoffLocation(buildingName) {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot set dropoff location');
+            return;
+        }
+        
         const coords = this.campusData.getLocationCoordinates(buildingName);
         if (coords) {
             this.setDropoffFromCoords(coords.lat, coords.lng, buildingName);
@@ -277,13 +397,24 @@ class MapIntegration {
      * @param {string} locationName - Location name
      */
     setPickupFromCoords(lat, lng, locationName) {
+        // Use global mapIntegration if this instance isn't ready
+        const mapInstance = (this.map && this.initialized) ? this : window.mapIntegration;
+        
+        if (!mapInstance || !mapInstance.map || !mapInstance.initialized) {
+            console.log('No initialized map instance available for pickup marker');
+            return;
+        }
+        
+        // Reset retry count on success
+        this.pickupRetryCount = 0;
+        
         // Remove existing pickup marker
-        if (this.pickupMarker) {
-            this.map.removeLayer(this.pickupMarker);
+        if (mapInstance.pickupMarker) {
+            mapInstance.map.removeLayer(mapInstance.pickupMarker);
         }
         
         // Create new pickup marker
-        this.pickupMarker = L.marker([lat, lng], {
+        mapInstance.pickupMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
                 className: 'custom-div-icon pickup-pin',
@@ -304,12 +435,12 @@ class MapIntegration {
                 iconSize: [50, 60],
                 iconAnchor: [25, 55]
             })
-        }).addTo(this.map);
+        }).addTo(mapInstance.map);
 
         // Add drag event listener for pickup marker
-        this.pickupMarker.on('dragend', (e) => {
+        mapInstance.pickupMarker.on('dragend', (e) => {
             const newPos = e.target.getLatLng();
-            const nearestBuilding = this.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
+            const nearestBuilding = mapInstance.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
             document.getElementById('pickup-location').value = nearestBuilding;
         });
         
@@ -318,7 +449,7 @@ class MapIntegration {
         document.getElementById('pickup-location').classList.add('is-valid');
         
         // Close any open popups
-        this.map.closePopup();
+        mapInstance.map.closePopup();
     }
 
     /**
@@ -328,13 +459,24 @@ class MapIntegration {
      * @param {string} locationName - Location name
      */
     setDropoffFromCoords(lat, lng, locationName) {
+        // Use global mapIntegration if this instance isn't ready
+        const mapInstance = (this.map && this.initialized) ? this : window.mapIntegration;
+        
+        if (!mapInstance || !mapInstance.map || !mapInstance.initialized) {
+            console.log('No initialized map instance available for dropoff marker');
+            return;
+        }
+        
+        // Reset retry count on success
+        this.dropoffRetryCount = 0;
+        
         // Remove existing dropoff marker
-        if (this.dropoffMarker) {
-            this.map.removeLayer(this.dropoffMarker);
+        if (mapInstance.dropoffMarker) {
+            mapInstance.map.removeLayer(mapInstance.dropoffMarker);
         }
         
         // Create new dropoff marker
-        this.dropoffMarker = L.marker([lat, lng], {
+        mapInstance.dropoffMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
                 className: 'custom-div-icon dropoff-pin',
@@ -355,12 +497,12 @@ class MapIntegration {
                 iconSize: [50, 60],
                 iconAnchor: [25, 55]
             })
-        }).addTo(this.map);
+        }).addTo(mapInstance.map);
 
         // Add drag event listener for dropoff marker
-        this.dropoffMarker.on('dragend', (e) => {
+        mapInstance.dropoffMarker.on('dragend', (e) => {
             const newPos = e.target.getLatLng();
-            const nearestBuilding = this.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
+            const nearestBuilding = mapInstance.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
             document.getElementById('dropoff-location').value = nearestBuilding;
         });
         
@@ -369,13 +511,18 @@ class MapIntegration {
         document.getElementById('dropoff-location').classList.add('is-valid');
         
         // Close any open popups
-        this.map.closePopup();
+        mapInstance.map.closePopup();
     }
 
     /**
      * Use current GPS location
      */
     async useCurrentLocation() {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot get current location');
+            return;
+        }
+        
         try {
             const locationData = await this.locationServices.getCurrentLocationWithBuilding();
             

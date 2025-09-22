@@ -62,9 +62,8 @@ class RiderInterface {
             this.updateRideStatistics();
         }, 500);
         
-        setTimeout(() => {
+        // Initialize map immediately if dependencies are ready
             this.initializeMap();
-        }, 100);
     }
 
     /**
@@ -755,7 +754,7 @@ class RiderInterface {
 
             // Show full-screen loading modal
             this.showFullScreenLoadingModal(requestId, rideRequest);
-            
+
             // Start polling for driver assignment
             this.startStatusPolling();
 
@@ -1505,21 +1504,21 @@ class RiderInterface {
             }
         } else if (this.currentRide) {
             // Legacy support for active rides
-            if (confirm('Are you sure you want to cancel this ride?')) {
-                // Update driver availability
-                this.campusData.updateDriverAvailability(this.currentRide.driver.id, true, null);
+        if (confirm('Are you sure you want to cancel this ride?')) {
+            // Update driver availability
+            this.campusData.updateDriverAvailability(this.currentRide.driver.id, true, null);
 
-                // Hide ride status card
-                const statusCard = document.getElementById('ride-status-card');
-                if (statusCard) {
-                    statusCard.style.display = 'none';
-                }
+            // Hide ride status card
+            const statusCard = document.getElementById('ride-status-card');
+            if (statusCard) {
+                statusCard.style.display = 'none';
+            }
 
-                // Show cancellation notification
-                this.showNotification('Ride cancelled successfully', 'info');
+            // Show cancellation notification
+            this.showNotification('Ride cancelled successfully', 'info');
 
-                // Clear current ride
-                this.currentRide = null;
+            // Clear current ride
+            this.currentRide = null;
             }
         }
     }
@@ -1541,7 +1540,7 @@ class RiderInterface {
         const pickup = document.getElementById('pickup-location').value.trim();
         const dropoff = document.getElementById('dropoff-location').value.trim();
         const passengerCount = this.getPassengerCount();
-        
+
         if (pickup && dropoff && 
             this.locationServices.isValidLocation(pickup) && 
             this.locationServices.isValidLocation(dropoff)) {
@@ -1702,8 +1701,20 @@ class RiderInterface {
             
             if (Object.values(deps).every(Boolean)) {
                 if (!this.mapIntegration) {
-                    this.mapIntegration = new MapIntegration(this.campusData, this.locationServices);
-                    window.mapIntegration = this.mapIntegration;
+                    // Check if global instance already exists and is initialized
+                    if (window.mapIntegration && window.mapIntegration.initialized) {
+                        console.log('Using existing global mapIntegration instance');
+                        this.mapIntegration = window.mapIntegration;
+                    } else {
+                        console.log('Creating new MapIntegration instance');
+                        this.mapIntegration = new MapIntegration(this.campusData, this.locationServices);
+                        window.mapIntegration = this.mapIntegration;
+                        
+                        // Initialize the map after creating the instance
+                        this.mapIntegration.waitForLeaflet();
+                    }
+                } else if (!this.mapIntegration.initialized) {
+                    this.mapIntegration.waitForLeaflet();
                 }
             } else {
                 setTimeout(() => this.initializeMap(), 500);
