@@ -277,38 +277,12 @@
                         </h5>
                     </div>
                     <div class="card-body p-0">
-                        <div id="rider-list" class="list-group list-group-flush">
-                            <!-- Rider 1 -->
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="bi bi-person-fill text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1">Alex Johnson</h6>
-                                        <small class="text-muted">Student ID: 12345</small>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="text-center">
-                                        <div class="fw-bold text-primary">12</div>
-                                        <small class="text-muted">Rides</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-success">$60.00</div>
-                                        <small class="text-muted">Total Spent</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-info">4.8</div>
-                                        <small class="text-muted">Avg Rating</small>
-                                    </div>
-                                    <span class="badge bg-success">Regular</span>
-                                </div>
-                            </div>
-
-                            <!-- Rider 2 -->
+                        <!-- VIP Riders -->
+                        <div class="px-3 pt-3">
+                            <h6 class="mb-2 text-muted"><i class="bi bi-star-fill me-2 text-warning"></i>VIP Riders</h6>
+                        </div>
+                        <div id="rider-list-vip" class="list-group list-group-flush">
+                            <!-- Maria Garcia (VIP) -->
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -332,73 +306,12 @@
                                     </div>
                                     <div class="text-center">
                                         <div class="fw-bold text-info">4.9</div>
-                                        <small class="text-muted">Avg Rating</small>
+                                        <small class="text-muted">Avg Rating Given</small>
                                     </div>
                                     <span class="badge bg-primary">VIP</span>
                                 </div>
                             </div>
-
-                            <!-- Rider 3 -->
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="bi bi-person-fill text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1">James Wilson</h6>
-                                        <small class="text-muted">Student ID: 12347</small>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="text-center">
-                                        <div class="fw-bold text-primary">15</div>
-                                        <small class="text-muted">Rides</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-success">$75.00</div>
-                                        <small class="text-muted">Total Spent</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-info">4.7</div>
-                                        <small class="text-muted">Avg Rating</small>
-                                    </div>
-                                    <span class="badge bg-success">Regular</span>
-                                </div>
-                            </div>
-
-                            <!-- Rider 4 -->
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="bi bi-person-fill text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1">Sarah Chen</h6>
-                                        <small class="text-muted">Student ID: 12348</small>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="text-center">
-                                        <div class="fw-bold text-primary">6</div>
-                                        <small class="text-muted">Rides</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-success">$30.00</div>
-                                        <small class="text-muted">Total Spent</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold text-info">4.9</div>
-                                        <small class="text-muted">Avg Rating</small>
-                                    </div>
-                                    <span class="badge bg-warning">New</span>
-                                </div>
-                            </div>
-
-                            <!-- Rider 5 -->
+                            <!-- Michael Brown (VIP) -->
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -422,13 +335,113 @@
                                     </div>
                                     <div class="text-center">
                                         <div class="fw-bold text-info">4.8</div>
-                                        <small class="text-muted">Avg Rating</small>
+                                        <small class="text-muted">Avg Rating Given</small>
                                     </div>
                                     <span class="badge bg-primary">VIP</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Rider 6 -->
+                        <!-- Regular Riders -->
+                        <div class="px-3 pt-3">
+                            <h6 class="mb-2 text-muted"><i class="bi bi-people-fill me-2 text-success"></i>Regular Riders</h6>
+                        </div>
+                        <div id="rider-list-regular" class="list-group list-group-flush">
+                            <!-- Alex Johnson (Regular) -->
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Alex Johnson</h6>
+                                        <small class="text-muted">Student ID: 12345</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-primary">12</div>
+                                        <small class="text-muted">Rides</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-success">$60.00</div>
+                                        <small class="text-muted">Total Spent</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-info">4.8</div>
+                                        <small class="text-muted">Avg Rating Given</small>
+                                    </div>
+                                    <span class="badge bg-success">Regular</span>
+                                </div>
+                            </div>
+                            <!-- James Wilson (Regular) -->
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">James Wilson</h6>
+                                        <small class="text-muted">Student ID: 12347</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-primary">15</div>
+                                        <small class="text-muted">Rides</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-success">$75.00</div>
+                                        <small class="text-muted">Total Spent</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-info">4.7</div>
+                                        <small class="text-muted">Avg Rating Given</small>
+                                    </div>
+                                    <span class="badge bg-success">Regular</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- New Riders -->
+                        <div class="px-3 pt-3">
+                            <h6 class="mb-2 text-muted"><i class="bi bi-plus-circle-fill me-2 text-warning"></i>New Riders</h6>
+                        </div>
+                        <div id="rider-list-new" class="list-group list-group-flush">
+                            <!-- Sarah Chen (New) -->
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person-fill text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Sarah Chen</h6>
+                                        <small class="text-muted">Student ID: 12348</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-primary">6</div>
+                                        <small class="text-muted">Rides</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-success">$30.00</div>
+                                        <small class="text-muted">Total Spent</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="fw-bold text-info">4.9</div>
+                                        <small class="text-muted">Avg Rating Given</small>
+                                    </div>
+                                    <span class="badge bg-warning">New</span>
+                                </div>
+                            </div>
+                            <!-- Emma Davis (New) -->
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -452,11 +465,12 @@
                                     </div>
                                     <div class="text-center">
                                         <div class="fw-bold text-info">4.6</div>
-                                        <small class="text-muted">Avg Rating</small>
+                                        <small class="text-muted">Avg Rating Given</small>
                                     </div>
                                     <span class="badge bg-warning">New</span>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>

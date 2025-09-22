@@ -40,6 +40,17 @@ body {
     border-left: 4px solid var(--primary-green);
     background: linear-gradient(135deg, rgba(45, 90, 39, 0.05) 0%, rgba(45, 90, 39, 0.1) 100%);
 }
+/* Keep summary metrics on a single line with horizontal scroll if needed */
+#summary-banner {
+    white-space: nowrap;
+    overflow-x: auto;
+}
+#summary-banner .row {
+    flex-wrap: nowrap;
+}
+#summary-banner .row > [class^="col-"] {
+    white-space: nowrap;
+}
 
 /* Action buttons */
 #actions .btn {
