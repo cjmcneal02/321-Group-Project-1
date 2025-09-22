@@ -1625,11 +1625,18 @@ class RiderInterface {
             
             if (Object.values(deps).every(Boolean)) {
                 if (!this.mapIntegration) {
-                    this.mapIntegration = new MapIntegration(this.campusData, this.locationServices);
-                    window.mapIntegration = this.mapIntegration;
-                    
-                    // Initialize the map after creating the instance
-                    this.mapIntegration.waitForLeaflet();
+                    // Check if global instance already exists and is initialized
+                    if (window.mapIntegration && window.mapIntegration.initialized) {
+                        console.log('Using existing global mapIntegration instance');
+                        this.mapIntegration = window.mapIntegration;
+                    } else {
+                        console.log('Creating new MapIntegration instance');
+                        this.mapIntegration = new MapIntegration(this.campusData, this.locationServices);
+                        window.mapIntegration = this.mapIntegration;
+                        
+                        // Initialize the map after creating the instance
+                        this.mapIntegration.waitForLeaflet();
+                    }
                 } else if (!this.mapIntegration.initialized) {
                     this.mapIntegration.waitForLeaflet();
                 }

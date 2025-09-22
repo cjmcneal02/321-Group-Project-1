@@ -5,6 +5,8 @@
 
 class MapIntegration {
     constructor(campusData, locationServices) {
+        console.log('MapIntegration constructor called');
+        
         // Validate dependencies
         if (!campusData) {
             throw new Error('CampusData instance is required');
@@ -27,6 +29,9 @@ class MapIntegration {
         this.retryCount = 0;
         this.maxRetries = 50; // 5 seconds max wait time
         
+        // Always update global reference to the latest instance
+        window.mapIntegration = this;
+        
         // Don't auto-initialize - let rider-interface.js control when to initialize
         // this.waitForLeaflet();
     }
@@ -35,14 +40,19 @@ class MapIntegration {
      * Wait for Leaflet to be available
      */
     waitForLeaflet() {
+        console.log('waitForLeaflet called');
         const checkLeaflet = () => {
             this.retryCount++;
+            console.log('Checking Leaflet availability, attempt:', this.retryCount, 'Leaflet available:', typeof L !== 'undefined');
             
             if (typeof L !== 'undefined') {
+                console.log('Leaflet found, initializing map');
                 this.initMap();
             } else if (this.retryCount < this.maxRetries) {
+                console.log('Leaflet not ready, retrying in 100ms');
                 setTimeout(checkLeaflet, 100);
             } else {
+                console.error('Leaflet failed to load after', this.maxRetries, 'attempts');
                 this.showMapError('Leaflet map library failed to load. Please refresh the page.');
             }
         };
@@ -54,7 +64,9 @@ class MapIntegration {
      */
     initMap() {
         try {
+            console.log('initMap called - initialized:', this.initialized, 'map exists:', !!this.map);
             if (this.initialized || this.map) {
+                console.log('Map already initialized, returning');
                 return;
             }
             
@@ -69,8 +81,9 @@ class MapIntegration {
                 throw new Error('Map container not found');
             }
             
-            // Check if there's already a map instance in the container
+            // Check if there's already a map in the container
             if (mapContainer._leaflet_id) {
+                console.log('Map container already has a Leaflet instance, skipping initialization');
                 return;
             }
 
@@ -124,8 +137,10 @@ class MapIntegration {
             this.addMapControls();
             
             this.initialized = true;
+            console.log('Map initialization completed successfully');
             
         } catch (error) {
+            console.error('Map initialization failed:', error);
             this.showMapError(error.message);
         }
     }
@@ -348,6 +363,11 @@ class MapIntegration {
      * @param {string} buildingName - Building name
      */
     setPickupLocation(buildingName) {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot set pickup location');
+            return;
+        }
+        
         const coords = this.campusData.getLocationCoordinates(buildingName);
         if (coords) {
             this.setPickupFromCoords(coords.lat, coords.lng, buildingName);
@@ -359,6 +379,11 @@ class MapIntegration {
      * @param {string} buildingName - Building name
      */
     setDropoffLocation(buildingName) {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot set dropoff location');
+            return;
+        }
+        
         const coords = this.campusData.getLocationCoordinates(buildingName);
         if (coords) {
             this.setDropoffFromCoords(coords.lat, coords.lng, buildingName);
@@ -372,13 +397,24 @@ class MapIntegration {
      * @param {string} locationName - Location name
      */
     setPickupFromCoords(lat, lng, locationName) {
+        // Use global mapIntegration if this instance isn't ready
+        const mapInstance = (this.map && this.initialized) ? this : window.mapIntegration;
+        
+        if (!mapInstance || !mapInstance.map || !mapInstance.initialized) {
+            console.log('No initialized map instance available for pickup marker');
+            return;
+        }
+        
+        // Reset retry count on success
+        this.pickupRetryCount = 0;
+        
         // Remove existing pickup marker
-        if (this.pickupMarker) {
-            this.map.removeLayer(this.pickupMarker);
+        if (mapInstance.pickupMarker) {
+            mapInstance.map.removeLayer(mapInstance.pickupMarker);
         }
         
         // Create new pickup marker
-        this.pickupMarker = L.marker([lat, lng], {
+        mapInstance.pickupMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
                 className: 'custom-div-icon pickup-pin',
@@ -399,12 +435,12 @@ class MapIntegration {
                 iconSize: [50, 60],
                 iconAnchor: [25, 55]
             })
-        }).addTo(this.map);
+        }).addTo(mapInstance.map);
 
         // Add drag event listener for pickup marker
-        this.pickupMarker.on('dragend', (e) => {
+        mapInstance.pickupMarker.on('dragend', (e) => {
             const newPos = e.target.getLatLng();
-            const nearestBuilding = this.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
+            const nearestBuilding = mapInstance.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
             document.getElementById('pickup-location').value = nearestBuilding;
         });
         
@@ -413,7 +449,7 @@ class MapIntegration {
         document.getElementById('pickup-location').classList.add('is-valid');
         
         // Close any open popups
-        this.map.closePopup();
+        mapInstance.map.closePopup();
     }
 
     /**
@@ -423,13 +459,24 @@ class MapIntegration {
      * @param {string} locationName - Location name
      */
     setDropoffFromCoords(lat, lng, locationName) {
+        // Use global mapIntegration if this instance isn't ready
+        const mapInstance = (this.map && this.initialized) ? this : window.mapIntegration;
+        
+        if (!mapInstance || !mapInstance.map || !mapInstance.initialized) {
+            console.log('No initialized map instance available for dropoff marker');
+            return;
+        }
+        
+        // Reset retry count on success
+        this.dropoffRetryCount = 0;
+        
         // Remove existing dropoff marker
-        if (this.dropoffMarker) {
-            this.map.removeLayer(this.dropoffMarker);
+        if (mapInstance.dropoffMarker) {
+            mapInstance.map.removeLayer(mapInstance.dropoffMarker);
         }
         
         // Create new dropoff marker
-        this.dropoffMarker = L.marker([lat, lng], {
+        mapInstance.dropoffMarker = L.marker([lat, lng], {
             draggable: true,
             icon: L.divIcon({
                 className: 'custom-div-icon dropoff-pin',
@@ -450,12 +497,12 @@ class MapIntegration {
                 iconSize: [50, 60],
                 iconAnchor: [25, 55]
             })
-        }).addTo(this.map);
+        }).addTo(mapInstance.map);
 
         // Add drag event listener for dropoff marker
-        this.dropoffMarker.on('dragend', (e) => {
+        mapInstance.dropoffMarker.on('dragend', (e) => {
             const newPos = e.target.getLatLng();
-            const nearestBuilding = this.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
+            const nearestBuilding = mapInstance.locationServices.getNearestCampusBuildingName(newPos.lat, newPos.lng);
             document.getElementById('dropoff-location').value = nearestBuilding;
         });
         
@@ -464,13 +511,18 @@ class MapIntegration {
         document.getElementById('dropoff-location').classList.add('is-valid');
         
         // Close any open popups
-        this.map.closePopup();
+        mapInstance.map.closePopup();
     }
 
     /**
      * Use current GPS location
      */
     async useCurrentLocation() {
+        if (!this.map || !this.initialized) {
+            console.log('Map not ready, cannot get current location');
+            return;
+        }
+        
         try {
             const locationData = await this.locationServices.getCurrentLocationWithBuilding();
             
