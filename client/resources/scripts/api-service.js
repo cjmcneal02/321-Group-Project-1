@@ -2,7 +2,9 @@
 class ApiService {
     constructor() {
         this.baseUrl = 'http://localhost:5063/api'; // API server port
-        this.currentDriverId = 1; // Default driver ID for testing
+        this.currentDriverId = null; // Will be set when driver logs in
+        this.currentUserId = null; // Will be set when user logs in
+        this.currentUserRole = null; // Will be set when user logs in
     }
 
     // Ride Request Methods
@@ -76,7 +78,7 @@ class ApiService {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ driverId, rideRequestId: requestId })
+                body: JSON.stringify({ DriverId: driverId, RideRequestId: requestId })
             });
 
             if (!response.ok) {
@@ -291,6 +293,132 @@ class ApiService {
             console.error('Error finding nearest driver:', error);
             throw error;
         }
+    }
+
+    // User Management Methods
+    async login(username, password) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const user = await response.json();
+            this.currentUserId = user.id;
+            this.currentUserRole = user.role;
+            
+            // If user is a driver, set the driver ID
+            if (user.role === 'Driver' && user.driver) {
+                this.currentDriverId = user.driver.id;
+            }
+
+            return user;
+        } catch (error) {
+            console.error('Error logging in:', error);
+            throw error;
+        }
+    }
+
+    async getUsers() {
+        try {
+            const response = await fetch(`${this.baseUrl}/users`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            throw error;
+        }
+    }
+
+    async getUsersByRole(role) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/role/${role}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching users by role:', error);
+            throw error;
+        }
+    }
+
+    async createUser(userData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating user:', error);
+            throw error;
+        }
+    }
+
+    async updateUser(userId, userData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating user:', error);
+            throw error;
+        }
+    }
+
+    async deleteUser(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            throw error;
+        }
+    }
+
+    logout() {
+        this.currentUserId = null;
+        this.currentUserRole = null;
+        this.currentDriverId = null;
     }
 }
 

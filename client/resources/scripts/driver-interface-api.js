@@ -11,13 +11,112 @@ class DriverInterface {
             return;
         }
 
-        this.currentDriverId = 1; // Default driver ID
+        this.currentDriverId = null;
+        this.currentUser = null;
         this.currentRide = null;
         this.requestsPollingInterval = null;
         this.chatPollingInterval = null;
         this.currentRideId = null;
 
-        this.initializeInterface();
+        this.init();
+    }
+
+    async init() {
+        // Check if user is already logged in as a driver
+        if (apiService.currentUserId && apiService.currentUserRole === 'Driver') {
+            this.showDashboard();
+            this.loadDriverData();
+        } else {
+            this.showLogin();
+            await this.loadDriverUsers();
+        }
+    }
+
+    async loadDriverUsers() {
+        try {
+            const driverUsers = await apiService.getUsersByRole('Driver');
+            const select = document.getElementById('driver-select');
+            select.innerHTML = '<option value="">Select a driver...</option>';
+            
+            driverUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = `${user.firstName} ${user.lastName} (${user.username})`;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            this.showNotification('Failed to load driver accounts.', 'danger');
+        }
+    }
+
+    async loginDriver() {
+        const selectedDriver = document.getElementById('driver-select').value;
+
+        if (!selectedDriver) {
+            this.showNotification('Please select a driver account.', 'warning');
+            return;
+        }
+
+        try {
+            // Map selected driver to user data
+            let userData, driverId;
+            
+            if (selectedDriver === 'stacy') {
+                userData = {
+                    id: 2,
+                    username: 'stacy',
+                    role: 'Driver',
+                    firstName: 'Stacy',
+                    lastName: 'Streets'
+                };
+                driverId = 1;
+            } else if (selectedDriver === 'sarah') {
+                userData = {
+                    id: 3,
+                    username: 'sarah',
+                    role: 'Driver',
+                    firstName: 'Sarah',
+                    lastName: 'Smith'
+                };
+                driverId = 2;
+            }
+
+            this.currentUser = userData;
+            this.currentDriverId = driverId;
+            
+            apiService.currentUserId = userData.id;
+            apiService.currentUserRole = userData.role;
+            apiService.currentDriverId = driverId;
+
+            this.showDashboard();
+            this.loadDriverData();
+            this.showNotification('Login successful!', 'success');
+        } catch (error) {
+            this.showNotification('Login failed. Please try again.', 'danger');
+        }
+    }
+
+    logout() {
+        apiService.logout();
+        this.currentUser = null;
+        this.currentDriverId = null;
+        this.showLogin();
+        this.showNotification('Logged out successfully.', 'info');
+    }
+
+    showLogin() {
+        document.getElementById('driver-selection-section').style.display = 'block';
+        document.getElementById('driver-dashboard').style.display = 'none';
+    }
+
+    showDashboard() {
+        document.getElementById('driver-selection-section').style.display = 'none';
+        document.getElementById('driver-dashboard').style.display = 'block';
+    }
+
+    loadDriverData() {
+        this.updateDriverInfo();
+        this.startRequestsPolling();
     }
 
     /**
@@ -226,16 +325,18 @@ class DriverInterface {
      */
     async acceptRequest(requestId) {
         try {
+            console.log('Accepting ride request:', requestId, 'with driver ID:', this.currentDriverId);
             const ride = await apiService.acceptRideRequest(requestId, this.currentDriverId);
+            console.log('Ride accepted, received data:', ride);
             
             if (ride) {
                 this.currentRide = ride;
-                this.currentRideId = ride.Id;
+                this.currentRideId = ride.Id || ride.id;
                 
                 // Hide requests and show active ride
                 this.hideRequestsUI();
                 this.showActiveRideUI(ride);
-                this.showChatInterface(ride.Id);
+                this.showChatInterface(ride.Id || ride.id);
                 
                 this.showNotification('Ride accepted! Chat with your rider.', 'success');
             }
@@ -263,54 +364,67 @@ class DriverInterface {
      * Show active ride UI
      */
     showActiveRideUI(ride) {
+        console.log('Showing active ride UI with ride data:', ride);
+        
         const activeRideSection = document.getElementById('active-ride-section');
-        if (activeRideSection) {
-            activeRideSection.style.display = 'block';
-            activeRideSection.innerHTML = `
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Active Ride</h5>
+        if (!activeRideSection) {
+            console.error('Active ride section element not found');
+            return;
+        }
+
+        // Handle both camelCase and PascalCase property names
+        const riderName = ride.RiderName || ride.riderName || 'Unknown Rider';
+        const estimatedFare = ride.EstimatedFare || ride.estimatedFare || 0;
+        const pickupLocation = ride.PickupLocation || ride.pickupLocation || 'Unknown';
+        const dropoffLocation = ride.DropoffLocation || ride.dropoffLocation || 'Unknown';
+        const passengerCount = ride.PassengerCount || ride.passengerCount || 1;
+        const cartSize = ride.CartSize || ride.cartSize || 'Standard';
+
+        activeRideSection.style.display = 'block';
+        activeRideSection.innerHTML = `
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Active Ride</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Rider:</strong><br>
+                            <span>${riderName}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Fare:</strong><br>
+                            <span class="text-success">$${estimatedFare.toFixed(2)}</span>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Rider:</strong><br>
-                                <span>${ride.RiderName}</span>
-                            </div>
-                            <div class="col-6">
-                                <strong>Fare:</strong><br>
-                                <span class="text-success">$${ride.EstimatedFare.toFixed(2)}</span>
-                            </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>From:</strong><br>
+                            <span>${pickupLocation}</span>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>From:</strong><br>
-                                <span>${ride.PickupLocation}</span>
-                            </div>
-                            <div class="col-6">
-                                <strong>To:</strong><br>
-                                <span>${ride.DropoffLocation}</span>
-                            </div>
+                        <div class="col-6">
+                            <strong>To:</strong><br>
+                            <span>${dropoffLocation}</span>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Passengers:</strong><br>
-                                <span>${ride.PassengerCount}</span>
-                            </div>
-                            <div class="col-6">
-                                <strong>Cart Size:</strong><br>
-                                <span>${ride.CartSize}</span>
-                            </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Passengers:</strong><br>
+                            <span>${passengerCount}</span>
                         </div>
-                        <div class="text-center">
-                            <button class="btn btn-success btn-lg" onclick="driverInterface.completeRide()">
-                                <i class="bi bi-check-circle me-2"></i>Complete Ride
-                            </button>
+                        <div class="col-6">
+                            <strong>Cart Size:</strong><br>
+                            <span>${cartSize}</span>
                         </div>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-success btn-lg" onclick="driverInterface.completeRide()">
+                            <i class="bi bi-check-circle me-2"></i>Complete Ride
+                        </button>
                     </div>
                 </div>
-            `;
-        }
+            </div>
+        `;
     }
 
     /**
@@ -343,12 +457,12 @@ class DriverInterface {
                 return;
             }
 
-            const result = await apiService.completeRide(this.currentDriverId, this.currentRide.Id);
+            const result = await apiService.completeRide(this.currentDriverId, this.currentRide.Id || this.currentRide.id);
             
             if (result) {
                 // Send completion message to rider
                 await apiService.sendChatMessage(
-                    this.currentRide.Id,
+                    this.currentRide.Id || this.currentRide.id,
                     'driver',
                     'Stacy Streets',
                     'Ride completed! Please confirm completion.'
@@ -572,6 +686,30 @@ class DriverInterface {
             const alert = document.querySelector('.alert');
             if (alert) {
                 alert.remove();
+            }
+        }, 5000);
+    }
+
+    showNotification(message, type) {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.alert-notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed alert-notification`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
             }
         }, 5000);
     }

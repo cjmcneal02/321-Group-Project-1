@@ -40,11 +40,83 @@ class RiderInterface {
         
         this.mapIntegration = null;
         this.currentRide = null;
+        this.currentUser = null;
         this.rideHistory = [];
         this.locationWatchId = null;
         this.statusPollingInterval = null;
         this.driverSearchTimeout = null;
         
+        this.init();
+    }
+
+    async init() {
+        // Check if user is already logged in as a rider
+        if (apiService.currentUserId && apiService.currentUserRole === 'Rider') {
+            this.showDashboard();
+            this.loadRiderData();
+        } else {
+            this.showLogin();
+            await this.loadRiderUsers();
+        }
+    }
+
+    async loadRiderUsers() {
+        // No need to load from API - using hardcoded options
+    }
+
+    async loginRider() {
+        const selectedRider = document.getElementById('rider-select').value;
+
+        if (!selectedRider) {
+            this.showNotification('Please select a rider account.', 'warning');
+            return;
+        }
+
+        try {
+            // Map selected rider to user data
+            let userData;
+            
+            if (selectedRider === 'rider') {
+                userData = {
+                    id: 4,
+                    username: 'rider',
+                    role: 'Rider',
+                    firstName: 'James',
+                    lastName: 'Wilson'
+                };
+            }
+
+            this.currentUser = userData;
+            
+            apiService.currentUserId = userData.id;
+            apiService.currentUserRole = userData.role;
+
+            this.showDashboard();
+            this.loadRiderData();
+            this.showNotification('Login successful!', 'success');
+        } catch (error) {
+            this.showNotification('Login failed. Please try again.', 'danger');
+        }
+    }
+
+    logout() {
+        apiService.logout();
+        this.currentUser = null;
+        this.showLogin();
+        this.showNotification('Logged out successfully.', 'info');
+    }
+
+    showLogin() {
+        document.getElementById('rider-selection-section').style.display = 'block';
+        document.getElementById('rider-dashboard').style.display = 'none';
+    }
+
+    showDashboard() {
+        document.getElementById('rider-selection-section').style.display = 'none';
+        document.getElementById('rider-dashboard').style.display = 'block';
+    }
+
+    loadRiderData() {
         if (this.campusData && this.locationServices) {
             this.initializeInterface();
         }

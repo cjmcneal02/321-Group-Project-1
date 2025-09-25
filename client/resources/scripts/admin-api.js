@@ -1,216 +1,262 @@
-// Admin Dashboard - API Version
-let dashboardPollingInterval = null;
-
-function formatCurrency(amount) {
-  return amount.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
-}
-
-function getStatusBadgeClass(status) {
-  switch(status) {
-    case 'Active': return 'bg-success';
-    case 'On Ride': return 'bg-warning';
-    case 'Offline': return 'bg-danger';
-    default: return 'bg-secondary';
-  }
-}
-
-function renderDriverList(drivers, sortBy = 'rating') {
-  const list = document.getElementById('driver-list');
-  if (!list) return;
-  
-  list.innerHTML = '';
-
-  // Sort the drivers based on the selected criteria
-  const sortedDrivers = [...drivers].sort((a, b) => {
-    if (sortBy === 'avgTip') {
-      return b.AverageTip - a.AverageTip; // Highest tip first
+// Admin Interface for User Management
+class AdminInterface {
+    constructor() {
+        this.currentUser = null;
+        this.users = [];
+        this.init();
     }
-    return b.Rating - a.Rating; // Highest rating first
-  });
 
-  sortedDrivers.forEach((driver) => {
-    const item = document.createElement('div');
-    item.className = 'list-group-item d-flex justify-content-between align-items-center';
-    item.innerHTML = `
-      <div class="d-flex align-items-center">
-        <div class="me-3">
-          <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-            <i class="bi bi-person-fill text-white"></i>
-          </div>
-        </div>
-        <div>
-          <h6 class="mb-1">${driver.Name}</h6>
-          <small class="text-muted">Solar Cart #${driver.VehicleId}</small>
-        </div>
-      </div>
-      <div class="d-flex align-items-center gap-3">
-        <div class="text-center">
-          <div class="fw-bold text-primary">${driver.Rating.toFixed(1)}</div>
-          <small class="text-muted">Rating</small>
-        </div>
-        <div class="text-center">
-          <div class="fw-bold text-success">$${driver.AverageTip.toFixed(2)}</div>
-          <small class="text-muted">Avg Tip</small>
-        </div>
-        <div class="text-center">
-          <div class="fw-bold text-info">${driver.TotalRides}</div>
-          <small class="text-muted">Rides</small>
-        </div>
-        <span class="badge ${getStatusBadgeClass(driver.Status)}">${driver.Status}</span>
-      </div>
-    `;
-    list.appendChild(item);
-  });
-}
+    init() {
+        // Check if user is already logged in
+        if (apiService.currentUserId && apiService.currentUserRole === 'Admin') {
+            this.showDashboard();
+            this.loadUsers();
+        } else {
+            this.showLogin();
+        }
 
-async function renderDashboard() {
-  if (typeof apiService === 'undefined') {
-    console.warn('ApiService not available');
-    return;
-  }
-
-  try {
-    // Get live data from API
-    const drivers = await apiService.getDrivers();
-    const activeRide = await apiService.getActiveRide();
-    const rideRequests = await apiService.getRideRequests();
-
-    // Update driver list with live data
-    const driversWithStatus = drivers.map(driver => ({
-      ...driver,
-      Status: driver.IsAvailable ? 'Active' : 'On Ride'
-    }));
-
-    // Get current sort selection
-    const sortSelect = document.getElementById('driver-sort');
-    const currentSort = sortSelect ? sortSelect.value : 'rating';
-    
-    renderDriverList(driversWithStatus, currentSort);
-
-    // Update monthly summary banner
-    await updateMonthlySummary(driversWithStatus, activeRide, rideRequests);
-
-  } catch (error) {
-    console.error('Error rendering dashboard:', error);
-    showNotification('Failed to load dashboard data', 'danger');
-  }
-}
-
-async function updateMonthlySummary(drivers, activeRide, rideRequests) {
-  const summaryBanner = document.getElementById('summary-banner');
-  if (!summaryBanner) return;
-
-  const activeDrivers = drivers.filter(driver => driver.Status === 'Active').length;
-  const onRideDrivers = drivers.filter(driver => driver.Status === 'On Ride').length;
-  const pendingRequests = rideRequests.length;
-
-  // Get ride history for total rides and revenue
-  let totalRidesCompleted = 0;
-  let totalRevenue = 0;
-
-  try {
-    const rideHistory = await apiService.getRideHistory();
-    totalRidesCompleted = rideHistory.length;
-    totalRevenue = rideHistory.reduce((sum, ride) => sum + ride.EstimatedFare, 0);
-  } catch (error) {
-    console.error('Error loading ride history:', error);
-  }
-
-  const currentTime = new Date();
-  const monthName = currentTime.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-  summaryBanner.innerHTML = `
-    <div class="row text-center">
-      <div class="col-md-2">
-        <div class="h4 text-primary mb-0">${activeDrivers}</div>
-        <small class="text-muted">Active Drivers</small>
-      </div>
-      <div class="col-md-2">
-        <div class="h4 text-warning mb-0">${onRideDrivers}</div>
-        <small class="text-muted">On Ride</small>
-      </div>
-      <div class="col-md-2">
-        <div class="h4 text-info mb-0">${pendingRequests}</div>
-        <small class="text-muted">Pending Requests</small>
-      </div>
-      <div class="col-md-2">
-        <div class="h4 text-success mb-0">${totalRidesCompleted}</div>
-        <small class="text-muted">Total Rides Completed</small>
-      </div>
-      <div class="col-md-2">
-        <div class="h4 text-success mb-0">${formatCurrency(totalRevenue)}</div>
-        <small class="text-muted">Total Revenue</small>
-      </div>
-      <div class="col-md-2">
-        <div class="h4 text-secondary mb-0">${monthName}</div>
-        <small class="text-muted">Current Month</small>
-      </div>
-    </div>
-  `;
-}
-
-function startDashboardPolling() {
-  // Initial render
-  renderDashboard();
-  
-  // Set up polling every 5 seconds
-  dashboardPollingInterval = setInterval(renderDashboard, 5000);
-}
-
-function stopDashboardPolling() {
-  if (dashboardPollingInterval) {
-    clearInterval(dashboardPollingInterval);
-    dashboardPollingInterval = null;
-  }
-}
-
-function showNotification(message, type = 'info') {
-  const alertClass = {
-    'success': 'alert-success',
-    'danger': 'alert-danger',
-    'warning': 'alert-warning',
-    'info': 'alert-info'
-  }[type] || 'alert-info';
-
-  const notificationHtml = `
-    <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-         style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;" role="alert">
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML('beforeend', notificationHtml);
-
-  // Auto-dismiss after 5 seconds
-  setTimeout(() => {
-    const alert = document.querySelector('.alert');
-    if (alert) {
-      alert.remove();
+        // Setup event listeners
+        this.setupEventListeners();
     }
-  }, 5000);
+
+    setupEventListeners() {
+        // No form submission needed - using button onclick
+    }
+
+    async loginAdmin() {
+        const selectedAdmin = document.getElementById('admin-select').value;
+        
+        if (!selectedAdmin) {
+            this.showNotification('Please select an admin account.', 'warning');
+            return;
+        }
+
+        try {
+            // For demo purposes, directly set admin user
+            this.currentUser = {
+                id: 1,
+                username: 'admin',
+                role: 'Admin',
+                firstName: 'System',
+                lastName: 'Administrator'
+            };
+            
+            apiService.currentUserId = this.currentUser.id;
+            apiService.currentUserRole = this.currentUser.role;
+            
+            this.showDashboard();
+            await this.loadUsers();
+            this.showNotification('Login successful!', 'success');
+        } catch (error) {
+            this.showNotification('Login failed. Please try again.', 'danger');
+        }
+    }
+
+    logout() {
+        apiService.logout();
+        this.currentUser = null;
+        this.showLogin();
+        this.showNotification('Logged out successfully.', 'info');
+    }
+
+    showLogin() {
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('admin-dashboard').style.display = 'none';
+    }
+
+    showDashboard() {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('admin-dashboard').style.display = 'block';
+    }
+
+    async loadUsers() {
+        try {
+            this.users = await apiService.getUsers();
+            this.updateUsersTable();
+            this.updateSummary();
+        } catch (error) {
+            this.showNotification('Failed to load users.', 'danger');
+        }
+    }
+
+    updateUsersTable() {
+        const tbody = document.getElementById('users-table-body');
+        tbody.innerHTML = '';
+
+        this.users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.firstName} ${user.lastName}</td>
+                <td>${user.email}</td>
+                <td>
+                    <span class="badge ${this.getRoleBadgeClass(user.role)}">${user.role}</span>
+                </td>
+                <td>
+                    <span class="badge ${user.isActive ? 'bg-success' : 'bg-danger'}">
+                        ${user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="adminInterface.editUser(${user.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="adminInterface.deleteUser(${user.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    getRoleBadgeClass(role) {
+        switch (role) {
+            case 'Admin': return 'bg-danger';
+            case 'Driver': return 'bg-primary';
+            case 'Rider': return 'bg-success';
+            default: return 'bg-secondary';
+        }
+    }
+
+    updateSummary() {
+        const totalUsers = this.users.length;
+        const activeDrivers = this.users.filter(u => u.role === 'Driver' && u.isActive).length;
+        const activeRiders = this.users.filter(u => u.role === 'Rider' && u.isActive).length;
+        const admins = this.users.filter(u => u.role === 'Admin' && u.isActive).length;
+
+        document.getElementById('summary-users').textContent = totalUsers;
+        document.getElementById('summary-drivers').textContent = activeDrivers;
+        document.getElementById('summary-riders').textContent = activeRiders;
+        document.getElementById('summary-admins').textContent = admins;
+    }
+
+    showCreateUserModal() {
+        // Clear form
+        document.getElementById('create-user-form').reset();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+        modal.show();
+    }
+
+    async createUser() {
+        const userData = {
+            username: document.getElementById('create-username').value,
+            email: document.getElementById('create-email').value,
+            password: document.getElementById('create-password').value,
+            role: document.getElementById('create-role').value,
+            firstName: document.getElementById('create-firstname').value,
+            lastName: document.getElementById('create-lastname').value,
+            phoneNumber: document.getElementById('create-phone').value
+        };
+
+        try {
+            await apiService.createUser(userData);
+            await this.loadUsers();
+            
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createUserModal'));
+            modal.hide();
+            
+            this.showNotification('User created successfully!', 'success');
+        } catch (error) {
+            this.showNotification('Failed to create user. ' + error.message, 'danger');
+        }
+    }
+
+    editUser(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return;
+
+        // Populate form
+        document.getElementById('edit-user-id').value = user.id;
+        document.getElementById('edit-username').value = user.username;
+        document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-firstname').value = user.firstName;
+        document.getElementById('edit-lastname').value = user.lastName;
+        document.getElementById('edit-phone').value = user.phoneNumber;
+        document.getElementById('edit-role').value = user.role;
+        document.getElementById('edit-active').checked = user.isActive;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    }
+
+    async updateUser() {
+        const userId = document.getElementById('edit-user-id').value;
+        const userData = {
+            username: document.getElementById('edit-username').value,
+            email: document.getElementById('edit-email').value,
+            firstName: document.getElementById('edit-firstname').value,
+            lastName: document.getElementById('edit-lastname').value,
+            phoneNumber: document.getElementById('edit-phone').value,
+            role: document.getElementById('edit-role').value,
+            isActive: document.getElementById('edit-active').checked
+        };
+
+        // Only include password if provided
+        const password = document.getElementById('edit-password').value;
+        if (password) {
+            userData.password = password;
+        }
+
+        try {
+            await apiService.updateUser(userId, userData);
+            await this.loadUsers();
+            
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            modal.hide();
+            
+            this.showNotification('User updated successfully!', 'success');
+        } catch (error) {
+            this.showNotification('Failed to update user. ' + error.message, 'danger');
+        }
+    }
+
+    async deleteUser(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) return;
+
+        if (confirm(`Are you sure you want to deactivate ${user.username}?`)) {
+            try {
+                await apiService.deleteUser(userId);
+                await this.loadUsers();
+                this.showNotification('User deactivated successfully!', 'success');
+            } catch (error) {
+                this.showNotification('Failed to deactivate user. ' + error.message, 'danger');
+            }
+        }
+    }
+
+    showNotification(message, type) {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.alert-notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed alert-notification`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
 }
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  // Ensure API service is loaded first
-  if (typeof apiService === 'undefined') {
-    console.error('ApiService not loaded! Check script loading order.');
-    alert('ApiService not loaded! Please refresh the page.');
-    return;
-  }
-
-  // Set up sort change handler
-  const sortSelect = document.getElementById('driver-sort');
-  if (sortSelect) {
-    sortSelect.addEventListener('change', () => {
-      renderDashboard();
-    });
-  }
-
-  // Start dashboard polling
-  startDashboardPolling();
-
-  // Stop polling when page is unloaded
-  window.addEventListener('beforeunload', stopDashboardPolling);
+// Initialize admin interface when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.adminInterface = new AdminInterface();
 });

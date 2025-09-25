@@ -48,6 +48,33 @@
 
     <!-- Main Content -->
     <div class="container-fluid mt-5 pt-4">
+        <!-- Rider Selection Section -->
+        <div class="row mb-4" id="rider-selection-section">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0">
+                        <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                            <i class="bi bi-person-circle me-2"></i>Select Rider Account
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label for="rider-select" class="form-label">Select Rider Account</label>
+                            <select class="form-select" id="rider-select" required>
+                                <option value="">Select a rider...</option>
+                                <option value="rider">James Wilson</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="riderInterface.loginRider()">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login as Rider
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rider Dashboard (Hidden initially) -->
+        <div id="rider-dashboard" style="display: none;">
         <div class="row">
             <!-- Left Column - Main Interface -->
             <div class="col-lg-8">
@@ -70,6 +97,9 @@
                                         <div class="badge bg-success fs-6 mb-2">
                                             <i class="bi bi-check-circle me-1"></i>Verified Rider
                                         </div>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="riderInterface.logout()">
+                                            <i class="bi bi-box-arrow-right me-1"></i>Logout
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -398,6 +428,7 @@
                 </div>
             </div>
         </div>
+        </div> <!-- Close rider-dashboard -->
     </div>
 
     <!-- Notification Alert -->

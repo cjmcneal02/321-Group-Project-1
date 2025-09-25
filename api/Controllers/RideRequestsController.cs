@@ -144,20 +144,26 @@ namespace api.Controllers
         [HttpPost("{id}/accept")]
         public async Task<ActionResult<Ride>> AcceptRideRequest(int id, AcceptRideRequestDto dto)
         {
+            Console.WriteLine($"AcceptRideRequest called with id={id}, DriverId={dto.DriverId}, RideRequestId={dto.RideRequestId}");
+            
             var rideRequest = await _context.RideRequests.FindAsync(id);
             if (rideRequest == null)
             {
+                Console.WriteLine($"Ride request {id} not found");
                 return NotFound("Ride request not found");
             }
 
             var driver = await _context.Drivers.FindAsync(dto.DriverId);
             if (driver == null)
             {
+                Console.WriteLine($"Driver {dto.DriverId} not found");
                 return NotFound("Driver not found");
             }
 
+            Console.WriteLine($"Driver {dto.DriverId} found: IsAvailable={driver.IsAvailable}, Status={driver.Status}");
             if (!driver.IsAvailable)
             {
+                Console.WriteLine($"Driver {dto.DriverId} is not available");
                 return BadRequest("Driver is not available");
             }
 

@@ -5,6 +5,7 @@ namespace api.Models
     public class Driver
     {
         public int Id { get; set; }
+        public int? UserId { get; set; } // Foreign key to User
         public string Name { get; set; } = string.Empty;
         public string VehicleId { get; set; } = string.Empty;
         public string VehicleName { get; set; } = string.Empty;
@@ -18,11 +19,15 @@ namespace api.Models
         public int? CurrentRideId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation property
+        public User? User { get; set; }
     }
 
     public class RideRequest
     {
         public int Id { get; set; }
+        public int? UserId { get; set; } // Foreign key to User
         public string RiderName { get; set; } = string.Empty;
         public string PickupLocation { get; set; } = string.Empty;
         public string DropoffLocation { get; set; } = string.Empty;
@@ -33,6 +38,9 @@ namespace api.Models
         public string DeclinedByDrivers { get; set; } = string.Empty; // Comma-separated list of driver IDs who declined
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation property
+        public User? User { get; set; }
     }
 
     public class Ride
@@ -120,5 +128,62 @@ namespace api.Models
         public int RideId { get; set; }
         [Required]
         public int DriverId { get; set; }
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty; // In production, this should be hashed
+        public string Role { get; set; } = string.Empty; // "Admin", "Driver", "Rider"
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public Driver? Driver { get; set; }
+    }
+
+    public class CreateUserDto
+    {
+        [Required]
+        public string Username { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+        [Required]
+        public string Password { get; set; } = string.Empty;
+        [Required]
+        public string Role { get; set; } = string.Empty;
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+    }
+
+    public class UpdateUserDto
+    {
+        public string Username { get; set; } = string.Empty;
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public bool? IsActive { get; set; }
+    }
+
+    public class LoginDto
+    {
+        [Required]
+        public string Username { get; set; } = string.Empty;
+        [Required]
+        public string Password { get; set; } = string.Empty;
     }
 }

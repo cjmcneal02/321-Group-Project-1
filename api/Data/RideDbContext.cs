@@ -9,6 +9,7 @@ namespace api.Data
         {
         }
 
+        public DbSet<User> Users { get; set; }
         public DbSet<Driver> Drivers { get; set; }
         public DbSet<RideRequest> RideRequests { get; set; }
         public DbSet<Ride> Rides { get; set; }
@@ -36,6 +37,19 @@ namespace api.Data
                 .WithMany()
                 .HasForeignKey(c => c.RideId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // User relationships
+            modelBuilder.Entity<Driver>()
+                .HasOne(d => d.User)
+                .WithOne(u => u.Driver)
+                .HasForeignKey<Driver>(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<RideRequest>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Seed initial data
             modelBuilder.Entity<Driver>().HasData(
