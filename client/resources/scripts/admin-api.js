@@ -144,11 +144,11 @@ class AdminInterface {
         const userData = {
             username: document.getElementById('create-username').value,
             email: document.getElementById('create-email').value,
-            password: document.getElementById('create-password').value,
+            password: 'default123', // Default password for all users
             role: document.getElementById('create-role').value,
             firstName: document.getElementById('create-firstname').value,
             lastName: document.getElementById('create-lastname').value,
-            phoneNumber: document.getElementById('create-phone').value
+            phoneNumber: 'N/A' // Default phone number
         };
 
         try {
@@ -175,9 +175,15 @@ class AdminInterface {
         document.getElementById('edit-email').value = user.email;
         document.getElementById('edit-firstname').value = user.firstName;
         document.getElementById('edit-lastname').value = user.lastName;
-        document.getElementById('edit-phone').value = user.phoneNumber;
         document.getElementById('edit-role').value = user.role;
         document.getElementById('edit-active').checked = user.isActive;
+
+        // Handle driver-specific fields
+        this.toggleDriverFields();
+        if (user.role === 'Driver' && user.driver) {
+            document.getElementById('edit-driver-status').value = user.driver.status || '';
+            document.getElementById('edit-driver-availability').value = user.driver.isAvailable ? 'true' : 'false';
+        }
 
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
@@ -191,19 +197,31 @@ class AdminInterface {
             email: document.getElementById('edit-email').value,
             firstName: document.getElementById('edit-firstname').value,
             lastName: document.getElementById('edit-lastname').value,
-            phoneNumber: document.getElementById('edit-phone').value,
             role: document.getElementById('edit-role').value,
             isActive: document.getElementById('edit-active').checked
         };
 
-        // Only include password if provided
-        const password = document.getElementById('edit-password').value;
-        if (password) {
-            userData.password = password;
-        }
-
         try {
             await apiService.updateUser(userId, userData);
+            
+            // If user is a driver, also update driver status
+            if (userData.role === 'Driver') {
+                const driverStatus = document.getElementById('edit-driver-status').value;
+                const driverAvailability = document.getElementById('edit-driver-availability').value;
+                
+                if (driverStatus || driverAvailability) {
+                    // Find the driver ID associated with this user
+                    const user = this.users.find(u => u.id == userId);
+                    if (user && user.driver) {
+                        const statusData = {};
+                        if (driverStatus) statusData.Status = driverStatus;
+                        if (driverAvailability) statusData.IsAvailable = driverAvailability === 'true';
+                        
+                        await apiService.updateDriverStatus(user.driver.id, statusData);
+                    }
+                }
+            }
+            
             await this.loadUsers();
             
             // Hide modal
@@ -253,6 +271,18 @@ class AdminInterface {
                 notification.remove();
             }
         }, 5000);
+    }
+
+    // Toggle driver-specific fields visibility
+    toggleDriverFields() {
+        const role = document.getElementById('edit-role').value;
+        const driverFields = document.getElementById('driver-fields');
+        
+        if (role === 'Driver') {
+            driverFields.style.display = 'block';
+        } else {
+            driverFields.style.display = 'none';
+        }
     }
 }
 

@@ -59,8 +59,19 @@ namespace api.Controllers
                 return NotFound();
             }
 
+            // Update availability
             driver.IsAvailable = dto.IsAvailable;
-            driver.Status = dto.IsAvailable ? "Active" : "Offline";
+            
+            // Update status if provided, otherwise set based on availability
+            if (!string.IsNullOrEmpty(dto.Status))
+            {
+                driver.Status = dto.Status;
+            }
+            else
+            {
+                driver.Status = dto.IsAvailable ? "Available" : "Unavailable";
+            }
+            
             driver.UpdatedAt = DateTime.UtcNow;
 
             _context.Drivers.Update(driver);
@@ -113,5 +124,6 @@ namespace api.Controllers
     public class UpdateDriverStatusDto
     {
         public bool IsAvailable { get; set; }
+        public string? Status { get; set; }
     }
 }

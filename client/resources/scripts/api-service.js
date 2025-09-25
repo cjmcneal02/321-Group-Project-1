@@ -119,14 +119,14 @@ class ApiService {
         }
     }
 
-    async updateDriverStatus(driverId, isAvailable) {
+    async updateDriverStatus(driverId, statusData) {
         try {
             const response = await fetch(`${this.baseUrl}/drivers/${driverId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ isAvailable })
+                body: JSON.stringify(statusData)
             });
 
             if (!response.ok) {
