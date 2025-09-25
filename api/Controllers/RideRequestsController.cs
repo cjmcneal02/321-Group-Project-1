@@ -74,6 +74,53 @@ namespace api.Controllers
             _context.RideRequests.Add(rideRequest);
             await _context.SaveChangesAsync();
 
+            // Attempt auto-assign to an available driver immediately
+            try
+            {
+                var availableDriver = await _context.Drivers
+                    .Where(d => d.IsAvailable)
+                    .OrderByDescending(d => d.Rating)
+                    .FirstOrDefaultAsync();
+
+                if (availableDriver != null)
+                {
+                    var ride = new Ride
+                    {
+                        RideRequestId = rideRequest.Id,
+                        DriverId = availableDriver.Id,
+                        RiderName = rideRequest.RiderName,
+                        PickupLocation = rideRequest.PickupLocation,
+                        DropoffLocation = rideRequest.DropoffLocation,
+                        PassengerCount = rideRequest.PassengerCount,
+                        CartSize = rideRequest.CartSize,
+                        EstimatedFare = rideRequest.EstimatedFare,
+                        Status = "Active",
+                        StartTime = DateTime.UtcNow,
+                        Distance = CalculateDistance(rideRequest.PickupLocation, rideRequest.DropoffLocation),
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    // Update statuses
+                    rideRequest.Status = "Accepted";
+                    rideRequest.UpdatedAt = DateTime.UtcNow;
+
+                    availableDriver.IsAvailable = false;
+                    availableDriver.CurrentRideId = ride.Id;
+                    availableDriver.Status = "On Ride";
+                    availableDriver.UpdatedAt = DateTime.UtcNow;
+
+                    _context.Rides.Add(ride);
+                    _context.RideRequests.Update(rideRequest);
+                    _context.Drivers.Update(availableDriver);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch
+            {
+                // Swallow auto-assign failure; the request remains pending for manual assignment
+            }
+
             return CreatedAtAction(nameof(GetRideRequest), new { id = rideRequest.Id }, rideRequest);
         }
 
@@ -148,6 +195,39 @@ namespace api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(ride);
+        }
+
+        // POST: api/riderequests/{id}/decline
+        [HttpPost("{id}/decline")]
+        public async Task<ActionResult> DeclineRideRequest(int id, DeclineRideRequestDto dto)
+        {
+            var rideRequest = await _context.RideRequests.FindAsync(id);
+            if (rideRequest == null)
+            {
+                return NotFound("Ride request not found");
+            }
+
+            var driver = await _context.Drivers.FindAsync(dto.DriverId);
+            if (driver == null)
+            {
+                return NotFound("Driver not found");
+            }
+
+            // Add driver to declined list
+            if (string.IsNullOrEmpty(rideRequest.DeclinedByDrivers))
+            {
+                rideRequest.DeclinedByDrivers = dto.DriverId.ToString();
+            }
+            else
+            {
+                rideRequest.DeclinedByDrivers += $",{dto.DriverId}";
+            }
+
+            rideRequest.UpdatedAt = DateTime.UtcNow;
+            _context.RideRequests.Update(rideRequest);
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
         private int CalculateDistance(string pickup, string dropoff)

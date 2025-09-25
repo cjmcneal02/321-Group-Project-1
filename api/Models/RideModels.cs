@@ -30,6 +30,7 @@ namespace api.Models
         public string CartSize { get; set; } = string.Empty;
         public decimal EstimatedFare { get; set; }
         public string Status { get; set; } = "Pending";
+        public string DeclinedByDrivers { get; set; } = string.Empty; // Comma-separated list of driver IDs who declined
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
@@ -93,6 +94,12 @@ namespace api.Models
         public int DriverId { get; set; }
         [Required]
         public int RideRequestId { get; set; }
+    }
+
+    public class DeclineRideRequestDto
+    {
+        [Required]
+        public int DriverId { get; set; }
     }
 
     public class SendMessageDto

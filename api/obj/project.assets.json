@@ -3175,19 +3175,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/sydneymarch/.nuget/packages/": {}
+    "/Users/mollywaldron/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/api.csproj",
+      "projectUniqueName": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/api.csproj",
       "projectName": "api",
-      "projectPath": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/api.csproj",
-      "packagesPath": "/Users/sydneymarch/.nuget/packages/",
-      "outputPath": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/",
+      "projectPath": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/api.csproj",
+      "packagesPath": "/Users/mollywaldron/.nuget/packages/",
+      "outputPath": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/sydneymarch/.nuget/NuGet/NuGet.Config"
+        "/Users/mollywaldron/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -3211,7 +3211,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -3253,7 +3253,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
