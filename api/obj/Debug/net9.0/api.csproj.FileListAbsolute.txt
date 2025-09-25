@@ -147,11 +147,6 @@
 /Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/api.pdb
 /Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/api.genruntimeconfig.cache
 /Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/ref/api.dll
-/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rpswa.dswa.cache.json
-/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjimswa.dswa.cache.json
-/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjsmrazor.dswa.cache.json
-/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjsmcshtml.dswa.cache.json
-/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/staticwebassets.build.json.cache
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/bin/Debug/net9.0/appsettings.Development.json
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/bin/Debug/net9.0/appsettings.json
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/bin/Debug/net9.0/api.staticwebassets.endpoints.json
@@ -308,3 +303,8 @@
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/obj/Debug/net9.0/api.pdb
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/obj/Debug/net9.0/api.genruntimeconfig.cache
 /Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/obj/Debug/net9.0/ref/api.dll
+/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rpswa.dswa.cache.json
+/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjimswa.dswa.cache.json
+/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjsmrazor.dswa.cache.json
+/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/rjsmcshtml.dswa.cache.json
+/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/Debug/net9.0/staticwebassets.build.json.cache

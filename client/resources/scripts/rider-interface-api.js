@@ -188,19 +188,19 @@ class RiderInterface {
                 EstimatedFare: parseFloat(fareEstimate.toFixed(2)) // Ensure proper decimal format
             };
 
-            // Debug: Log the data being sent
-            console.log('Ride request data:', rideRequestData);
 
             // Show loading modal
             this.showNotification('Requesting ride...', 'info');
 
             // Create ride request via API
             const rideRequest = await apiService.createRideRequest(rideRequestData);
-            
-            console.log('API Response:', rideRequest);
+            console.log('Created ride request:', rideRequest);
             
             if (rideRequest) {
                 const rideId = rideRequest.Id || rideRequest.id;
+                console.log('Using ride ID:', rideId);
+                this.currentRideId = rideId;
+                this.currentRideRequest = rideRequest;
                 this.showFullScreenLoadingModal(rideId, rideRequest);
                 this.startStatusPolling(rideId);
             }
@@ -215,8 +215,11 @@ class RiderInterface {
      * Start polling for ride status updates
      */
     startStatusPolling(requestId) {
+        console.log('Starting status polling for request ID:', requestId);
+        
         this.statusPollingInterval = setInterval(async () => {
             try {
+                console.log('Polling check...');
                 await this.checkRideStatus(requestId);
             } catch (error) {
                 console.error('Error checking ride status:', error);
@@ -225,8 +228,11 @@ class RiderInterface {
 
         // Set timeout for driver search
         this.driverSearchTimeout = setTimeout(() => {
+            console.log('Driver search timeout reached (2 minutes)');
             this.showDriverSearchTimeout();
-        }, 30000); // 30 seconds timeout
+        }, 120000); // 2 minutes timeout - give drivers more time
+        
+        console.log('Status polling started, timeout set for 2 minutes');
     }
 
     /**
@@ -248,11 +254,15 @@ class RiderInterface {
      */
     async checkRideStatus(requestId) {
         try {
+            console.log('Checking ride status for ID:', requestId);
+            
             // Check if there's an active ride
             const activeRide = await apiService.getActiveRide();
+            console.log('Active ride check result:', activeRide);
             
-            if (activeRide && activeRide.RideRequestId === requestId) {
+            if (activeRide && (activeRide.RideRequestId || activeRide.rideRequestId) === requestId) {
                 // Driver accepted the ride
+                console.log('Driver accepted ride!');
                 this.stopStatusPolling();
                 this.hideFullScreenLoadingModal();
                 this.showNotification('Driver found! Redirecting to ride page...', 'success');
@@ -266,10 +276,13 @@ class RiderInterface {
 
             // Check if request still exists
             const requests = await apiService.getRideRequests();
-            const ourRequest = requests.find(r => r.Id === requestId);
+            console.log('All pending requests:', requests);
+            const ourRequest = requests.find(r => (r.Id || r.id) === requestId);
+            console.log('Our request found:', ourRequest);
             
             if (!ourRequest) {
                 // Request was removed (declined or cancelled)
+                console.log('Request not found, stopping polling');
                 this.stopStatusPolling();
                 this.hideFullScreenLoadingModal();
                 this.showNotification('No driver available. Please try again.', 'warning');
@@ -390,7 +403,7 @@ class RiderInterface {
                             <h5 class="modal-title">No Driver Found</h5>
                         </div>
                         <div class="modal-body">
-                            <p>We couldn't find an available driver within 30 seconds. Would you like to:</p>
+                            <p>We couldn't find an available driver within 2 minutes. Would you like to:</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" onclick="riderInterface.cancelRideRequest(${this.currentRideId})">
@@ -452,17 +465,13 @@ class RiderInterface {
      * Calculate fare estimate
      */
     calculateFareEstimate(pickupLocation, dropoffLocation, passengerCount, cartSize) {
-        console.log('Calculating fare for:', { pickupLocation, dropoffLocation, passengerCount, cartSize });
-        console.log('ShortestPath available:', !!this.shortestPath);
         
         if (!this.shortestPath) {
-            console.log('No shortestPath, returning default fare');
             return 5.00;
         }
 
         try {
             const route = this.shortestPath.findShortestPath(pickupLocation, dropoffLocation);
-            console.log('Route found:', route);
             if (!route || route.length === 0) return 5.00;
 
             const baseFare = 3.00;
@@ -472,12 +481,9 @@ class RiderInterface {
             const cartSizeMultiplier = cartSize === 'Large' ? 1.3 : 1.0;
 
             const fare = (baseFare + (estimatedTime * perMinuteRate)) * passengerMultiplier * cartSizeMultiplier;
-            console.log('Calculated fare:', fare);
-            console.log('Fare components:', { baseFare, estimatedTime, perMinuteRate, passengerMultiplier, cartSizeMultiplier });
             
             // Ensure we return a valid number
             const finalFare = isNaN(fare) ? 5.00 : fare;
-            console.log('Final fare:', finalFare);
             return finalFare;
         } catch (error) {
             console.error('Error calculating fare:', error);
@@ -569,7 +575,7 @@ class RiderInterface {
 
         const notificationHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-                 style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;" role="alert">
+                 style="top: 20px; right: 20px; z-index: 10000; min-width: 300px; background-color: ${type === 'danger' ? '#dc3545' : type === 'warning' ? '#ffc107' : type === 'success' ? '#198754' : '#0dcaf0'}; color: ${type === 'warning' ? '#000' : '#fff'}; opacity: 1 !important;" role="alert">
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>

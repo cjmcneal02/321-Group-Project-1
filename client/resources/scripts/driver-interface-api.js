@@ -5,15 +5,11 @@
 
 class DriverInterface {
     constructor() {
-        console.log('🚗 DRIVER INTERFACE CONSTRUCTOR CALLED! 🚗');
-        
         // Check for API service availability
         if (typeof apiService === 'undefined') {
             console.error('ApiService not available. Please ensure api-service.js is loaded.');
             return;
         }
-        
-        console.log('DriverInterface: ApiService available, initializing...');
 
         this.currentDriverId = 1; // Default driver ID
         this.currentRide = null;
@@ -28,11 +24,9 @@ class DriverInterface {
      * Initialize the driver interface
      */
     initializeInterface() {
-        console.log('DriverInterface: Initializing interface...');
         this.setupEventListeners();
         this.updateDriverInfo();
         this.startRequestsPolling();
-        console.log('DriverInterface: Interface initialized successfully');
     }
 
     /**
@@ -101,7 +95,6 @@ class DriverInterface {
      * Start polling for ride requests
      */
     startRequestsPolling() {
-        console.log('DriverInterface: Starting requests polling...');
         this.requestsPollingInterval = setInterval(async () => {
             try {
                 await this.updateRequestsUI();
@@ -112,7 +105,6 @@ class DriverInterface {
 
         // Initial update
         this.updateRequestsUI();
-        console.log('DriverInterface: Requests polling started');
     }
 
     /**
@@ -130,48 +122,33 @@ class DriverInterface {
      */
     async updateRequestsUI() {
         try {
-            console.log('Driver: Fetching ride requests...');
             const requests = await apiService.getRideRequests();
-            console.log('🚨 DRIVER RECEIVED REQUESTS:', requests.length, 'requests!');
-            console.log('Driver: Received requests:', requests);
-            console.log('Driver: First request details:', requests[0]);
             const requestsList = document.getElementById('requestsList');
-            console.log('🔍 Driver: requestsList element:', requestsList);
             
             if (!requestsList) {
-                console.error('❌ Driver: requestsList element not found');
+                console.error('Driver: requestsList element not found');
                 return;
             }
-            
-            console.log('✅ Driver: requestsList element found!');
 
             // Clear existing requests
             requestsList.innerHTML = '';
 
             if (requests.length === 0) {
-                console.log('📭 Driver: No requests, showing no requests state');
                 // Show no requests state
                 const noRequestsState = document.getElementById('noRequestsState');
-                console.log('📭 Driver: noRequestsState element:', noRequestsState);
                 if (noRequestsState) {
                     noRequestsState.classList.remove('d-none');
-                    console.log('📭 Driver: Removed d-none from noRequestsState');
                 }
                 requestsList.classList.add('d-none');
-                console.log('📭 Driver: Added d-none to requestsList');
                 return;
             }
 
-            console.log('📋 Driver: Has requests, hiding no requests state and showing requests list');
             // Hide no requests state and show requests list
             const noRequestsState = document.getElementById('noRequestsState');
-            console.log('📋 Driver: noRequestsState element:', noRequestsState);
             if (noRequestsState) {
                 noRequestsState.classList.add('d-none');
-                console.log('📋 Driver: Added d-none to noRequestsState');
             }
             requestsList.classList.remove('d-none');
-            console.log('📋 Driver: Removed d-none from requestsList');
 
             // Remove duplicates based on ID
             const uniqueRequests = requests.filter((request, index, self) => {
@@ -180,14 +157,10 @@ class DriverInterface {
             });
 
             // Display requests
-            console.log('🎨 DRIVER RENDERING', uniqueRequests.length, 'UNIQUE REQUESTS!');
-            uniqueRequests.forEach((request, index) => {
-                console.log(`🎨 Driver: Rendering request ${index + 1}:`, request);
+            uniqueRequests.forEach(request => {
                 const requestElement = this.createRequestElement(request);
                 requestsList.appendChild(requestElement);
-                console.log(`✅ Request ${index + 1} added to DOM!`);
             });
-            console.log('🎉 DRIVER FINISHED RENDERING ALL REQUESTS!');
 
         } catch (error) {
             console.error('Error updating requests UI:', error);
@@ -606,7 +579,6 @@ class DriverInterface {
 
 // Initialize driver interface when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DriverInterface: DOMContentLoaded event fired');
     
     // Ensure API service is loaded first
     if (typeof apiService === 'undefined') {
@@ -615,11 +587,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    console.log('DriverInterface: ApiService found, creating DriverInterface...');
     
     setTimeout(() => {
         if (typeof DriverInterface !== 'undefined') {
-            console.log('DriverInterface: Creating new DriverInterface instance...');
             window.driverInterface = new DriverInterface();
         } else {
             console.error('DriverInterface not loaded!');
