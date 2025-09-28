@@ -12,7 +12,6 @@ namespace api.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Driver> Drivers { get; set; }
         public DbSet<Rider> Riders { get; set; }
-        public DbSet<RideRequest> RideRequests { get; set; }
         public DbSet<Ride> Rides { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
@@ -21,12 +20,6 @@ namespace api.Data
             base.OnModelCreating(modelBuilder);
 
             // Configure relationships
-            modelBuilder.Entity<Ride>()
-                .HasOne(r => r.RideRequest)
-                .WithMany()
-                .HasForeignKey(r => r.RideRequestId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Ride>()
                 .HasOne(r => r.Driver)
                 .WithMany()
@@ -52,11 +45,6 @@ namespace api.Data
                 .HasForeignKey<Rider>(r => r.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<RideRequest>()
-                .HasOne(r => r.User)
-                .WithMany()
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
 
             // Seed initial data
             modelBuilder.Entity<Driver>().HasData(

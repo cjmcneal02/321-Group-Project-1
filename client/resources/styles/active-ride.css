@@ -1,0 +1,54 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.ride-page-container {
+    min-height: 100vh;
+}
+
+.ride-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.driver-info-card {
+    background: linear-gradient(135deg, #9E1B32 0%, #C41E3A 100%);
+    color: white;
+    border-radius: 15px;
+}
+
+.chat-container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    max-height: 400px;
+}
+
+.message-bubble {
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message-rider {
+    background: linear-gradient(135deg, #9E1B32 0%, #C41E3A 100%);
+    color: white;
+}
+
+.message-driver {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.ride-status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}

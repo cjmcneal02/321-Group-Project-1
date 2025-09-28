@@ -38,31 +38,11 @@ namespace api.Models
         public User? User { get; set; }
     }
 
-    public class RideRequest
-    {
-        public int Id { get; set; }
-        public int? UserId { get; set; } // Foreign key to User
-        public string RiderName { get; set; } = string.Empty;
-        public string PickupLocation { get; set; } = string.Empty;
-        public string DropoffLocation { get; set; } = string.Empty;
-        public int PassengerCount { get; set; }
-        public string CartSize { get; set; } = string.Empty;
-        public string SpecialNotes { get; set; } = string.Empty;
-        public decimal EstimatedFare { get; set; }
-        public string Status { get; set; } = "Pending";
-        public string DeclinedByDrivers { get; set; } = string.Empty; // Comma-separated list of driver IDs who declined
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        
-        // Navigation property
-        public User? User { get; set; }
-    }
 
     public class Ride
     {
         public int Id { get; set; }
-        public int RideRequestId { get; set; }
-        public int DriverId { get; set; }
+        public int? DriverId { get; set; } // Optional - NULL until driver accepts
         public int? RiderId { get; set; } // Foreign key to Rider
         public string RiderName { get; set; } = string.Empty;
         public string PickupLocation { get; set; } = string.Empty;
@@ -71,15 +51,14 @@ namespace api.Models
         public string CartSize { get; set; } = string.Empty;
         public string SpecialNotes { get; set; } = string.Empty;
         public decimal EstimatedFare { get; set; }
-        public string Status { get; set; } = "Active";
-        public DateTime StartTime { get; set; } = DateTime.UtcNow;
-        public DateTime? EndTime { get; set; }
+        public string Status { get; set; } = "Requested"; // "Requested", "In Progress", "Completed", "Cancelled"
+        public DateTime? StartTime { get; set; } // NULL until driver accepts
+        public DateTime? EndTime { get; set; } // NULL until completed
         public int Distance { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
         // Navigation properties
-        public RideRequest? RideRequest { get; set; }
         public Driver? Driver { get; set; }
     }
 
@@ -97,8 +76,10 @@ namespace api.Models
     }
 
     // DTOs for API requests/responses
-    public class CreateRideRequestDto
+    public class CreateRideDto
     {
+        [Required]
+        public int RiderId { get; set; }
         [Required]
         public string RiderName { get; set; } = string.Empty;
         [Required]
@@ -114,18 +95,12 @@ namespace api.Models
         public decimal EstimatedFare { get; set; }
     }
 
-    public class AcceptRideRequestDto
+    public class AcceptRideDto
     {
         [Required]
         public int DriverId { get; set; }
         [Required]
-        public int RideRequestId { get; set; }
-    }
-
-    public class DeclineRideRequestDto
-    {
-        [Required]
-        public int DriverId { get; set; }
+        public int RideId { get; set; }
     }
 
     public class SendMessageDto

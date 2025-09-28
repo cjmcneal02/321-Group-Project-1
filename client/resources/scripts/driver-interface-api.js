@@ -170,9 +170,33 @@ class DriverInterface {
         this.updateDriverInfo();
         this.startRequestsPolling();
         this.loadRideHistory();
+        this.checkForActiveRide();
         
-        // Hide active ride panel initially (driver starts with no active ride)
-        this.updateActiveRidePanelVisibility();
+        // Always show active ride panel
+        this.showActiveRidePanel();
+        this.initializeChat();
+        this.initializeRideButtons();
+    }
+
+    /**
+     * Check for active ride when driver logs in
+     */
+    async checkForActiveRide() {
+        try {
+            const activeRides = await apiService.getRidesByStatus('In Progress');
+            const driverActiveRide = activeRides.find(ride => 
+                (ride.DriverId || ride.driverId) === this.currentDriverId
+            );
+            
+            if (driverActiveRide) {
+                this.currentRide = driverActiveRide;
+                this.currentRideId = driverActiveRide.Id || driverActiveRide.id;
+                this.showActiveRideUI(driverActiveRide);
+                this.hideRequestsUI();
+            }
+        } catch (error) {
+            console.error('Error checking for active ride:', error);
+        }
     }
 
     /**
@@ -337,7 +361,7 @@ class DriverInterface {
      */
     async updateRequestsUI() {
         try {
-            const requests = await apiService.getRideRequests();
+            const requests = await apiService.getRidesByStatus('Requested');
             const requestsList = document.getElementById('requestsList');
             
             if (!requestsList) {
@@ -394,7 +418,7 @@ class DriverInterface {
         const dropoffLocation = request.DropoffLocation || request.dropoffLocation;
         const passengerCount = request.PassengerCount || request.passengerCount;
         const cartSize = request.CartSize || request.cartSize;
-        const requestId = request.Id || request.id;
+        const rideId = request.Id || request.id;
 
         requestDiv.innerHTML = `
             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -424,10 +448,10 @@ class DriverInterface {
                 </div>
             </div>
             <div class="request-actions">
-                <button class="btn btn-success btn-sm me-2" onclick="driverInterface.acceptRequest(${requestId})">
+                <button class="btn btn-success btn-sm me-2" onclick="driverInterface.acceptRequest(${rideId})">
                     <i class="bi bi-check-circle me-1"></i>Accept
                 </button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="driverInterface.declineRequest(${requestId})">
+                <button class="btn btn-outline-secondary btn-sm" onclick="driverInterface.declineRequest(${rideId})">
                     <i class="bi bi-x-circle me-1"></i>Decline
                 </button>
             </div>
@@ -439,10 +463,10 @@ class DriverInterface {
     /**
      * Accept ride request
      */
-    async acceptRequest(requestId) {
+    async acceptRequest(rideId) {
         try {
             
-            const ride = await apiService.acceptRideRequest(requestId, this.currentDriverId);
+            const ride = await apiService.acceptRide(rideId, this.currentDriverId);
             
             if (ride) {
                 this.currentRide = ride;
@@ -465,9 +489,9 @@ class DriverInterface {
     /**
      * Decline ride request
      */
-    async declineRequest(requestId) {
+    async declineRequest(rideId) {
         try {
-            await apiService.deleteRideRequest(requestId);
+            await apiService.cancelRide(rideId);
             this.showNotification('Ride request declined.', 'info');
         } catch (error) {
             console.error('Error declining request:', error);
@@ -479,12 +503,25 @@ class DriverInterface {
      * Show active ride UI
      */
     showActiveRideUI(ride) {
-        
         // Update the hardcoded HTML elements with dynamic data
         this.updateActiveRideDetails(ride);
         
-        // Show the active ride panel
-        this.updateActiveRidePanelVisibility();
+        // Show active ride state, hide no ride state
+        const activeRideState = document.getElementById('activeRideState');
+        const noRideState = document.getElementById('noRideState');
+        
+        if (activeRideState) {
+            activeRideState.classList.remove('d-none');
+        }
+        if (noRideState) {
+            noRideState.classList.add('d-none');
+        }
+        
+        // Load chat messages
+        this.loadChatMessages();
+        
+        // Hide requests UI
+        this.hideRequestsUI();
     }
 
     /**
@@ -498,6 +535,7 @@ class DriverInterface {
         const dropoffLocation = ride.DropoffLocation || ride.dropoffLocation || 'Unknown';
         const passengerCount = ride.PassengerCount || ride.passengerCount || 1;
         const cartSize = ride.CartSize || ride.cartSize || 'Standard';
+        const specialNotes = ride.SpecialNotes || ride.specialNotes || '';
         
         // Update the hardcoded HTML elements
         const passengerNameElement = document.getElementById('passengerName');
@@ -515,9 +553,28 @@ class DriverInterface {
             dropoffLocationElement.textContent = dropoffLocation;
         }
 
+        const passengerCountElement = document.getElementById('passengerCount');
+        if (passengerCountElement) {
+            passengerCountElement.textContent = passengerCount;
+        }
+
+        const cartSizeElement = document.getElementById('cartSize');
+        if (cartSizeElement) {
+            cartSizeElement.textContent = cartSize;
+        }
+
         const rideFareElement = document.getElementById('rideFare');
         if (rideFareElement) {
             rideFareElement.textContent = `$${estimatedFare.toFixed(2)}`;
+        }
+
+        const specialNotesElement = document.getElementById('specialNotesContent');
+        if (specialNotesElement) {
+            if (specialNotes && specialNotes.trim()) {
+                specialNotesElement.innerHTML = `<em>${specialNotes}</em>`;
+            } else {
+                specialNotesElement.innerHTML = '<em>No special notes</em>';
+            }
         }
     }
 
@@ -761,7 +818,6 @@ class DriverInterface {
             
             // Update button text and UI
             this.updateToggleButton(newStatus);
-            this.updateActiveRidePanelVisibility();
             
         } catch (error) {
             console.error('Error toggling driver status:', error);
@@ -819,18 +875,248 @@ class DriverInterface {
     }
 
     /**
-     * Update active ride panel visibility based on driver status
+     * Always show active ride panel
      */
-    updateActiveRidePanelVisibility() {
+    showActiveRidePanel() {
         const activeRidePanel = document.querySelector('.col-lg-8');
         if (activeRidePanel) {
-            // Only show active ride panel if driver has a current ride
-            if (this.currentRideId) {
-                activeRidePanel.style.display = 'block';
-            } else {
-                activeRidePanel.style.display = 'none';
-            }
+            activeRidePanel.style.display = 'block';
         }
+    }
+
+    /**
+     * Initialize chat functionality
+     */
+    initializeChat() {
+        const sendBtn = document.getElementById('send-message-btn');
+        const chatInput = document.getElementById('chat-input');
+        
+        if (sendBtn && chatInput) {
+            sendBtn.addEventListener('click', () => this.sendMessage());
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
+                }
+            });
+        }
+        
+        // Load existing messages
+        this.loadChatMessages();
+    }
+
+    /**
+     * Initialize ride action buttons
+     */
+    initializeRideButtons() {
+        const onWayBtn = document.getElementById('onWayBtn');
+        const arrivedBtn = document.getElementById('arrivedBtn');
+        const completeBtn = document.getElementById('completeRideBtn');
+        
+        if (onWayBtn) {
+            onWayBtn.addEventListener('click', () => this.onWayToPickup());
+        }
+        if (arrivedBtn) {
+            arrivedBtn.addEventListener('click', () => this.arrivedAtPickup());
+        }
+        if (completeBtn) {
+            completeBtn.addEventListener('click', () => this.completeRide());
+        }
+    }
+
+    /**
+     * Send chat message
+     */
+    async sendMessage() {
+        const chatInput = document.getElementById('chat-input');
+        if (!chatInput || !chatInput.value.trim() || !this.currentRideId) return;
+        
+        try {
+            const message = {
+                rideId: parseInt(this.currentRideId),
+                sender: 'driver',
+                senderName: 'Driver',
+                content: chatInput.value.trim()
+            };
+            
+            await apiService.sendChatMessage(message);
+            chatInput.value = '';
+            this.loadChatMessages();
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    }
+
+    /**
+     * Load chat messages
+     */
+    async loadChatMessages() {
+        const messagesContainer = document.getElementById('chat-messages');
+        if (!messagesContainer || !this.currentRideId) return;
+        
+        try {
+            const messages = await apiService.getChatMessages(this.currentRideId);
+            
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Start chatting with your rider!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            messagesContainer.innerHTML = messages.map(msg => `
+                <div class="message mb-2 ${msg.Sender === 'driver' || msg.sender === 'driver' ? 'text-end' : 'text-start'}">
+                    <div class="d-inline-block p-2 rounded-3 ${msg.Sender === 'driver' || msg.sender === 'driver' ? 'bg-primary text-white' : 'bg-light text-dark'}" style="max-width: 70%;">
+                        <small class="d-block opacity-75 mb-1">${msg.SenderName || msg.senderName || 'Unknown'}</small>
+                        ${msg.Content || msg.content || ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+        } catch (error) {
+            console.error('Error loading chat messages:', error);
+        }
+    }
+
+    /**
+     * On way to pickup button handler
+     */
+    async onWayToPickup() {
+        if (!this.currentRideId) return;
+        
+        try {
+            // Send message to rider
+            const message = {
+                rideId: parseInt(this.currentRideId),
+                sender: 'driver',
+                senderName: 'Driver',
+                content: 'I\'m on my way to pick you up!'
+            };
+            
+            await apiService.sendChatMessage(message);
+            this.loadChatMessages();
+            
+            // Enable arrived button
+            const arrivedBtn = document.getElementById('arrivedBtn');
+            if (arrivedBtn) {
+                arrivedBtn.disabled = false;
+            }
+            
+            // Disable on way button
+            const onWayBtn = document.getElementById('onWayBtn');
+            if (onWayBtn) {
+                onWayBtn.disabled = true;
+            }
+            
+            this.showNotification('Message sent to rider: On my way!', 'success');
+        } catch (error) {
+            console.error('Error sending on way message:', error);
+        }
+    }
+
+    /**
+     * Arrived at pickup button handler
+     */
+    async arrivedAtPickup() {
+        if (!this.currentRideId) return;
+        
+        try {
+            // Send message to rider
+            const message = {
+                rideId: parseInt(this.currentRideId),
+                sender: 'driver',
+                senderName: 'Driver',
+                content: 'I\'ve arrived at your pickup location!'
+            };
+            
+            await apiService.sendChatMessage(message);
+            this.loadChatMessages();
+            
+            // Enable complete ride button
+            const completeBtn = document.getElementById('completeRideBtn');
+            if (completeBtn) {
+                completeBtn.disabled = false;
+            }
+            
+            // Disable arrived button
+            const arrivedBtn = document.getElementById('arrivedBtn');
+            if (arrivedBtn) {
+                arrivedBtn.disabled = true;
+            }
+            
+            this.showNotification('Message sent to rider: Arrived at pickup!', 'success');
+        } catch (error) {
+            console.error('Error sending arrived message:', error);
+        }
+    }
+
+    /**
+     * Complete ride button handler
+     */
+    async completeRide() {
+        if (!this.currentRideId) return;
+        
+        try {
+            // Complete the ride
+            await apiService.completeRide(this.currentDriverId, this.currentRideId);
+            
+            this.showNotification('Ride completed successfully!', 'success');
+            
+            // Wait 2 seconds then reset
+            setTimeout(() => {
+                this.resetActiveRide();
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Error completing ride:', error);
+        }
+    }
+
+    /**
+     * Reset active ride state
+     */
+    resetActiveRide() {
+        this.currentRide = null;
+        this.currentRideId = null;
+        
+        // Hide active ride state, show no ride state
+        const activeRideState = document.getElementById('activeRideState');
+        const noRideState = document.getElementById('noRideState');
+        
+        if (activeRideState) {
+            activeRideState.classList.add('d-none');
+        }
+        if (noRideState) {
+            noRideState.classList.remove('d-none');
+        }
+        
+        // Reset buttons
+        const onWayBtn = document.getElementById('onWayBtn');
+        const arrivedBtn = document.getElementById('arrivedBtn');
+        const completeBtn = document.getElementById('completeRideBtn');
+        
+        if (onWayBtn) onWayBtn.disabled = false;
+        if (arrivedBtn) arrivedBtn.disabled = true;
+        if (completeBtn) completeBtn.disabled = true;
+        
+        // Clear chat
+        const messagesContainer = document.getElementById('chat-messages');
+        if (messagesContainer) {
+            messagesContainer.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="bi bi-chat-dots" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Start chatting with your rider!</p>
+                </div>
+            `;
+        }
+        
+        // Show requests UI again
+        this.showRequestsUI();
     }
 
     /**
@@ -843,7 +1129,6 @@ class DriverInterface {
             
             // Update UI elements
             this.updateToggleButton(isAvailable);
-            this.updateActiveRidePanelVisibility();
             
         } catch (error) {
             console.error('Error updating driver status:', error);

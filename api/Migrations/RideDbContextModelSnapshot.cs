@@ -118,8 +118,8 @@ namespace api.Migrations
                             Status = "Active",
                             TotalRides = 23,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            VehicleId = "SC-001",
-                            VehicleName = "Solar Golf Cart Alpha"
+                            VehicleId = "GC-001",
+                            VehicleName = "Golf Cart Alpha"
                         },
                         new
                         {
@@ -133,8 +133,8 @@ namespace api.Migrations
                             Status = "Active",
                             TotalRides = 18,
                             UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            VehicleId = "SC-002",
-                            VehicleName = "Solar Golf Cart Beta"
+                            VehicleId = "GC-002",
+                            VehicleName = "Golf Cart Beta"
                         });
                 });
 
@@ -154,7 +154,7 @@ namespace api.Migrations
                     b.Property<int>("Distance")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("DriverId")
+                    b.Property<int?>("DriverId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("DropoffLocation")
@@ -174,7 +174,7 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("RideRequestId")
+                    b.Property<int?>("RiderId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("RiderName")
@@ -185,7 +185,7 @@ namespace api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("StartTime")
+                    b.Property<DateTime?>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -199,65 +199,7 @@ namespace api.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.HasIndex("RideRequestId");
-
                     b.ToTable("Rides");
-                });
-
-            modelBuilder.Entity("api.Models.RideRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CartSize")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DeclinedByDrivers")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DropoffLocation")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("EstimatedFare")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PassengerCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PickupLocation")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("RiderName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SpecialNotes")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RideRequests");
                 });
 
             modelBuilder.Entity("api.Models.Rider", b =>
@@ -384,28 +326,9 @@ namespace api.Migrations
                     b.HasOne("api.Models.Driver", "Driver")
                         .WithMany()
                         .HasForeignKey("DriverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("api.Models.RideRequest", "RideRequest")
-                        .WithMany()
-                        .HasForeignKey("RideRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Driver");
-
-                    b.Navigation("RideRequest");
-                });
-
-            modelBuilder.Entity("api.Models.RideRequest", b =>
-                {
-                    b.HasOne("api.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("api.Models.Rider", b =>

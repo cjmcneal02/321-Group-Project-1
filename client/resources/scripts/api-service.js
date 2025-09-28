@@ -7,16 +7,17 @@ class ApiService {
         this.currentUserRole = null; // Will be set when user logs in
     }
 
-    // Ride Request Methods
-    async createRideRequest(rideData) {
+    // Ride Methods (Single Table Approach)
+    async createRide(rideData) {
         try {
-            // Ensure riderName is included from logged-in user
+            // Ensure riderId and riderName are included from logged-in user
             const requestData = {
                 ...rideData,
+                RiderId: rideData.RiderId || this.getCurrentRiderId(),
                 RiderName: rideData.RiderName || this.getCurrentUserName() || 'Anonymous Rider'
             };
             
-            const response = await fetch(`${this.baseUrl}/riderequests`, {
+            const response = await fetch(`${this.baseUrl}/rides`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,7 +33,7 @@ class ApiService {
 
             return await response.json();
         } catch (error) {
-            console.error('Error creating ride request:', error);
+            console.error('Error creating ride:', error);
             throw error;
         }
     }
@@ -50,61 +51,86 @@ class ApiService {
         }
     }
 
-    async getRideRequest(requestId) {
+    async getRide(rideId) {
         try {
-            const response = await fetch(`${this.baseUrl}/riderequests/${requestId}`);
+            const response = await fetch(`${this.baseUrl}/rides/${rideId}`);
+            if (response.status === 404) {
+                return null; // Ride not found
+            }
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
-            console.error('Error fetching ride request:', error);
+            console.error('Error fetching ride:', error);
             throw error;
         }
     }
 
-    async getRideRequests() {
+    async getCurrentRiderActiveRide() {
         try {
-            const response = await fetch(`${this.baseUrl}/riderequests`);
+            const riderId = this.getCurrentRiderId();
+            if (!riderId) {
+                return null;
+            }
+            
+            const rides = await this.getRidesByRider(riderId, 'In Progress');
+            console.log('Active rides for rider', riderId, ':', rides);
+            return rides.length > 0 ? rides[0] : null;
+        } catch (error) {
+            console.error('Error fetching current rider active ride:', error);
+            return null;
+        }
+    }
+
+    async getRidesByRider(riderId, status = null) {
+        try {
+            let url = `${this.baseUrl}/rides/rider/${riderId}`;
+            if (status) {
+                url += `?status=${status}`;
+            }
+            
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
-            console.error('Error fetching ride requests:', error);
+            console.error('Error fetching rides by rider:', error);
             throw error;
         }
     }
 
-    async deleteRideRequest(requestId) {
+    async cancelRide(rideId) {
         try {
-            const response = await fetch(`${this.baseUrl}/riderequests/${requestId}`, {
-                method: 'DELETE'
+            const response = await fetch(`${this.baseUrl}/rides/${rideId}/cancel`, {
+                method: 'PUT'
             });
             return response.ok;
         } catch (error) {
-            console.error('Error deleting ride request:', error);
+            console.error('Error cancelling ride:', error);
             throw error;
         }
     }
 
-    async acceptRideRequest(requestId, driverId) {
+    async acceptRide(rideId, driverId) {
         try {
-            const response = await fetch(`${this.baseUrl}/riderequests/${requestId}/accept`, {
-                method: 'POST',
+            const response = await fetch(`${this.baseUrl}/rides/${rideId}/accept`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ DriverId: driverId, RideRequestId: requestId })
+                body: JSON.stringify({ DriverId: driverId, RideId: rideId })
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // The endpoint returns NoContent (204), so we need to fetch the updated ride
+            return await this.getRide(rideId);
         } catch (error) {
-            console.error('Error accepting ride request:', error);
+            console.error('Error accepting ride:', error);
             throw error;
         }
     }
@@ -159,19 +185,20 @@ class ApiService {
 
     async completeRide(driverId, rideId) {
         try {
-            const response = await fetch(`${this.baseUrl}/drivers/${driverId}/complete-ride`, {
-                method: 'POST',
+            const response = await fetch(`${this.baseUrl}/rides/${rideId}/complete`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ driverId, rideId })
+                body: JSON.stringify({ DriverId: driverId, RideId: rideId })
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // The endpoint returns NoContent (204), so we just return success
+            return { success: true };
         } catch (error) {
             console.error('Error completing ride:', error);
             throw error;
@@ -192,6 +219,19 @@ class ApiService {
         }
     }
 
+    async getRidesByStatus(status) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rides?status=${status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rides by status:', error);
+            throw error;
+        }
+    }
+
     async getActiveRide() {
         try {
             const response = await fetch(`${this.baseUrl}/rides/active`);
@@ -208,21 +248,6 @@ class ApiService {
         }
     }
 
-    async getRideByRequestId(requestId) {
-        try {
-            const response = await fetch(`${this.baseUrl}/rides/by-request/${requestId}`);
-            if (response.status === 404) {
-                return null; // No ride found for this request
-            }
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching ride by request ID:', error);
-            throw error;
-        }
-    }
 
     async getRideHistory() {
         try {

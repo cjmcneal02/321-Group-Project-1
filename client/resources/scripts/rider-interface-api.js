@@ -63,13 +63,13 @@ class RiderInterface {
                 apiService.currentUserId = parseInt(storedUserId);
                 apiService.currentUserRole = storedUserRole;
                 
-                // Check if there's a pending ride request
-                const pendingRequestId = localStorage.getItem('pendingRideRequestId');
-                if (pendingRequestId) {
-                    await this.loadPendingRideRequest(pendingRequestId);
+                // Check if there's a pending ride
+                const pendingRideId = localStorage.getItem('pendingRideId');
+                if (pendingRideId) {
+                    await this.loadPendingRideRequest(pendingRideId);
                 } else {
-            this.showDashboard();
-            this.loadRiderData();
+                    // Check if there's an active ride for this rider
+                    await this.checkForActiveRide();
                 }
                 return;
             } catch (error) {
@@ -89,42 +89,69 @@ class RiderInterface {
     /**
      * Load pending ride request from localStorage
      */
-    async loadPendingRideRequest(requestId) {
+    async loadPendingRideRequest(rideId) {
         try {
-            const rideRequest = await apiService.getRideRequest(requestId);
+            const ride = await apiService.getRide(rideId);
             
-            if (!rideRequest) {
-                // Request no longer exists, clear session
-                localStorage.removeItem('pendingRideRequestId');
+            if (!ride) {
+                // Ride no longer exists, clear session
+                localStorage.removeItem('pendingRideId');
                 this.showDashboard();
                 this.loadRiderData();
                 return;
             }
             
-            if (rideRequest.Status === 'Pending') {
-                // Still pending, show waiting screen
-                this.currentRideRequestId = requestId;
+            if (ride.Status === 'Requested') {
+                // Still requested, show waiting screen
+                this.currentRideId = rideId;
                 this.showDashboard();
                 this.loadRiderData();
-                this.showWaitingForDriverStatus(rideRequest);
-                this.startStatusPolling(requestId);
-            } else if (rideRequest.Status === 'Accepted') {
-                // Accepted, get the ride and redirect
-                const ride = await apiService.getRideByRequestId(requestId);
-                if (ride) {
-                    localStorage.removeItem('pendingRideRequestId');
-                    localStorage.setItem('activeRideId', ride.Id.toString());
-                    window.location.href = `./active-ride.html?rideId=${ride.Id}`;
-                }
+                this.showWaitingForDriverStatus(ride);
+                this.startStatusPolling(rideId);
+            } else if (ride.Status === 'In Progress') {
+                // In progress, redirect to active ride
+                localStorage.removeItem('pendingRideId');
+                localStorage.setItem('activeRideId', ride.Id.toString());
+                window.location.href = `./active-ride.html?rideId=${ride.Id}`;
             } else {
                 // Completed or cancelled, clear session and show dashboard
-                localStorage.removeItem('pendingRideRequestId');
+                localStorage.removeItem('pendingRideId');
                 this.showDashboard();
                 this.loadRiderData();
             }
         } catch (error) {
-            console.error('Error loading pending ride request:', error);
-            localStorage.removeItem('pendingRideRequestId');
+            console.error('Error loading pending ride:', error);
+            localStorage.removeItem('pendingRideId');
+            this.showDashboard();
+            this.loadRiderData();
+        }
+    }
+
+    /**
+     * Check for active ride when rider logs in
+     */
+    async checkForActiveRide() {
+        try {
+            const activeRide = await apiService.getCurrentRiderActiveRide();
+            
+            if (activeRide) {
+                // Rider has an active ride, redirect to active ride page
+                const rideId = activeRide.Id || activeRide.id;
+                if (rideId) {
+                    localStorage.setItem('activeRideId', rideId.toString());
+                    window.location.href = `./active-ride.html?rideId=${rideId}`;
+                } else {
+                    console.error('Active ride found but no ID:', activeRide);
+                    this.showDashboard();
+                    this.loadRiderData();
+                }
+            } else {
+                // No active ride, show dashboard
+                this.showDashboard();
+                this.loadRiderData();
+            }
+        } catch (error) {
+            console.error('Error checking for active ride:', error);
             this.showDashboard();
             this.loadRiderData();
         }
@@ -407,8 +434,9 @@ class RiderInterface {
             // Calculate fare estimate
             const fareEstimate = this.calculateFareEstimate(pickupLocation, dropoffLocation, passengerCount, cartSize);
 
-            // Create ride request data
-            const rideRequestData = {
+            // Create ride data
+            const rideData = {
+                RiderId: apiService.getCurrentRiderId(),
                 RiderName: riderName,
                 PickupLocation: pickupLocation,
                 DropoffLocation: dropoffLocation,
@@ -424,19 +452,19 @@ class RiderInterface {
             // Show loading notification
             this.showNotification('Requesting ride...', 'info');
 
-            // Create ride request via API
-            const rideRequest = await apiService.createRideRequest(rideRequestData);
+            // Create ride via API
+            const ride = await apiService.createRide(rideData);
             
-            if (rideRequest) {
-                // All requests start as "Pending" - show waiting status
-                const requestId = rideRequest.Id || rideRequest.id;
-                this.currentRideRequestId = requestId;
+            if (ride) {
+                // All rides start as "Requested" - show waiting status
+                const rideId = ride.Id || ride.id;
+                this.currentRideId = rideId;
                 
-                // Store requestId in localStorage for persistence
-                localStorage.setItem('pendingRideRequestId', requestId.toString());
+                // Store rideId in localStorage for persistence
+                localStorage.setItem('pendingRideId', rideId.toString());
                 
-                this.showWaitingForDriverStatus(rideRequest);
-                this.startStatusPolling(requestId);
+                this.showWaitingForDriverStatus(ride);
+                this.startStatusPolling(rideId);
             }
 
         } catch (error) {
@@ -485,7 +513,7 @@ class RiderInterface {
      * Cancel pending ride request
      */
     async cancelPendingRide() {
-        if (!this.currentRideRequestId) {
+        if (!this.currentRideId) {
             this.showNotification('No pending ride to cancel.', 'warning');
             return;
         }
@@ -495,11 +523,11 @@ class RiderInterface {
             const confirmed = confirm('Are you sure you want to cancel this ride request?');
             if (!confirmed) return;
 
-            // Delete the ride request
-            await apiService.deleteRideRequest(this.currentRideRequestId);
+            // Cancel the ride
+            await apiService.cancelRide(this.currentRideId);
             
             // Clear session storage
-            localStorage.removeItem('pendingRideRequestId');
+            localStorage.removeItem('pendingRideId');
             
             // Close modal and reset UI
             const modal = document.getElementById('cancelRideModal');
@@ -510,7 +538,7 @@ class RiderInterface {
                 }
                 modal.remove();
             }
-            this.currentRideRequestId = null;
+            this.currentRideId = null;
             
             // Stop polling
             if (this.statusPollingInterval) {
@@ -529,11 +557,11 @@ class RiderInterface {
     /**
      * Start polling for ride status updates
      */
-    startStatusPolling(requestId) {
+    startStatusPolling(rideId) {
         
         this.statusPollingInterval = setInterval(async () => {
             try {
-                await this.checkRideRequestStatus(requestId);
+                await this.checkRideStatus(rideId);
             } catch (error) {
                 console.error('Error checking ride status:', error);
             }
@@ -558,62 +586,65 @@ class RiderInterface {
     }
 
     /**
-     * Check ride request status by polling GET /api/riderequests/{id}
+     * Check ride status by polling GET /api/rides/{id}
      */
-    async checkRideRequestStatus(requestId) {
+    async checkRideStatus(rideId) {
         try {
             
-            // Get the specific ride request
-            const rideRequest = await apiService.getRideRequest(requestId);
+            // Get the specific ride
+            const ride = await apiService.getRide(rideId);
             
-            if (!rideRequest) {
-                // Request was removed (declined or cancelled)
+            if (!ride) {
+                // Ride was removed (cancelled)
                 this.stopStatusPolling();
                 this.hideFullScreenLoadingModal();
-                this.showNotification('No driver available. Please try again.', 'warning');
+                this.showNotification('Ride was cancelled. Please try again.', 'warning');
                 return;
             }
 
-            if (rideRequest.Status === "Accepted") {
-                // Driver accepted the ride - get the ride using request ID
-                const ride = await apiService.getRideByRequestId(requestId);
+            if (ride.Status === "In Progress") {
+                // Driver accepted the ride
+                this.stopStatusPolling();
+                this.hideRideStatusCard();
                 
-                if (ride) {
-                    this.stopStatusPolling();
-                    this.hideRideStatusCard();
-                    
-                    // Clear pending request and set active ride
-                    localStorage.removeItem('pendingRideRequestId');
-                    localStorage.setItem('activeRideId', ride.Id.toString());
-                    
+                // Clear pending ride and set active ride
+                localStorage.removeItem('pendingRideId');
+                localStorage.setItem('activeRideId', ride.Id.toString());
+                
                 this.showNotification('Driver found! Redirecting to ride page...', 'success');
                 
                 // Redirect to active ride page
                 setTimeout(() => {
-                        window.location.href = `./active-ride.html?rideId=${ride.Id}`;
+                    window.location.href = `./active-ride.html?rideId=${ride.Id}`;
                 }, 1000);
-                }
+            } else if (ride.Status === "Cancelled") {
+                // Ride was cancelled
+                this.stopStatusPolling();
+                this.hideFullScreenLoadingModal();
+                this.showNotification('Ride was cancelled.', 'info');
+                localStorage.removeItem('pendingRideId');
             }
-            // If status is still "Pending", continue polling
+            // If status is still "Requested", continue polling
 
         } catch (error) {
-            console.error('Error checking ride request status:', error);
+            console.error('Error checking ride status:', error);
         }
     }
 
     /**
-     * Cancel ride request
+     * Cancel ride
      */
-    async cancelRideRequest(requestId) {
+    async cancelRide(rideId) {
         try {
-            await apiService.deleteRideRequest(requestId);
+            await apiService.cancelRide(rideId);
             this.stopStatusPolling();
             this.hideFullScreenLoadingModal();
             this.hideAllModals(); // Clean up all modals
-            this.showNotification('Ride request cancelled.', 'info');
+            this.showNotification('Ride cancelled.', 'info');
+            localStorage.removeItem('pendingRideId');
         } catch (error) {
-            console.error('Error cancelling ride request:', error);
-            this.showNotification('Failed to cancel ride request.', 'danger');
+            console.error('Error cancelling ride:', error);
+            this.showNotification('Failed to cancel ride.', 'danger');
         }
     }
 
