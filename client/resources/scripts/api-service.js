@@ -470,6 +470,156 @@ class ApiService {
         }
     }
 
+    async getRiders() {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching riders:', error);
+            throw error;
+        }
+    }
+
+    async getRider(riderId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders/${riderId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rider:', error);
+            throw error;
+        }
+    }
+
+    async getDrivers() {
+        try {
+            const response = await fetch(`${this.baseUrl}/drivers`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching drivers:', error);
+            throw error;
+        }
+    }
+
+    async getDriver(driverId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/drivers/${driverId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching driver:', error);
+            throw error;
+        }
+    }
+
+    async getCampusLocations() {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching campus locations:', error);
+            throw error;
+        }
+    }
+
+    async getCampusLocation(locationId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations/${locationId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching campus location:', error);
+            throw error;
+        }
+    }
+
+    async getCampusLocationsByType(type) {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations/type/${type}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching campus locations by type:', error);
+            throw error;
+        }
+    }
+
+    async createCampusLocation(locationData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(locationData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating campus location:', error);
+            throw error;
+        }
+    }
+
+    async updateCampusLocation(locationId, locationData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations/${locationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(locationData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating campus location:', error);
+            throw error;
+        }
+    }
+
+    async deleteCampusLocation(locationId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/campuslocations/${locationId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting campus location:', error);
+            throw error;
+        }
+    }
+
     async getUsers() {
         try {
             const response = await fetch(`${this.baseUrl}/users`);
@@ -479,19 +629,6 @@ class ApiService {
             return await response.json();
         } catch (error) {
             console.error('Error fetching users:', error);
-            throw error;
-        }
-    }
-
-    async getUser(userId) {
-        try {
-            const response = await fetch(`${this.baseUrl}/users/${userId}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching user:', error);
             throw error;
         }
     }

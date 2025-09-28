@@ -136,6 +136,41 @@ namespace api.Models
         public string DriverLocation { get; set; } = string.Empty; // "PreRide", "OnWay", "AtPickup", "AtDropoff"
     }
 
+    public class CampusLocation
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string Type { get; set; } = string.Empty; // "academic", "residential", "dining", "recreation", "landmark", "hub"
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class CreateCampusLocationDto
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public double Latitude { get; set; }
+        [Required]
+        public double Longitude { get; set; }
+        [Required]
+        public string Type { get; set; } = string.Empty;
+    }
+
+    public class UpdateCampusLocationDto
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+        [Required]
+        public double Latitude { get; set; }
+        [Required]
+        public double Longitude { get; set; }
+        [Required]
+        public string Type { get; set; } = string.Empty;
+    }
+
     public class User
     {
         public int Id { get; set; }

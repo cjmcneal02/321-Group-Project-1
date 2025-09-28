@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Tide Rides</title>
+    <title>Admin Dashboard - Tide Rides</title>
     <!-- Bootstrap 5.3.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -43,34 +43,9 @@
             </div>
         </div>
     </nav>
+
     <!-- Main Content -->
     <div class="container-fluid mt-5 pt-4">
-        <!-- Welcome Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h2 class="card-title mb-1 fw-bold" style="color: var(--primary-green);">
-                                    <i class="bi bi-gear-fill me-2"></i>Admin Portal
-                                </h2>
-                                <p class="text-muted mb-0">
-                                    <i class="bi bi-graph-up me-1"></i>
-                                    Platform Management & Analytics
-                                </p>
-                            </div>
-                            <div class="text-end">
-                                <div class="badge bg-success fs-6 mb-2">
-                                    <i class="bi bi-shield-check me-1"></i>System Admin
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Login Section -->
         <div class="row mb-4" id="login-section">
             <div class="col-12">
@@ -98,55 +73,130 @@
 
         <!-- Admin Dashboard (Hidden initially) -->
         <div id="admin-dashboard" style="display: none;">
-            <!-- Summary Banner -->
+            <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light border-0">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
-                                    <i class="bi bi-trophy me-2"></i>Platform Summary
-                            </h5>
+                                <div>
+                                    <h2 class="card-title mb-1 fw-bold" style="color: var(--primary-green);">
+                                        <i class="bi bi-gear-fill me-2"></i>Admin Dashboard
+                                    </h2>
+                                    <p class="text-muted mb-0">
+                                        <i class="bi bi-graph-up me-1"></i>
+                                        Platform Management & Analytics
+                                    </p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="badge bg-success fs-6 mb-2">
+                                        <i class="bi bi-shield-check me-1"></i>System Admin
+                                    </div>
                                 <button class="btn btn-outline-danger btn-sm" onclick="adminInterface.logout()">
                                     <i class="bi bi-box-arrow-right me-1"></i>Logout
                                 </button>
                             </div>
-                                        </div>
-                        <div class="card-body p-4">
-                            <div id="summary-banner" class="alert alert-success mb-0" role="alert">
-                                <i class="bi bi-check-circle me-2"></i>
-                                <strong>Platform Overview:</strong>
-                                <span class="ms-1">Total Users: <span id="summary-users">0</span>, Active Drivers: <span id="summary-drivers">0</span>, Active Riders: <span id="summary-riders">0</span>, Admins: <span id="summary-admins">0</span></span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-            <!-- User Management Section -->
-        <div class="row mb-4">
+            <!-- Dashboard Tabs -->
+            <div class="row">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light border-0">
-                            <div class="d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-light border-0 p-0">
+                            <ul class="nav nav-tabs nav-fill" id="adminTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                                        <i class="bi bi-people me-2"></i>Users
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="rides-tab" data-bs-toggle="tab" data-bs-target="#rides" type="button" role="tab">
+                                        <i class="bi bi-car-front me-2"></i>Rides
+                                    </button>
+                                </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">
+                            <i class="bi bi-chat-dots me-2"></i>Messages
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="campus-locations-tab" data-bs-toggle="tab" data-bs-target="#campus-locations" type="button" role="tab">
+                            <i class="bi bi-geo-alt me-2"></i>Campus Locations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                            <i class="bi bi-graph-up me-2"></i>Analytics
+                        </button>
+                    </li>
+                            </ul>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="tab-content" id="adminTabsContent">
+                                <!-- Users Tab -->
+                                <div class="tab-pane fade show active" id="users" role="tabpanel">
+                                    <div class="p-4">
+                                        <!-- Users Header -->
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
                                     <i class="bi bi-people me-2"></i>User Management
                         </h5>
-                                <button class="btn btn-primary btn-sm" onclick="adminInterface.showCreateUserModal()">
+                                            <button class="btn btn-primary" onclick="adminInterface.showCreateUserModal()">
                                     <i class="bi bi-plus-circle me-1"></i>Add User
                                 </button>
+                                        </div>
+
+                                        <!-- Filters -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Role Filter</label>
+                                                <select class="form-select" id="role-filter" onchange="adminInterface.filterUsers()">
+                                                    <option value="">All Roles</option>
+                                                    <option value="Admin">Admin</option>
+                                                    <option value="Driver">Driver</option>
+                                                    <option value="Rider">Rider</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Status Filter</label>
+                                                <select class="form-select" id="status-filter" onchange="adminInterface.filterUsers()">
+                                                    <option value="">All Status</option>
+                                                    <option value="Active">Active</option>
+                                                    <option value="Inactive">Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Search</label>
+                                                <input type="text" class="form-control" id="user-search" placeholder="Search users..." onkeyup="adminInterface.filterUsers()">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Sort By</label>
+                                                <select class="form-select" id="user-sort" onchange="adminInterface.sortUsers()">
+                                                    <option value="username">Username</option>
+                                                    <option value="firstName">First Name</option>
+                                                    <option value="lastName">Last Name</option>
+                                                    <option value="role">Role</option>
+                                                    <option value="createdAt">Created Date</option>
+                                                </select>
                             </div>
                     </div>
-                    <div class="card-body p-0">
+
+                                        <!-- Users Table -->
                             <div class="table-responsive">
-                                <table class="table table-hover mb-0">
+                                            <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
+                                                        <th>ID</th>
                                             <th>Username</th>
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>Role</th>
                                             <th>Status</th>
+                                                        <th>Created</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -155,18 +205,421 @@
                                     </tbody>
                                 </table>
                         </div>
-                                        </div>
-                                    </div>
+
+                                        <!-- Pagination -->
+                                        <nav aria-label="Users pagination">
+                                            <ul class="pagination justify-content-center" id="users-pagination">
+                                                <!-- Pagination will be generated here -->
+                                            </ul>
+                                        </nav>
                                     </div>
                                 </div>
 
+                                <!-- Rides Tab -->
+                                <div class="tab-pane fade" id="rides" role="tabpanel">
+                                    <div class="p-4">
+                                        <!-- Rides Header -->
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                                                <i class="bi bi-car-front me-2"></i>Ride Management
+                                            </h5>
+                                            <button class="btn btn-success" onclick="adminInterface.showCreateRideModal()">
+                                                <i class="bi bi-plus-circle me-1"></i>Create Ride
+                                            </button>
+                                        </div>
 
+                                        <!-- Ride Statistics -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="card bg-primary text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="total-rides">0</h4>
+                                                        <p class="mb-0">Total Rides</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-success text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="completed-rides">0</h4>
+                                                        <p class="mb-0">Completed</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-warning text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="in-progress-rides">0</h4>
+                                                        <p class="mb-0">In Progress</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-danger text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="cancelled-rides">0</h4>
+                                                        <p class="mb-0">Cancelled</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ride Filters -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Status Filter</label>
+                                                <select class="form-select" id="ride-status-filter" onchange="adminInterface.filterRides()">
+                                                    <option value="">All Status</option>
+                                                    <option value="Requested">Requested</option>
+                                                    <option value="In Progress">In Progress</option>
+                                                    <option value="Completed">Completed</option>
+                                                    <option value="Cancelled">Cancelled</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Driver Filter</label>
+                                                <select class="form-select" id="driver-filter" onchange="adminInterface.filterRides()">
+                                                    <option value="">All Drivers</option>
+                                                    <!-- Drivers will be populated here -->
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Rider Filter</label>
+                                                <select class="form-select" id="rider-filter" onchange="adminInterface.filterRides()">
+                                                    <option value="">All Riders</option>
+                                                    <!-- Riders will be populated here -->
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Search</label>
+                                                <input type="text" class="form-control" id="ride-search" placeholder="Search rides..." onkeyup="adminInterface.filterRides()">
+                                            </div>
+                                        </div>
+
+                                        <!-- Rides Table -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Rider</th>
+                                                        <th>Driver</th>
+                                                        <th>Pickup</th>
+                                                        <th>Dropoff</th>
+                                                        <th>Status</th>
+                                                        <th>Driver Location</th>
+                                                        <th>Fare</th>
+                                                        <th>Created</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="rides-table-body">
+                                                    <!-- Rides will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Pagination -->
+                                        <nav aria-label="Rides pagination">
+                                            <ul class="pagination justify-content-center" id="rides-pagination">
+                                                <!-- Pagination will be generated here -->
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+
+                                <!-- Messages Tab -->
+                                <div class="tab-pane fade" id="messages" role="tabpanel">
+                                    <div class="p-4">
+                                        <!-- Messages Header -->
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                                                <i class="bi bi-chat-dots me-2"></i>Message Management
+                                            </h5>
+                                            <button class="btn btn-danger" onclick="adminInterface.clearAllMessages()">
+                                                <i class="bi bi-trash me-1"></i>Clear All Messages
+                                            </button>
+                                        </div>
+
+                                        <!-- Message Statistics -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-4">
+                                                <div class="card bg-info text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="total-messages">0</h4>
+                                                        <p class="mb-0">Total Messages</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card bg-success text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="driver-messages">0</h4>
+                                                        <p class="mb-0">Driver Messages</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card bg-warning text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="rider-messages">0</h4>
+                                                        <p class="mb-0">Rider Messages</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Message Filters -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <label class="form-label">Sender Filter</label>
+                                                <select class="form-select" id="sender-filter" onchange="adminInterface.filterMessages()">
+                                                    <option value="">All Senders</option>
+                                                    <option value="driver">Driver</option>
+                                                    <option value="rider">Rider</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Ride Filter</label>
+                                                <select class="form-select" id="message-ride-filter" onchange="adminInterface.filterMessages()">
+                                                    <option value="">All Rides</option>
+                                                    <!-- Rides will be populated here -->
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Date Range</label>
+                                                <input type="date" class="form-control" id="message-date-filter" onchange="adminInterface.filterMessages()">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Search</label>
+                                                <input type="text" class="form-control" id="message-search" placeholder="Search messages..." onkeyup="adminInterface.filterMessages()">
+                                            </div>
+                                        </div>
+
+                                        <!-- Messages Table -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Ride ID</th>
+                                                        <th>Sender</th>
+                                                        <th>Sender Name</th>
+                                                        <th>Content</th>
+                                                        <th>Created</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="messages-table-body">
+                                                    <!-- Messages will be loaded here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <!-- Pagination -->
+                                        <nav aria-label="Messages pagination">
+                                            <ul class="pagination justify-content-center" id="messages-pagination">
+                                                <!-- Pagination will be generated here -->
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+
+                                <!-- Campus Locations Tab -->
+                                <div class="tab-pane fade" id="campus-locations" role="tabpanel">
+                                    <div class="p-4">
+                                        <!-- Campus Locations Header -->
+                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                            <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
+                                                <i class="bi bi-geo-alt me-2"></i>Campus Locations Management
+                                            </h5>
+                                            <button class="btn btn-primary" onclick="adminInterface.showCreateLocationModal()">
+                                                <i class="bi bi-plus-circle me-1"></i>Add Location
+                                            </button>
+                                        </div>
+
+                                        <!-- Location Statistics -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="card bg-primary text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="total-locations">0</h4>
+                                                        <p class="mb-0">Total Locations</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-info text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="academic-locations">0</h4>
+                                                        <p class="mb-0">Academic</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-success text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="residential-locations">0</h4>
+                                                        <p class="mb-0">Residential</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-warning text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="dining-locations">0</h4>
+                                                        <p class="mb-0">Dining</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Filters and Search -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="location-type-filter" class="form-label">Filter by Type:</label>
+                                                    <select class="form-select" id="location-type-filter" onchange="adminInterface.filterLocations()">
+                                                        <option value="">All Types</option>
+                                                        <option value="academic">Academic</option>
+                                                        <option value="residential">Residential</option>
+                                                        <option value="dining">Dining</option>
+                                                        <option value="recreation">Recreation</option>
+                                                        <option value="landmark">Landmark</option>
+                                                        <option value="hub">Hub</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="location-search" class="form-label">Search Locations:</label>
+                                                    <input type="text" class="form-control" id="location-search" placeholder="Search by name..." onkeyup="adminInterface.filterLocations()">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="location-sort" class="form-label">Sort by:</label>
+                                                    <select class="form-select" id="location-sort" onchange="adminInterface.sortLocations()">
+                                                        <option value="name">Name</option>
+                                                        <option value="type">Type</option>
+                                                        <option value="createdAt">Created Date</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Locations Table -->
+                                        <div class="card">
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Name</th>
+                                                                <th>Type</th>
+                                                                <th>Latitude</th>
+                                                                <th>Longitude</th>
+                                                                <th>Created</th>
+                                                                <th>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="locations-table-body">
+                                                            <!-- Dynamic content -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Pagination -->
+                                        <nav aria-label="Locations pagination" class="mt-3">
+                                            <ul class="pagination justify-content-center" id="locations-pagination">
+                                                <!-- Dynamic pagination -->
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+
+                                <!-- Analytics Tab -->
+                                <div class="tab-pane fade" id="analytics" role="tabpanel">
+                                    <div class="p-4">
+                                        <h5 class="mb-4 fw-bold" style="color: var(--primary-green);">
+                                            <i class="bi bi-graph-up me-2"></i>Platform Analytics
+                                        </h5>
+
+                                        <!-- Analytics Cards -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="card bg-primary text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="total-users-analytics">0</h4>
+                                                        <p class="mb-0">Total Users</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-success text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="active-drivers-analytics">0</h4>
+                                                        <p class="mb-0">Active Drivers</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-info text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="total-earnings-analytics">$0</h4>
+                                                        <p class="mb-0">Total Earnings</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-warning text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="avg-ride-fare-analytics">$0</h4>
+                                                        <p class="mb-0">Avg Ride Fare</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Charts Placeholder -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">Rides by Status</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <canvas id="ridesStatusChart" width="400" height="200"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">Users by Role</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <canvas id="usersRoleChart" width="400" height="200"></canvas>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
                                     </div>
                                     </div>
 
     <!-- Create User Modal -->
     <div class="modal fade" id="createUserModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Create New User</h5>
@@ -206,12 +659,53 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="create-role" class="form-label">Role</label>
-                                    <select class="form-select" id="create-role" required>
+                                    <select class="form-select" id="create-role" required onchange="adminInterface.toggleDriverFields('create')">
                                         <option value="">Select Role</option>
                                         <option value="Admin">Admin</option>
                                         <option value="Driver">Driver</option>
                                         <option value="Rider">Rider</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="create-password" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Driver-specific fields -->
+                        <div id="create-driver-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="create-driver-name" class="form-label">Driver Name</label>
+                                        <input type="text" class="form-control" id="create-driver-name">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="create-vehicle-name" class="form-label">Vehicle Name</label>
+                                        <input type="text" class="form-control" id="create-vehicle-name">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="create-vehicle-id" class="form-label">Vehicle ID</label>
+                                        <input type="text" class="form-control" id="create-vehicle-id">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="create-driver-availability" class="form-label">Availability</label>
+                                        <select class="form-select" id="create-driver-availability">
+                                            <option value="true">Available</option>
+                                            <option value="false">Unavailable</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +721,7 @@
 
     <!-- Edit User Modal -->
     <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit User</h5>
@@ -268,7 +762,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="edit-role" class="form-label">Role</label>
-                                    <select class="form-select" id="edit-role" required onchange="adminInterface.toggleDriverFields()">
+                                    <select class="form-select" id="edit-role" required onchange="adminInterface.toggleDriverFields('edit')">
                                         <option value="">Select Role</option>
                                         <option value="Admin">Admin</option>
                                         <option value="Driver">Driver</option>
@@ -276,11 +770,37 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-password" class="form-label">New Password (optional)</label>
+                                    <input type="password" class="form-control" id="edit-password">
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Driver-specific fields -->
-                        <div id="driver-fields" style="display: none;">
+                        <div id="edit-driver-fields" style="display: none;">
                             <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="edit-driver-name" class="form-label">Driver Name</label>
+                                        <input type="text" class="form-control" id="edit-driver-name">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="edit-vehicle-name" class="form-label">Vehicle Name</label>
+                                        <input type="text" class="form-control" id="edit-vehicle-name">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="edit-vehicle-id" class="form-label">Vehicle ID</label>
+                                        <input type="text" class="form-control" id="edit-vehicle-id">
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="edit-driver-status" class="form-label">Driver Status</label>
@@ -292,18 +812,21 @@
                                         </select>
                                     </div>
                                     </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="edit-driver-availability" class="form-label">Availability</label>
                                         <select class="form-select" id="edit-driver-availability">
-                                            <option value="">Select Availability</option>
-                                            <option value="true">Available for Rides</option>
-                                            <option value="false">Not Available for Rides</option>
+                                            <option value="true">Available</option>
+                                            <option value="false">Unavailable</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Active Status -->
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="edit-active">
@@ -322,9 +845,413 @@
         </div>
     </div>
 
+    <!-- Create Ride Modal -->
+    <div class="modal fade" id="createRideModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Ride</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-ride-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-rider" class="form-label">Rider</label>
+                                    <select class="form-select" id="create-ride-rider" required>
+                                        <option value="">Select Rider</option>
+                                        <!-- Riders will be populated here -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-driver" class="form-label">Driver</label>
+                                    <select class="form-select" id="create-ride-driver">
+                                        <option value="">Select Driver (optional)</option>
+                                        <!-- Drivers will be populated here -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-pickup" class="form-label">Pickup Location</label>
+                                    <input type="text" class="form-control" id="create-ride-pickup" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-dropoff" class="form-label">Dropoff Location</label>
+                                    <input type="text" class="form-control" id="create-ride-dropoff" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="create-ride-passengers" class="form-label">Passenger Count</label>
+                                    <input type="number" class="form-control" id="create-ride-passengers" min="1" max="8" value="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="create-ride-cart-size" class="form-label">Cart Size</label>
+                                    <select class="form-select" id="create-ride-cart-size" required>
+                                        <option value="Small">Small</option>
+                                        <option value="Standard">Standard</option>
+                                        <option value="Large">Large</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="create-ride-fare" class="form-label">Estimated Fare</label>
+                                    <input type="number" class="form-control" id="create-ride-fare" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-status" class="form-label">Status</label>
+                                    <select class="form-select" id="create-ride-status" required>
+                                        <option value="Requested">Requested</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-ride-driver-location" class="form-label">Driver Location</label>
+                                    <select class="form-select" id="create-ride-driver-location">
+                                        <option value="PreRide">PreRide</option>
+                                        <option value="OnWay">OnWay</option>
+                                        <option value="AtPickup">AtPickup</option>
+                                        <option value="AtDropoff">AtDropoff</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="create-ride-notes" class="form-label">Special Notes</label>
+                            <textarea class="form-control" id="create-ride-notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="adminInterface.createRide()">Create Ride</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Location Modal -->
+    <div class="modal fade" id="createLocationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-geo-alt me-2"></i>Add Campus Location
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-location-form">
+                        <div class="mb-3">
+                            <label for="create-location-name" class="form-label">Location Name</label>
+                            <input type="text" class="form-control" id="create-location-name" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-location-latitude" class="form-label">Latitude</label>
+                                    <input type="number" class="form-control" id="create-location-latitude" step="any" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="create-location-longitude" class="form-label">Longitude</label>
+                                    <input type="number" class="form-control" id="create-location-longitude" step="any" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="create-location-type" class="form-label">Location Type</label>
+                            <select class="form-select" id="create-location-type" required>
+                                <option value="">Select Type</option>
+                                <option value="academic">Academic</option>
+                                <option value="residential">Residential</option>
+                                <option value="dining">Dining</option>
+                                <option value="recreation">Recreation</option>
+                                <option value="landmark">Landmark</option>
+                                <option value="hub">Hub</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="adminInterface.createLocation()">Create Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Location Modal -->
+    <div class="modal fade" id="editLocationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-geo-alt me-2"></i>Edit Campus Location
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-location-form">
+                        <input type="hidden" id="edit-location-id">
+                        <div class="mb-3">
+                            <label for="edit-location-name" class="form-label">Location Name</label>
+                            <input type="text" class="form-control" id="edit-location-name" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-location-latitude" class="form-label">Latitude</label>
+                                    <input type="number" class="form-control" id="edit-location-latitude" step="any" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="edit-location-longitude" class="form-label">Longitude</label>
+                                    <input type="number" class="form-control" id="edit-location-longitude" step="any" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-location-type" class="form-label">Location Type</label>
+                            <select class="form-select" id="edit-location-type" required>
+                                <option value="">Select Type</option>
+                                <option value="academic">Academic</option>
+                                <option value="residential">Residential</option>
+                                <option value="dining">Dining</option>
+                                <option value="recreation">Recreation</option>
+                                <option value="landmark">Landmark</option>
+                                <option value="hub">Hub</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="adminInterface.updateLocation()">Update Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rider Profile Modal -->
+    <div class="modal fade" id="riderProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person me-2"></i>Rider Profile
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rider ID:</label>
+                                <p id="rider-profile-id" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Name:</label>
+                                <p id="rider-profile-name" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">User ID:</label>
+                                <p id="rider-profile-user-id" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Total Rides:</label>
+                                <p id="rider-profile-total-rides" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status:</label>
+                                <p id="rider-profile-status" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Average Rating:</label>
+                                <p id="rider-profile-rating" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Created:</label>
+                                <p id="rider-profile-created" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Last Updated:</label>
+                                <p id="rider-profile-updated" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Profile Modal -->
+    <div class="modal fade" id="driverProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-car-front me-2"></i>Driver Profile
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Driver ID:</label>
+                                <p id="driver-profile-id" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Name:</label>
+                                <p id="driver-profile-name" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">User ID:</label>
+                                <p id="driver-profile-user-id" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Vehicle ID:</label>
+                                <p id="driver-profile-vehicle-id" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Vehicle Name:</label>
+                                <p id="driver-profile-vehicle-name" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Current Location:</label>
+                                <p id="driver-profile-location" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status:</label>
+                                <p id="driver-profile-status" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Availability:</label>
+                                <p id="driver-profile-availability" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Total Rides:</label>
+                                <p id="driver-profile-total-rides" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Average Tip:</label>
+                                <p id="driver-profile-average-tip" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Rating:</label>
+                                <p id="driver-profile-rating" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Current Ride ID:</label>
+                                <p id="driver-profile-current-ride" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Created:</label>
+                                <p id="driver-profile-created" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Last Updated:</label>
+                                <p id="driver-profile-updated" class="form-control-plaintext">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap 5.3.3 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Admin JS -->
     <script src="./resources/scripts/api-service.js"></script>
     <script src="./resources/scripts/admin-api.js"></script>

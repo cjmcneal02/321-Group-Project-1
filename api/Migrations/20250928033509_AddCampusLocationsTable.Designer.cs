@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using api.Data;
 
@@ -10,9 +11,11 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(RideDbContext))]
-    partial class RideDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250928033509_AddCampusLocationsTable")]
+    partial class AddCampusLocationsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -51,292 +54,292 @@ namespace api.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8160),
                             Latitude = 33.212117999999997,
                             Longitude = -87.546127999999996,
                             Name = "Gorgas Library",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8270)
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8390),
                             Latitude = 33.209716999999998,
                             Longitude = -87.546835999999999,
                             Name = "Denny Chimes",
                             Type = "landmark",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8390)
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.207301000000001,
                             Longitude = -87.549064000000001,
                             Name = "Bryant-Denny Stadium",
                             Type = "recreation",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.214950000000002,
                             Longitude = -87.546285999999995,
                             Name = "Ferguson Student Center",
                             Type = "hub",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.203809999999997,
                             Longitude = -87.539703000000003,
                             Name = "Coleman Coliseum",
                             Type = "recreation",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.209826999999997,
                             Longitude = -87.548377000000002,
                             Name = "Reese Phifer Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.212642000000002,
                             Longitude = -87.549700000000001,
                             Name = "Ten Hoor Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 8,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400),
                             Latitude = 33.211083000000002,
                             Longitude = -87.544274999999999,
                             Name = "Lloyd Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8400)
                         },
                         new
                         {
                             Id = 9,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410),
                             Latitude = 33.211928999999998,
                             Longitude = -87.544212999999999,
                             Name = "Smith Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
                             Id = 10,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410),
                             Latitude = 33.211644999999997,
                             Longitude = -87.547810999999996,
                             Name = "Bidgood Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
                             Id = 11,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410),
                             Latitude = 33.209750999999997,
                             Longitude = -87.542963,
                             Name = "Russell Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
                             Id = 12,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410),
                             Latitude = 33.205334999999998,
                             Longitude = -87.549397999999997,
                             Name = "Tutwiler Hall",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
                             Id = 13,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410),
                             Latitude = 33.216746000000001,
                             Longitude = -87.546687000000006,
                             Name = "Paty Hall",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8410)
                         },
                         new
                         {
                             Id = 14,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.217326999999997,
                             Longitude = -87.549386999999996,
                             Name = "Ridgecrest South",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 15,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.217187000000003,
                             Longitude = -87.548608999999999,
                             Name = "Ridgecrest East",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 16,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.217078000000001,
                             Longitude = -87.548089000000004,
                             Name = "Blount Hall",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 17,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.219701999999998,
                             Longitude = -87.544140999999996,
                             Name = "Presidential Village",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 18,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.219701999999998,
                             Longitude = -87.544140999999996,
                             Name = "Riverside",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 19,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420),
                             Latitude = 33.217410000000001,
                             Longitude = -87.545917000000003,
                             Name = "Lakeside Dining",
                             Type = "dining",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8420)
                         },
                         new
                         {
                             Id = 20,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.212577000000003,
                             Longitude = -87.542907999999997,
                             Name = "Fresh Foods Company",
                             Type = "dining",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 21,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.211596999999998,
                             Longitude = -87.531760000000006,
                             Name = "Student Recreation Center",
                             Type = "recreation",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 22,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.205570999999999,
                             Longitude = -87.541471999999999,
                             Name = "Aquatic Center",
                             Type = "recreation",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 23,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.212038,
                             Longitude = -87.551336000000006,
                             Name = "Hewson Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 24,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.211212000000003,
                             Longitude = -87.541341000000003,
                             Name = "Bryant Hall",
                             Type = "residential",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 25,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430),
                             Latitude = 33.208714000000001,
                             Longitude = -87.545828999999998,
                             Name = "Little Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8430)
                         },
                         new
                         {
                             Id = 26,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440),
                             Latitude = 33.209130000000002,
                             Longitude = -87.544390000000007,
                             Name = "Farrah Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440)
                         },
                         new
                         {
                             Id = 27,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440),
                             Latitude = 33.212276000000003,
                             Longitude = -87.546541000000005,
                             Name = "Clark Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440)
                         },
                         new
                         {
                             Id = 28,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440),
                             Latitude = 33.209541999999999,
                             Longitude = -87.544387999999998,
                             Name = "Gallalee Hall",
                             Type = "academic",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440)
                         },
                         new
                         {
                             Id = 29,
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440),
                             Latitude = 33.205334999999998,
                             Longitude = -87.549397999999997,
                             Name = "Burke Dining Hall",
                             Type = "dining",
-                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2025, 9, 28, 3, 35, 9, 636, DateTimeKind.Utc).AddTicks(8440)
                         });
                 });
 
