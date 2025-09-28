@@ -1075,11 +1075,13 @@ class RiderInterface {
      * @param {HTMLElement} input - Input element
      */
     handleLocationFocus(input) {
+        console.log(`Focus event for ${input.id}`);
         const popularContainer = this.getPopularContainer(input);
         const suggestionsContainer = this.getSuggestionsContainer(input);
         
         // Show popular locations when focused and empty
         if (!input.value.trim()) {
+            console.log(`Showing popular locations for ${input.id}`);
             popularContainer.classList.add('show');
         }
         
@@ -1372,6 +1374,8 @@ class RiderInterface {
     populatePopularLocations(input) {
         const popularContainer = this.getPopularContainer(input);
         const chipsContainer = popularContainer.querySelector('.popular-chips');
+        
+        console.log(`Populating popular locations for ${input.id}:`, popularContainer, chipsContainer);
         
         // Define comprehensive list of popular campus locations
         const popularLocationNames = [
