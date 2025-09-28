@@ -219,6 +219,7 @@ class RiderInterface {
         localStorage.removeItem('riderUserRole');
         localStorage.removeItem('pendingRideRequestId');
         localStorage.removeItem('activeRideId');
+        localStorage.removeItem('cachedLocation');
         
         this.showLogin();
         this.showNotification('Logged out successfully.', 'info');
@@ -247,16 +248,27 @@ class RiderInterface {
     }
 
     async getCurrentLocationOnLogin() {
-        try {
-            // Try to get current location automatically
-            await this.useCurrentLocation();
-        } catch (error) {
-            console.log('Could not get current location automatically:', error);
-            // Set a default message if location can't be determined
-            const currentLocationElement = document.getElementById('current-location');
-            if (currentLocationElement) {
-                currentLocationElement.textContent = 'Location not available';
+        // Check if we have a cached location first
+        const cachedLocation = localStorage.getItem('cachedLocation');
+        if (cachedLocation) {
+            try {
+                const locationData = JSON.parse(cachedLocation);
+                const currentLocationElement = document.getElementById('current-location');
+                if (currentLocationElement) {
+                    currentLocationElement.textContent = locationData.nearestBuilding;
+                }
+                console.log('Using cached location:', locationData.nearestBuilding);
+                return;
+            } catch (error) {
+                console.log('Invalid cached location data, clearing cache');
+                localStorage.removeItem('cachedLocation');
             }
+        }
+        
+        // No cached location, set default message
+        const currentLocationElement = document.getElementById('current-location');
+        if (currentLocationElement) {
+            currentLocationElement.textContent = 'Click "Use Current Location" to set';
         }
     }
 
@@ -1502,10 +1514,15 @@ class RiderInterface {
      */
     async useCurrentLocation() {
         try {
+            // Always get fresh GPS location when button is clicked
             const locationData = await this.locationServices.getCurrentLocationWithBuilding();
             
+            // Cache the fresh location data for future page loads
+            localStorage.setItem('cachedLocation', JSON.stringify(locationData));
+            console.log('Fresh location obtained and cached:', locationData.nearestBuilding);
+            
             // Set pickup location
-                const pickupInput = document.getElementById('pickup-location');
+            const pickupInput = document.getElementById('pickup-location');
             pickupInput.value = locationData.nearestBuilding;
             pickupInput.classList.add('is-valid');
             
