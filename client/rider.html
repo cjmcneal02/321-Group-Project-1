@@ -374,6 +374,56 @@
         </div>
     </div>
 
+    <!-- Waiting for Driver Modal -->
+    <div id="cancelRideModal" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: crimson; color: white;">
+                    <h5 class="modal-title" style="color: white;">
+                        <i class="bi bi-clock-history me-2"></i>Ride Request Submitted
+                    </h5>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <div class="spinner-border text-success mb-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h6 class="fw-bold">Waiting for driver...</h6>
+                        <p class="text-muted">Your ride request has been submitted</p>
+                    </div>
+                    
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>From:</strong><br>
+                                <small class="text-muted" id="waiting-pickup">Loading...</small>
+                            </div>
+                            <div class="col-6">
+                                <strong>To:</strong><br>
+                                <small class="text-muted" id="waiting-dropoff">Loading...</small>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-6">
+                                <strong>Passengers:</strong><br>
+                                <small class="text-muted" id="waiting-passengers">Loading...</small>
+                            </div>
+                            <div class="col-6">
+                                <strong>Fare:</strong><br>
+                                <small class="text-success fw-bold" id="waiting-fare">Loading...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" onclick="riderInterface.cancelPendingRide()">
+                        <i class="bi bi-x-circle me-1"></i>Cancel Ride
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Core JavaScript Modules -->
     <script src="./resources/scripts/api-service.js"></script>
     <script src="./resources/scripts/campus-data.js"></script>

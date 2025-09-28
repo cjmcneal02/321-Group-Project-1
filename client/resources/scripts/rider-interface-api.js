@@ -470,67 +470,12 @@ class RiderInterface {
      * Show cancel ride modal
      */
     showCancelRideModal(rideRequest) {
-        // Create a simple modal with cancel button
-        const modalHtml = `
-            <div class="modal fade" id="cancelRideModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-warning text-dark">
-                            <h5 class="modal-title">
-                                <i class="bi bi-clock-history me-2"></i>Ride Request Submitted
-                            </h5>
-                        </div>
-                        <div class="modal-body text-center">
-                            <div class="mb-3">
-                                <div class="spinner-border text-success mb-2" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <h6 class="fw-bold">Waiting for driver...</h6>
-                                <p class="text-muted">Your ride request has been submitted</p>
-                            </div>
-                            
-                            <div class="border rounded p-3 mb-3 bg-light">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <strong>From:</strong><br>
-                                        <small class="text-muted">${rideRequest.PickupLocation || rideRequest.pickupLocation || 'Unknown'}</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>To:</strong><br>
-                                        <small class="text-muted">${rideRequest.DropoffLocation || rideRequest.dropoffLocation || 'Unknown'}</small>
-                                    </div>
-                                </div>
-                                <div class="row mt-2">
-                                    <div class="col-6">
-                                        <strong>Passengers:</strong><br>
-                                        <small class="text-muted">${rideRequest.PassengerCount || rideRequest.passengerCount || 2}</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <strong>Fare:</strong><br>
-                                        <small class="text-success fw-bold">$${(rideRequest.EstimatedFare || rideRequest.estimatedFare || 0).toFixed(2)}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-danger" onclick="riderInterface.cancelPendingRide()">
-                                <i class="bi bi-x-circle me-1"></i>Cancel Ride
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Remove existing modal if it exists
-        const existingModal = document.getElementById('cancelRideModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // Add modal to body
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
+        // Populate the modal with dynamic data
+        document.getElementById('waiting-pickup').textContent = rideRequest.PickupLocation || rideRequest.pickupLocation || 'Unknown';
+        document.getElementById('waiting-dropoff').textContent = rideRequest.DropoffLocation || rideRequest.dropoffLocation || 'Unknown';
+        document.getElementById('waiting-passengers').textContent = rideRequest.PassengerCount || rideRequest.passengerCount || 2;
+        document.getElementById('waiting-fare').textContent = `$${(rideRequest.EstimatedFare || rideRequest.estimatedFare || 0).toFixed(2)}`;
+
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('cancelRideModal'));
         modal.show();
@@ -594,10 +539,7 @@ class RiderInterface {
             }
         }, 2000); // Check every 2 seconds
 
-        // Set timeout for driver search
-        this.driverSearchTimeout = setTimeout(() => {
-            this.showDriverSearchTimeout();
-        }, 120000); // 2 minutes timeout
+        // No timeout - wait forever for a driver
         
     }
 
