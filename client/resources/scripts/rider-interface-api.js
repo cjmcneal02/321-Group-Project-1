@@ -100,7 +100,7 @@ class RiderInterface {
             if (!rideRequest) {
                 // Request no longer exists, clear session
                 console.log('Ride request not found, clearing session');
-                sessionStorage.removeItem('pendingRideRequestId');
+                localStorage.removeItem('pendingRideRequestId');
                 this.showDashboard();
                 this.loadRiderData();
                 return;
@@ -118,19 +118,19 @@ class RiderInterface {
                 // Accepted, get the ride and redirect
                 const ride = await apiService.getRideByRequestId(requestId);
                 if (ride) {
-                    sessionStorage.removeItem('pendingRideRequestId');
-                    sessionStorage.setItem('activeRideId', ride.Id.toString());
+                    localStorage.removeItem('pendingRideRequestId');
+                    localStorage.setItem('activeRideId', ride.Id.toString());
                     window.location.href = `./active-ride.html?rideId=${ride.Id}`;
                 }
             } else {
                 // Completed or cancelled, clear session and show dashboard
-                sessionStorage.removeItem('pendingRideRequestId');
+                localStorage.removeItem('pendingRideRequestId');
                 this.showDashboard();
                 this.loadRiderData();
             }
         } catch (error) {
             console.error('Error loading pending ride request:', error);
-            sessionStorage.removeItem('pendingRideRequestId');
+            localStorage.removeItem('pendingRideRequestId');
             this.showDashboard();
             this.loadRiderData();
         }
@@ -426,8 +426,8 @@ class RiderInterface {
                 const requestId = rideRequest.Id || rideRequest.id;
                 this.currentRideRequestId = requestId;
                 
-                // Store requestId in sessionStorage for persistence
-                sessionStorage.setItem('pendingRideRequestId', requestId.toString());
+                // Store requestId in localStorage for persistence
+                localStorage.setItem('pendingRideRequestId', requestId.toString());
                 
                 this.showWaitingForDriverStatus(rideRequest);
                 this.startStatusPolling(requestId);
@@ -549,7 +549,7 @@ class RiderInterface {
             await apiService.deleteRideRequest(this.currentRideRequestId);
             
             // Clear session storage
-            sessionStorage.removeItem('pendingRideRequestId');
+            localStorage.removeItem('pendingRideRequestId');
             
             // Close modal and reset UI
             const modal = document.getElementById('cancelRideModal');
@@ -643,8 +643,8 @@ class RiderInterface {
                     this.hideRideStatusCard();
                     
                     // Clear pending request and set active ride
-                    sessionStorage.removeItem('pendingRideRequestId');
-                    sessionStorage.setItem('activeRideId', ride.Id.toString());
+                    localStorage.removeItem('pendingRideRequestId');
+                    localStorage.setItem('activeRideId', ride.Id.toString());
                     
                 this.showNotification('Driver found! Redirecting to ride page...', 'success');
                 
