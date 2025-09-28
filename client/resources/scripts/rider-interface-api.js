@@ -67,7 +67,7 @@ class RiderInterface {
                 const pendingRideId = localStorage.getItem('pendingRideId');
                 if (pendingRideId) {
                     await this.loadPendingRideRequest(pendingRideId);
-                } else {
+        } else {
                     // Check if there's an active ride for this rider
                     await this.checkForActiveRide();
                 }
@@ -492,6 +492,11 @@ class RiderInterface {
         
         // Show cancel button in a modal or notification
         this.showCancelRideModal(rideRequest);
+        
+        // Start polling for status updates if we have a ride ID
+        if (this.currentRideId) {
+            this.startStatusPolling(this.currentRideId);
+        }
     }
 
     /**
@@ -602,22 +607,22 @@ class RiderInterface {
                 return;
             }
 
-            if (ride.Status === "In Progress") {
+            if (ride.Status === "In Progress" || ride.status === "In Progress") {
                 // Driver accepted the ride
                 this.stopStatusPolling();
                 this.hideRideStatusCard();
                 
                 // Clear pending ride and set active ride
                 localStorage.removeItem('pendingRideId');
-                localStorage.setItem('activeRideId', ride.Id.toString());
+                localStorage.setItem('activeRideId', (ride.Id || ride.id).toString());
                 
                 this.showNotification('Driver found! Redirecting to ride page...', 'success');
                 
                 // Redirect to active ride page
                 setTimeout(() => {
-                    window.location.href = `./active-ride.html?rideId=${ride.Id}`;
+                    window.location.href = `./active-ride.html?rideId=${ride.Id || ride.id}`;
                 }, 1000);
-            } else if (ride.Status === "Cancelled") {
+            } else if (ride.Status === "Cancelled" || ride.status === "Cancelled") {
                 // Ride was cancelled
                 this.stopStatusPolling();
                 this.hideFullScreenLoadingModal();

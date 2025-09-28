@@ -329,6 +329,10 @@ class DriverInterface {
         if (totalRidesElement) {
             totalRidesElement.textContent = driver.totalRides || driver.TotalRides || 0;
         }
+
+        // Update requests visibility based on availability
+        const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+        this.updateRequestsVisibility(isAvailable);
     }
 
     /**
@@ -518,6 +522,10 @@ class DriverInterface {
             noRideState.classList.add('d-none');
         }
         
+        // Hide driver status panel and make active ride panel full-width
+        this.hideDriverStatusPanel();
+        this.makeActiveRidePanelFullWidth();
+        
         // Load chat messages and start polling
         this.loadChatMessages();
         this.startChatPolling();
@@ -615,6 +623,46 @@ class DriverInterface {
             default:
                 // Default state - only "On Way" button enabled
                 break;
+        }
+    }
+
+    /**
+     * Hide driver status panel
+     */
+    hideDriverStatusPanel() {
+        const driverStatusPanel = document.querySelector('.col-lg-4');
+        if (driverStatusPanel) {
+            driverStatusPanel.style.display = 'none';
+        }
+    }
+
+    /**
+     * Show driver status panel
+     */
+    showDriverStatusPanel() {
+        const driverStatusPanel = document.querySelector('.col-lg-4');
+        if (driverStatusPanel) {
+            driverStatusPanel.style.display = 'block';
+        }
+    }
+
+    /**
+     * Make active ride panel full-width
+     */
+    makeActiveRidePanelFullWidth() {
+        const activeRidePanel = document.querySelector('.col-lg-8');
+        if (activeRidePanel) {
+            activeRidePanel.className = 'col-12';
+        }
+    }
+
+    /**
+     * Restore active ride panel to normal width
+     */
+    restoreActiveRidePanelWidth() {
+        const activeRidePanel = document.querySelector('.col-12');
+        if (activeRidePanel) {
+            activeRidePanel.className = 'col-lg-8';
         }
     }
 
@@ -1192,6 +1240,10 @@ class DriverInterface {
             noRideState.classList.remove('d-none');
         }
         
+        // Restore normal layout - show driver status panel and restore active ride panel width
+        this.showDriverStatusPanel();
+        this.restoreActiveRidePanelWidth();
+        
         // Reset buttons
         const onWayBtn = document.getElementById('onWayBtn');
         const arrivedBtn = document.getElementById('arrivedBtn');
@@ -1227,9 +1279,26 @@ class DriverInterface {
             // Update UI elements
             this.updateToggleButton(isAvailable);
             
+            // Show/hide ride requests based on availability
+            this.updateRequestsVisibility(isAvailable);
+            
         } catch (error) {
             console.error('Error updating driver status:', error);
             this.showNotification('Failed to update status.', 'danger');
+        }
+    }
+
+    /**
+     * Update requests visibility based on driver availability
+     */
+    updateRequestsVisibility(isAvailable) {
+        const requestsSection = document.getElementById('requests-section');
+        if (requestsSection) {
+            if (isAvailable) {
+                requestsSection.style.display = 'block';
+            } else {
+                requestsSection.style.display = 'none';
+            }
         }
     }
 
@@ -1266,10 +1335,11 @@ class DriverInterface {
         }
 
         // Filter rides for this driver and completed rides only
-        const driverRides = rideHistory.filter(ride => 
-            (ride.driverId || ride.DriverId) === this.currentDriverId && 
-            (ride.status || ride.Status) === 'Completed'
-        );
+        const driverRides = rideHistory.filter(ride => {
+            const rideDriverId = ride.driverId || ride.DriverId;
+            const rideStatus = ride.status || ride.Status;
+            return rideDriverId === this.currentDriverId && rideStatus === 'Completed';
+        });
 
         if (driverRides.length === 0) {
             tableBody.innerHTML = `
@@ -1282,9 +1352,19 @@ class DriverInterface {
             return;
         }
 
+        // Sort by completion time (most recent first) and take only the 3 most recent
+        const recentRides = driverRides
+            .sort((a, b) => {
+                const timeA = new Date(a.endTime || a.EndTime);
+                const timeB = new Date(b.endTime || b.EndTime);
+                return timeB - timeA; // Most recent first
+            })
+            .slice(0, 3); // Only show 3 most recent
+
         // Populate table with actual ride data
-        tableBody.innerHTML = driverRides.map(ride => {
-            const rideTime = new Date(ride.startTime || ride.StartTime).toLocaleString();
+        tableBody.innerHTML = recentRides.map(ride => {
+            const endTime = new Date(ride.endTime || ride.EndTime);
+            const timeAgo = this.formatTimeAgo(endTime);
             const riderName = ride.riderName || ride.RiderName || 'Unknown Rider';
             const pickup = ride.pickupLocation || ride.PickupLocation || 'Unknown';
             const dropoff = ride.dropoffLocation || ride.DropoffLocation || 'Unknown';
@@ -1293,7 +1373,7 @@ class DriverInterface {
 
             return `
                 <tr>
-                    <td>${rideTime}</td>
+                    <td>${timeAgo}</td>
                     <td>${riderName}</td>
                     <td>${pickup} → ${dropoff}</td>
                     <td>$${fare.toFixed(2)}</td>
@@ -1301,6 +1381,31 @@ class DriverInterface {
                 </tr>
             `;
         }).join('');
+    }
+
+    /**
+     * Format time ago (copied from rider interface)
+     */
+    formatTimeAgo(date) {
+        const now = new Date();
+        const diffInMs = now - date;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        const diffInWeeks = Math.floor(diffInDays / 7);
+        const diffInYears = Math.floor(diffInDays / 365);
+
+        if (diffInMinutes < 60) {
+            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        } else if (diffInDays < 7) {
+            return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        } else if (diffInWeeks < 52) {
+            return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+        } else {
+            return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+        }
     }
 
     /**
@@ -1324,24 +1429,10 @@ class DriverInterface {
             totalEarningsElement.textContent = `$${totalEarnings.toFixed(2)}`;
         }
 
-        // Get driver's current rating from driver data
-        this.updateDriverRating();
-    }
-
-    /**
-     * Update driver rating display
-     */
-    async updateDriverRating() {
-        try {
-            const driver = await apiService.getDriver(this.currentDriverId);
-            const rating = driver.rating || driver.Rating || 0;
-            
-            const averageRatingElement = document.getElementById('averageRating');
-            if (averageRatingElement) {
-                averageRatingElement.textContent = rating.toFixed(1);
-            }
-        } catch (error) {
-            console.error('Error updating driver rating:', error);
+        // Update total rides display
+        const totalRidesElement = document.getElementById('totalRides');
+        if (totalRidesElement) {
+            totalRidesElement.textContent = driverRides.length;
         }
     }
 

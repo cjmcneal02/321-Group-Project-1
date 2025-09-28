@@ -272,24 +272,28 @@ class ApiService {
 
     async getRideHistory() {
         try {
-            // Get ride history for the current rider by ID
-            const riderId = this.getCurrentRiderId();
-            if (!riderId) {
-                return [];
-            }
-            
             const response = await fetch(`${this.baseUrl}/rides/history`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const allRides = await response.json();
             
-            // Filter rides by current rider's ID (handle both camelCase and PascalCase)
-            const riderRides = allRides.filter(ride => {
-                const rideRiderId = ride.RiderId || ride.riderId;
-                return rideRiderId === riderId;
-            });
-            return riderRides;
+            // If we're a rider, filter by rider ID
+            if (this.currentUserRole === 'Rider') {
+                const riderId = this.getCurrentRiderId();
+                if (!riderId) {
+                    return [];
+                }
+                
+                const riderRides = allRides.filter(ride => {
+                    const rideRiderId = ride.RiderId || ride.riderId;
+                    return rideRiderId === riderId;
+                });
+                return riderRides;
+            }
+            
+            // If we're a driver, return all rides (they'll be filtered on the frontend)
+            return allRides;
         } catch (error) {
             console.error('Error fetching ride history:', error);
             throw error;
