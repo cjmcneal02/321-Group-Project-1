@@ -1594,8 +1594,105 @@ class RiderInterface {
                     </div>
                 `;
             }
+
+            // Update ride history list
+            this.updateRideHistoryList(rideHistory);
         } catch (error) {
             console.error('Error updating ride statistics:', error);
+            
+            // Show welcome message for new riders when API fails
+            this.updateRideHistoryList([]);
+            
+            // Set default stats
+            const statsDisplay = document.getElementById('ride-stats-display');
+            if (statsDisplay) {
+                statsDisplay.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-primary">0</h5>
+                            <small class="text-muted">Total Rides</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success">$0.00</h5>
+                            <small class="text-muted">Total Spent</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    /**
+     * Update ride history list with actual data
+     */
+    updateRideHistoryList(rideHistory) {
+        const rideHistoryContainer = document.getElementById('ride-history-list');
+        if (!rideHistoryContainer) {
+            console.log('Ride history container not found');
+            return;
+        }
+
+        if (rideHistory.length === 0) {
+            rideHistoryContainer.innerHTML = `
+                <div class="list-group-item border-0 px-0 text-center py-4">
+                    <div class="text-muted">
+                        <i class="bi bi-emoji-smile fs-1 mb-3 text-success"></i>
+                        <h5 class="mb-2 text-success">Welcome to Tide Rides!</h5>
+                        <p class="mb-2">You're all set to start your first ride.</p>
+                        <small>Your completed rides will appear here after your first trip.</small>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // Sort rides by date (most recent first)
+        const sortedRides = rideHistory.sort((a, b) => new Date(b.EndTime || b.StartTime) - new Date(a.EndTime || a.StartTime));
+
+        // Show only the 5 most recent rides
+        const recentRides = sortedRides.slice(0, 5);
+
+        rideHistoryContainer.innerHTML = recentRides.map(ride => {
+            const startTime = new Date(ride.StartTime);
+            const endTime = ride.EndTime ? new Date(ride.EndTime) : null;
+            const displayTime = endTime || startTime;
+            
+            // Format date and time
+            const timeAgo = this.getTimeAgo(displayTime);
+            const route = `${ride.PickupLocation || 'Unknown'} → ${ride.DropoffLocation || 'Unknown'}`;
+            
+            return `
+                <div class="list-group-item border-0 px-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 fw-bold">${route}</h6>
+                            <small class="text-muted">${timeAgo}</small>
+                        </div>
+                        <span class="badge bg-success">Completed</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Get time ago string for display
+     */
+    getTimeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+        if (diffDays > 0) {
+            return `${diffDays} day${diffDays > 1 ? 's' : ''} ago, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        } else if (diffHours > 0) {
+            return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        } else if (diffMinutes > 0) {
+            return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+        } else {
+            return 'Just now';
         }
     }
 

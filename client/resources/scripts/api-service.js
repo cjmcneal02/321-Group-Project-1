@@ -228,11 +228,22 @@ class ApiService {
 
     async getRideHistory() {
         try {
+            // Get ride history for the current rider by name
+            const riderName = this.getCurrentUserName();
+            if (!riderName) {
+                console.log('No current user name, returning empty ride history');
+                return [];
+            }
+            
             const response = await fetch(`${this.baseUrl}/rides/history`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return await response.json();
+            const allRides = await response.json();
+            
+            // Filter rides by current rider's name
+            const riderRides = allRides.filter(ride => ride.RiderName === riderName);
+            return riderRides;
         } catch (error) {
             console.error('Error fetching ride history:', error);
             throw error;
