@@ -1,4 +1,4 @@
-// Admin Dashboard - Live Data from AppState
+// Admin Dashboard - Legacy AppState Version (Not used in API flow)
 let dashboardPollingInterval = null;
 
 function formatCurrency(amount) {

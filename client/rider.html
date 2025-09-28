@@ -62,7 +62,6 @@
                             <label for="rider-select" class="form-label">Select Rider Account</label>
                             <select class="form-select" id="rider-select" required>
                                 <option value="">Select a rider...</option>
-                                <option value="rider">James Wilson</option>
                             </select>
                         </div>
                         <button type="button" class="btn btn-primary" onclick="riderInterface.loginRider()">
@@ -86,11 +85,11 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h2 class="card-title mb-1 fw-bold" style="color: var(--primary-green);">
-                                            Welcome, <span id="rider-name">James Wilson</span>
+                                            Welcome, <span id="rider-name">Loading...</span>
                                         </h2>
                                         <p class="text-muted mb-0">
                                             <i class="bi bi-geo-alt-fill me-1"></i>
-                                            Current Location: <span id="current-location">Ferguson Student Center</span>
+                                            Current Location: <span id="current-location">Loading...</span>
                                         </p>
                                     </div>
                                     <div class="text-end">
@@ -183,12 +182,6 @@
                                                         <label for="passenger-count-select">Select Passenger Count</label>
                                                     </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="alert alert-warning py-3">
-                                                        <i class="bi bi-info-circle me-2"></i>
-                                                        <strong>Large Groups:</strong> For groups larger than 8 people, please submit multiple ride requests. Each golf cart can accommodate a maximum of 8 passengers.
-                                                    </div>
-                                                </div>
                                             </div>
                                             <div class="mt-2">
                                                 <small id="passenger-count-help" class="text-muted">
@@ -242,7 +235,7 @@
                 <div class="row mb-4">
                     <div class="col-12 text-center">
                         <button type="button" class="btn btn-custom btn-lg px-5" id="request-ride-btn">
-                            <i class="bi bi-car-front me-2"></i>Request Solar Ride
+                            <i class="bi bi-car-front me-2"></i>Request Ride
                         </button>
                     </div>
                 </div>
@@ -250,63 +243,6 @@
 
             <!-- Right Column - Status & Info -->
             <div class="col-lg-4">
-                <!-- Current Ride Status Card (Initially Hidden) -->
-                <div class="card border-0 shadow-sm mb-4" id="ride-status-card" style="display: none;">
-                    <div class="card-header bg-success text-white border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-car-front me-2"></i>Current Ride
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="text-center mb-3">
-                            <div class="spinner-border text-success mb-2" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <h6 class="fw-bold">Finding your driver...</h6>
-                        </div>
-                        
-                        <!-- Progress Bar -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small text-muted mb-1">
-                                <span>Requested</span>
-                                <span>Driver Assigned</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-success" role="progressbar" 
-                                     style="width: 25%" id="ride-progress"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Driver Info -->
-                        <div class="border-top pt-3" id="driver-info" style="display: none;">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                     style="width: 40px; height: 40px;">
-                                    <i class="bi bi-person-fill text-white"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 fw-bold">Stacy Streets</h6>
-                                    <small class="text-muted">Rating: 4.9 ⭐</small>
-                                </div>
-                            </div>
-                            <div class="small text-muted">
-                                <i class="bi bi-car-front me-1"></i>Solar Vehicle #SC-001<br>
-                                <i class="bi bi-clock me-1"></i>ETA: 5 minutes
-                            </div>
-                        </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="d-grid gap-2 mt-3">
-                            <button class="btn btn-outline-success btn-sm" id="track-ride-btn">
-                                <i class="bi bi-geo-alt me-1"></i>Track Ride
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" id="cancel-ride-btn">
-                                <i class="bi bi-x-circle me-1"></i>Cancel Ride
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Recent Rides -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-light border-0">

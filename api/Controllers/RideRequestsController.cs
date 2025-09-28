@@ -65,6 +65,7 @@ namespace api.Controllers
                 DropoffLocation = dto.DropoffLocation,
                 PassengerCount = dto.PassengerCount,
                 CartSize = dto.CartSize,
+                SpecialNotes = dto.SpecialNotes,
                 EstimatedFare = dto.EstimatedFare,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow,
@@ -73,53 +74,6 @@ namespace api.Controllers
 
             _context.RideRequests.Add(rideRequest);
             await _context.SaveChangesAsync();
-
-            // Attempt auto-assign to an available driver immediately
-            try
-            {
-                var availableDriver = await _context.Drivers
-                    .Where(d => d.IsAvailable)
-                    .OrderByDescending(d => d.Rating)
-                    .FirstOrDefaultAsync();
-
-                if (availableDriver != null)
-                {
-                    var ride = new Ride
-                    {
-                        RideRequestId = rideRequest.Id,
-                        DriverId = availableDriver.Id,
-                        RiderName = rideRequest.RiderName,
-                        PickupLocation = rideRequest.PickupLocation,
-                        DropoffLocation = rideRequest.DropoffLocation,
-                        PassengerCount = rideRequest.PassengerCount,
-                        CartSize = rideRequest.CartSize,
-                        EstimatedFare = rideRequest.EstimatedFare,
-                        Status = "Active",
-                        StartTime = DateTime.UtcNow,
-                        Distance = CalculateDistance(rideRequest.PickupLocation, rideRequest.DropoffLocation),
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-
-                    // Update statuses
-                    rideRequest.Status = "Accepted";
-                    rideRequest.UpdatedAt = DateTime.UtcNow;
-
-                    availableDriver.IsAvailable = false;
-                    availableDriver.CurrentRideId = ride.Id;
-                    availableDriver.Status = "On Ride";
-                    availableDriver.UpdatedAt = DateTime.UtcNow;
-
-                    _context.Rides.Add(ride);
-                    _context.RideRequests.Update(rideRequest);
-                    _context.Drivers.Update(availableDriver);
-                    await _context.SaveChangesAsync();
-                }
-            }
-            catch
-            {
-                // Swallow auto-assign failure; the request remains pending for manual assignment
-            }
 
             return CreatedAtAction(nameof(GetRideRequest), new { id = rideRequest.Id }, rideRequest);
         }
@@ -177,6 +131,7 @@ namespace api.Controllers
                 DropoffLocation = rideRequest.DropoffLocation,
                 PassengerCount = rideRequest.PassengerCount,
                 CartSize = rideRequest.CartSize,
+                SpecialNotes = rideRequest.SpecialNotes,
                 EstimatedFare = rideRequest.EstimatedFare,
                 Status = "Active",
                 StartTime = DateTime.UtcNow,
@@ -185,17 +140,19 @@ namespace api.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            // Update ride request status
+            // Add the ride to context and save to generate ride.Id
+            _context.Rides.Add(ride);
+            await _context.SaveChangesAsync();
+
+            // Now update statuses with the generated ride.Id
             rideRequest.Status = "Accepted";
             rideRequest.UpdatedAt = DateTime.UtcNow;
 
-            // Update driver status
             driver.IsAvailable = false;
-            driver.CurrentRideId = ride.Id;
+            driver.CurrentRideId = ride.Id; // Now ride.Id is properly set
             driver.Status = "On Ride";
             driver.UpdatedAt = DateTime.UtcNow;
 
-            _context.Rides.Add(ride);
             _context.RideRequests.Update(rideRequest);
             _context.Drivers.Update(driver);
             await _context.SaveChangesAsync();

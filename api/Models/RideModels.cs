@@ -11,7 +11,6 @@ namespace api.Models
         public string VehicleName { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public bool IsAvailable { get; set; } = true;
-        public int BatteryLevel { get; set; }
         public int TotalRides { get; set; }
         public decimal AverageTip { get; set; }
         public decimal Rating { get; set; }
@@ -33,6 +32,7 @@ namespace api.Models
         public string DropoffLocation { get; set; } = string.Empty;
         public int PassengerCount { get; set; }
         public string CartSize { get; set; } = string.Empty;
+        public string SpecialNotes { get; set; } = string.Empty;
         public decimal EstimatedFare { get; set; }
         public string Status { get; set; } = "Pending";
         public string DeclinedByDrivers { get; set; } = string.Empty; // Comma-separated list of driver IDs who declined
@@ -53,6 +53,7 @@ namespace api.Models
         public string DropoffLocation { get; set; } = string.Empty;
         public int PassengerCount { get; set; }
         public string CartSize { get; set; } = string.Empty;
+        public string SpecialNotes { get; set; } = string.Empty;
         public decimal EstimatedFare { get; set; }
         public string Status { get; set; } = "Active";
         public DateTime StartTime { get; set; } = DateTime.UtcNow;
@@ -92,6 +93,7 @@ namespace api.Models
         public int PassengerCount { get; set; }
         [Required]
         public string CartSize { get; set; } = string.Empty;
+        public string SpecialNotes { get; set; } = string.Empty;
         [Required]
         public decimal EstimatedFare { get; set; }
     }

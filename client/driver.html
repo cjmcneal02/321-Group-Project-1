@@ -62,8 +62,6 @@
                             <label for="driver-select" class="form-label">Select Driver Account</label>
                             <select class="form-select" id="driver-select" required>
                                 <option value="">Select a driver...</option>
-                                <option value="stacy">Stacy Streets</option>
-                                <option value="sarah">Sarah Smith</option>
                             </select>
                         </div>
                         <button type="button" class="btn btn-primary" onclick="driverInterface.loginDriver()">
@@ -84,16 +82,16 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h2 class="card-title mb-1 fw-bold" style="color: var(--primary-green);">
-                                    <i class="bi bi-car-front-fill me-2"></i>Welcome, <span id="welcomeMessage">John Driver</span>
+                                    <i class="bi bi-car-front-fill me-2"></i>Welcome, <span id="welcomeMessage">Loading...</span>
                                 </h2>
                                 <p class="text-muted mb-0">
                                     <i class="bi bi-geo-alt-fill me-1"></i>
-                                    Vehicle: <span id="vehicleInfo">Solar Cart #SC-001</span>
+                                    Vehicle: <span id="vehicleInfo">Loading...</span>
                                 </p>
                             </div>
                             <div class="text-end">
                                 <div class="badge bg-success fs-6 mb-2" id="statusBadge">
-                                    <i class="bi bi-check-circle me-1"></i>Available
+                                    <i class="bi bi-check-circle me-1"></i>Loading...
                                 </div>
                                 <button class="btn btn-outline-danger btn-sm" onclick="driverInterface.logout()">
                                     <i class="bi bi-box-arrow-right me-1"></i>Logout
@@ -119,44 +117,18 @@
                             <div class="driver-status-indicator" id="statusIndicator">
                                 <i class="bi bi-circle-fill text-success fs-1"></i>
                             </div>
-                            <h4 class="mt-2" id="statusText">Available</h4>
+                            <h4 class="mt-2" id="statusText">Loading...</h4>
                             <p class="text-muted" id="statusSubtext">Ready to accept rides</p>
                         </div>
                         
                         <div class="d-grid gap-2">
                             <button class="btn btn-outline-danger" id="toggleStatusBtn">
-                                <i class="bi bi-power me-2"></i>Go Unavailable
-                            </button>
-                            <button class="btn btn-custom" id="startRideBtn" disabled>
-                                <i class="bi bi-play-circle me-2"></i>Start Ride
+                                <i class="bi bi-power me-2"></i>Loading...
                             </button>
                         </div>
 
-                        <hr>
                         
-                        <div class="driver-stats">
-                            <h6 class="text-muted mb-3">Today's Stats</h6>
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <div class="stat-item">
-                                        <h5 class="text-primary mb-0" id="ridesCompleted">0</h5>
-                                        <small class="text-muted">Rides</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-item">
-                                        <h5 class="text-success mb-0" id="earnings">$0.00</h5>
-                                        <small class="text-muted">Earnings</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="stat-item">
-                                        <h5 class="text-info mb-0" id="rating">4.9</h5>
-                                        <small class="text-muted">Rating</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -174,7 +146,7 @@
                         <div id="noRideState" class="text-center py-5">
                             <i class="bi bi-car-front text-muted" style="font-size: 4rem;"></i>
                               <h4 class="text-muted mt-3">No Active Ride</h4>
-                              <p class="text-muted">You'll see ride requests and active rides here</p>
+                              <p class="text-muted">You'll see active rides here</p>
                         </div>
 
                         <!-- Active Ride State -->
@@ -185,35 +157,26 @@
                                     <div class="ride-info">
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Passenger:</span>
-                                            <span id="passengerName">Sarah Johnson</span>
+                                            <span id="passengerName">Loading...</span>
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">From:</span>
-                                            <span id="pickupLocation">Library</span>
+                                            <span id="pickupLocation">Loading...</span>
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">To:</span>
-                                            <span id="dropoffLocation">Student Center</span>
+                                            <span id="dropoffLocation">Loading...</span>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted">Distance:</span>
-                                            <span id="rideDistance">0.8 miles</span>
-                                        </div>
+                                        
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Fare:</span>
-                                            <span class="fw-bold text-success" id="rideFare">$3.50</span>
+                                            <span class="fw-bold text-success" id="rideFare">Loading...</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 class="text-muted mb-3">Navigation</h6>
-                                    <div id="rideMap" class="map-container bg-light border rounded" style="height: 200px;">
-                                        <!-- Leaflet map will be initialized here -->
-                                    </div>
                                     <div class="mt-2">
                                         <div class="d-flex justify-content-between text-muted small">
-                                            <span>ETA: <span id="rideETA">3 min</span></span>
-                                            <span>Distance: <span id="rideDistance">0.8 miles</span></span>
                                         </div>
                                         <div class="progress mt-1" style="height: 6px;">
                                             <div class="progress-bar bg-primary" id="rideProgress" style="width: 0%"></div>
@@ -249,7 +212,7 @@
                         <h5 class="mb-0 fw-bold" style="color: var(--primary-green);">
                             <i class="bi bi-bell me-2"></i>Incoming Ride Requests
                         </h5>
-                        <button class="btn btn-outline-primary btn-sm" id="refreshRequestsBtn" onclick="driverPortal.refreshRequests()">
+                        <button class="btn btn-outline-primary btn-sm" id="refreshRequestsBtn" onclick="driverInterface.refreshRequests()">
                             <i class="bi bi-arrow-clockwise me-1"></i>Refresh
                         </button>
                     </div>
@@ -265,13 +228,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Active Ride Section -->
-        <div class="row mb-4" id="active-ride-section" style="display: none;">
-            <div class="col-12">
-                <!-- Active ride content will be dynamically inserted here -->
             </div>
         </div>
 
@@ -292,7 +248,6 @@
                                         <th>Time</th>
                                         <th>Passenger</th>
                                         <th>Route</th>
-                                        <th>Distance</th>
                                         <th>Fare</th>
                                         <th>Status</th>
                                     </tr>
@@ -311,7 +266,7 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="text-muted mb-1">Total Earnings</h6>
-                                        <h4 class="text-success mb-0" id="totalEarnings">$0.00</h4>
+                                        <h4 class="text-success mb-0" id="totalEarnings">Loading...</h4>
                                     </div>
                                 </div>
                             </div>
@@ -319,7 +274,7 @@
                                 <div class="card bg-light">
                                     <div class="card-body text-center">
                                         <h6 class="text-muted mb-1">Average Rating</h6>
-                                        <h4 class="text-info mb-0" id="averageRating">4.9</h4>
+                                        <h4 class="text-info mb-0" id="averageRating">Loading...</h4>
                                     </div>
                                 </div>
                             </div>

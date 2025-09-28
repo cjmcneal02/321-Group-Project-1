@@ -61,6 +61,23 @@ namespace api.Controllers
             return activeRide;
         }
 
+        // GET: api/rides/by-request/{requestId}
+        [HttpGet("by-request/{requestId}")]
+        public async Task<ActionResult<Ride>> GetRideByRequestId(int requestId)
+        {
+            var ride = await _context.Rides
+                .Include(r => r.Driver)
+                .Include(r => r.RideRequest)
+                .FirstOrDefaultAsync(r => r.RideRequestId == requestId);
+
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            return ride;
+        }
+
         // GET: api/rides/history
         [HttpGet("history")]
         public async Task<ActionResult<IEnumerable<Ride>>> GetRideHistory()

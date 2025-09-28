@@ -28,11 +28,20 @@ class ActiveRideInterface {
     }
 
     /**
-     * Get ride ID from URL parameters
+     * Get ride ID from URL parameters or sessionStorage
      */
     getRideIdFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('rideId');
+        const urlRideId = urlParams.get('rideId');
+        
+        // If URL has rideId, use it and store in sessionStorage
+        if (urlRideId) {
+            sessionStorage.setItem('activeRideId', urlRideId);
+            return urlRideId;
+        }
+        
+        // Otherwise, check sessionStorage
+        return sessionStorage.getItem('activeRideId');
     }
 
     /**
@@ -74,41 +83,124 @@ class ActiveRideInterface {
     updateRideDisplay() {
         if (!this.currentRide) return;
 
-        // Update ride details
+        // Update individual ride detail elements
+        const pickupElement = document.getElementById('pickup-location');
+        if (pickupElement) {
+            pickupElement.textContent = this.currentRide.PickupLocation || 'Unknown';
+        }
+
+        const dropoffElement = document.getElementById('dropoff-location');
+        if (dropoffElement) {
+            dropoffElement.textContent = this.currentRide.DropoffLocation || 'Unknown';
+        }
+
+        const fareElement = document.getElementById('ride-fare');
+        if (fareElement) {
+            fareElement.textContent = `$${(this.currentRide.EstimatedFare || 0).toFixed(2)}`;
+        }
+
+        const passengerCountElement = document.getElementById('passenger-count');
+        if (passengerCountElement) {
+            passengerCountElement.textContent = this.currentRide.PassengerCount || 1;
+        }
+
+        const cartSizeElement = document.getElementById('cart-size');
+        if (cartSizeElement) {
+            cartSizeElement.textContent = this.currentRide.CartSize || 'Standard';
+        }
+
+        const rideStatusElement = document.getElementById('ride-status');
+        if (rideStatusElement) {
+            rideStatusElement.textContent = this.currentRide.Status || 'Active';
+            // Update badge color based on status
+            rideStatusElement.className = 'badge ride-status-badge';
+            if (this.currentRide.Status === 'Completed') {
+                rideStatusElement.classList.add('bg-success');
+            } else if (this.currentRide.Status === 'Active') {
+                rideStatusElement.classList.add('bg-primary');
+            } else {
+                rideStatusElement.classList.add('bg-secondary');
+            }
+        }
+
+        // Handle special notes
+        const specialNotesSection = document.getElementById('special-notes-section');
+        const specialNotesContent = document.getElementById('special-notes-content');
+        if (specialNotesSection && specialNotesContent) {
+            if (this.currentRide.SpecialNotes && this.currentRide.SpecialNotes.trim()) {
+                specialNotesContent.textContent = this.currentRide.SpecialNotes;
+                specialNotesSection.style.display = 'block';
+            } else {
+                specialNotesSection.style.display = 'none';
+            }
+        }
+
+        // Update ride details container (if it exists)
         const rideDetailsElement = document.getElementById('ride-details');
         if (rideDetailsElement) {
             rideDetailsElement.innerHTML = `
                 <div class="row mb-3">
                     <div class="col-6">
                         <strong>From:</strong><br>
-                        <span class="text-muted">${this.currentRide.PickupLocation}</span>
+                        <span class="text-muted">${this.currentRide.PickupLocation || 'Unknown'}</span>
                     </div>
                     <div class="col-6">
                         <strong>To:</strong><br>
-                        <span class="text-muted">${this.currentRide.DropoffLocation}</span>
+                        <span class="text-muted">${this.currentRide.DropoffLocation || 'Unknown'}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-6">
                         <strong>Passengers:</strong><br>
-                        <span class="text-muted">${this.currentRide.PassengerCount}</span>
+                        <span class="text-muted">${this.currentRide.PassengerCount || 1}</span>
                     </div>
                     <div class="col-6">
                         <strong>Cart Size:</strong><br>
-                        <span class="text-muted">${this.currentRide.CartSize}</span>
+                        <span class="text-muted">${this.currentRide.CartSize || 'Standard'}</span>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-6">
                         <strong>Estimated Fare:</strong><br>
-                        <span class="text-success fs-5">$${this.currentRide.EstimatedFare.toFixed(2)}</span>
+                        <span class="text-success fs-5">$${(this.currentRide.EstimatedFare || 0).toFixed(2)}</span>
                     </div>
                     <div class="col-6">
                         <strong>Status:</strong><br>
-                        <span class="badge bg-primary">${this.currentRide.Status}</span>
+                        <span class="badge bg-primary">${this.currentRide.Status || 'Active'}</span>
                     </div>
                 </div>
+                ${this.currentRide.SpecialNotes ? `
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Special Notes:</strong><br>
+                        <span class="text-muted">${this.currentRide.SpecialNotes}</span>
+                    </div>
+                </div>
+                ` : ''}
             `;
+        }
+
+        // Update individual driver elements
+        const driverNameElement = document.getElementById('driver-name');
+        if (driverNameElement) {
+            driverNameElement.textContent = this.currentRide.Driver?.Name || 'Loading Driver...';
+        }
+
+        const driverVehicleElement = document.getElementById('driver-vehicle');
+        if (driverVehicleElement) {
+            driverVehicleElement.textContent = this.currentRide.Driver?.VehicleName || 'Loading Vehicle...';
+        }
+
+        const driverRatingElement = document.getElementById('driver-rating');
+        if (driverRatingElement) {
+            driverRatingElement.textContent = this.currentRide.Driver?.Rating ? `${this.currentRide.Driver.Rating.toFixed(1)} ⭐` : 'Loading...';
+        }
+
+        const driverEtaElement = document.getElementById('driver-eta');
+        if (driverEtaElement) {
+            // Simple ETA calculation based on distance (mock for now)
+            const eta = this.calculateETA();
+            driverEtaElement.textContent = eta;
         }
 
         // Update driver info
@@ -118,26 +210,22 @@ class ActiveRideInterface {
                 <div class="driver-info-card p-3 mb-3">
                     <div class="row align-items-center">
                         <div class="col-8">
-                            <h5 class="mb-1">${this.currentRide.Driver.Name}</h5>
+                            <h5 class="mb-1">${this.currentRide.Driver.Name || 'Unknown Driver'}</h5>
                             <div class="driver-details">
                                 <div class="row">
                                     <div class="col-6">
                                         <small class="text-light">Vehicle:</small><br>
-                                        <span>${this.currentRide.Driver.VehicleName}</span>
+                                        <span>${this.currentRide.Driver.VehicleName || 'Unknown Vehicle'}</span>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-light">Rating:</small><br>
-                                        <span>${this.currentRide.Driver.Rating.toFixed(1)} ⭐</span>
+                                        <span>${(this.currentRide.Driver.Rating || 0).toFixed(1)} ⭐</span>
                                     </div>
                                 </div>
                                 <div class="row mt-2">
                                     <div class="col-6">
-                                        <small class="text-light">Battery:</small><br>
-                                        <span>${this.currentRide.Driver.BatteryLevel}%</span>
-                                    </div>
-                                    <div class="col-6">
                                         <small class="text-light">Total Rides:</small><br>
-                                        <span>${this.currentRide.Driver.TotalRides}</span>
+                                        <span>${this.currentRide.Driver.TotalRides || 0}</span>
                                     </div>
                                 </div>
                             </div>
@@ -154,6 +242,26 @@ class ActiveRideInterface {
 
         // Update page title
         document.title = `Active Ride - ${this.currentRide.RiderName}`;
+    }
+
+    /**
+     * Calculate ETA based on pickup and dropoff locations
+     */
+    calculateETA() {
+        if (!this.currentRide) return '5';
+        
+        // Simple ETA calculation - in a real app, you'd use actual distance/routing
+        const pickup = this.currentRide.PickupLocation?.toLowerCase() || '';
+        const dropoff = this.currentRide.DropoffLocation?.toLowerCase() || '';
+        
+        // Mock ETA based on location names
+        if (pickup.includes('hall') && dropoff.includes('hall')) {
+            return '3-5';
+        } else if (pickup.includes('center') || dropoff.includes('center')) {
+            return '5-8';
+        } else {
+            return '4-6';
+        }
     }
 
     /**
@@ -199,7 +307,7 @@ class ActiveRideInterface {
             } catch (error) {
                 console.error('Error checking ride status:', error);
             }
-        }, 5000); // Check every 5 seconds
+        }, 2000); // Check every 2 seconds
     }
 
     /**
@@ -234,6 +342,10 @@ class ActiveRideInterface {
                 // Ride completed
                 this.stopStatusPolling();
                 this.stopChatPolling();
+                
+                // Clear sessionStorage
+                sessionStorage.removeItem('activeRideId');
+                
                 this.showRideCompletionModal();
                 return;
             }
@@ -371,6 +483,13 @@ class ActiveRideInterface {
     }
 
     /**
+     * Go back to rider page
+     */
+    goBack() {
+        window.location.href = './rider.html';
+    }
+
+    /**
      * Confirm ride completion
      */
     async confirmRideCompletion() {
@@ -387,6 +506,9 @@ class ActiveRideInterface {
             // Stop polling
             this.stopStatusPolling();
             this.stopChatPolling();
+
+            // Clear sessionStorage
+            sessionStorage.removeItem('activeRideId');
 
             // Show success message
             this.showNotification('Ride completed successfully! Thank you for using Tide Rides.', 'success');
@@ -504,6 +626,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         if (typeof ActiveRideInterface !== 'undefined') {
             window.activeRideInterface = new ActiveRideInterface();
+            
+            // Make goBack function globally available
+            window.goBack = function() {
+                if (window.activeRideInterface) {
+                    window.activeRideInterface.goBack();
+                }
+            };
         } else {
             console.error('ActiveRideInterface not loaded!');
         }

@@ -61,13 +61,12 @@ namespace api.Data
                     VehicleName = "Solar Golf Cart Alpha",
                     Location = "Hewson Hall",
                     IsAvailable = true,
-                    BatteryLevel = 85,
                     TotalRides = 23,
                     AverageTip = 45.20m,
                     Rating = 4.9m,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
                 new Driver
                 {
@@ -77,13 +76,12 @@ namespace api.Data
                     VehicleName = "Solar Golf Cart Beta",
                     Location = "Presidential Village",
                     IsAvailable = true,
-                    BatteryLevel = 92,
                     TotalRides = 18,
                     AverageTip = 42.15m,
                     Rating = 4.8m,
                     Status = "Active",
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
         }

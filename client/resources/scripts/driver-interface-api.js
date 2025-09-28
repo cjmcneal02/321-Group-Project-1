@@ -22,13 +22,59 @@ class DriverInterface {
     }
 
     async init() {
-        // Check if user is already logged in as a driver
-        if (apiService.currentUserId && apiService.currentUserRole === 'Driver') {
+        // Load available drivers for login dropdown
+        await this.loadAvailableDrivers();
+        
+        // Set up toggle status button
+        this.setupToggleStatusButton();
+        
+        // Check if user is already logged in as a driver from localStorage
+        const savedDriverId = localStorage.getItem('driverId');
+        const savedDriverRole = localStorage.getItem('driverRole');
+        
+        if (savedDriverId && savedDriverRole === 'Driver') {
+            // Restore driver session
+            this.currentDriverId = parseInt(savedDriverId);
+            apiService.currentDriverId = this.currentDriverId;
+            apiService.currentUserId = parseInt(localStorage.getItem('driverUserId'));
+            apiService.currentUserRole = 'Driver';
+            
             this.showDashboard();
             this.loadDriverData();
         } else {
             this.showLogin();
-            await this.loadDriverUsers();
+        }
+    }
+
+    setupToggleStatusButton() {
+        const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+        if (toggleStatusBtn) {
+            toggleStatusBtn.addEventListener('click', () => this.toggleDriverStatus());
+        }
+    }
+
+    async loadAvailableDrivers() {
+        try {
+            const drivers = await apiService.getDrivers();
+            console.log('Loaded drivers:', drivers);
+            const driverSelect = document.getElementById('driver-select');
+            
+            if (driverSelect && drivers) {
+                // Clear existing options except the first one
+                driverSelect.innerHTML = '<option value="">Select a driver...</option>';
+                
+                // Add driver options
+                drivers.forEach(driver => {
+                    console.log('Adding driver:', driver);
+                    const option = document.createElement('option');
+                    option.value = driver.id || driver.Id;
+                    option.textContent = driver.name || driver.Name;
+                    driverSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading drivers:', error);
+            this.showNotification('Failed to load driver accounts.', 'danger');
         }
     }
 
@@ -51,6 +97,7 @@ class DriverInterface {
 
     async loginDriver() {
         const selectedDriver = document.getElementById('driver-select').value;
+        console.log('Selected driver value:', selectedDriver);
 
         if (!selectedDriver) {
             this.showNotification('Please select a driver account.', 'warning');
@@ -58,28 +105,24 @@ class DriverInterface {
         }
 
         try {
-            // Map selected driver to user data
-            let userData, driverId;
+            // Get driver data from API instead of hardcoded values
+            const driverId = parseInt(selectedDriver);
+            console.log('Parsed driver ID:', driverId);
+            const driver = await apiService.getDriver(driverId);
             
-            if (selectedDriver === 'stacy') {
-                userData = {
-                    id: 2,
-                    username: 'stacy',
-                    role: 'Driver',
-                    firstName: 'Stacy',
-                    lastName: 'Streets'
-                };
-                driverId = 1;
-            } else if (selectedDriver === 'sarah') {
-                userData = {
-                    id: 3,
-                    username: 'sarah',
-                    role: 'Driver',
-                    firstName: 'Sarah',
-                    lastName: 'Smith'
-                };
-                driverId = 2;
+            if (!driver) {
+                this.showNotification('Driver not found.', 'error');
+                return;
             }
+
+            // Set up user data from API response
+            const userData = {
+                id: driver.userId || driver.UserId || driverId,
+                username: (driver.name || driver.Name || '').toLowerCase().replace(' ', ''),
+                role: 'Driver',
+                firstName: (driver.name || driver.Name || '').split(' ')[0],
+                lastName: (driver.name || driver.Name || '').split(' ')[1] || ''
+            };
 
             this.currentUser = userData;
             this.currentDriverId = driverId;
@@ -88,10 +131,17 @@ class DriverInterface {
             apiService.currentUserRole = userData.role;
             apiService.currentDriverId = driverId;
 
+            // Save driver session to localStorage
+            localStorage.setItem('driverId', driverId.toString());
+            localStorage.setItem('driverRole', 'Driver');
+            localStorage.setItem('driverUserId', userData.id.toString());
+
             this.showDashboard();
             this.loadDriverData();
-            this.showNotification('Login successful!', 'success');
+            
+            this.showNotification(`Welcome, ${userData.firstName}!`, 'success');
         } catch (error) {
+            console.error('Error logging in driver:', error);
             this.showNotification('Login failed. Please try again.', 'danger');
         }
     }
@@ -100,6 +150,12 @@ class DriverInterface {
         apiService.logout();
         this.currentUser = null;
         this.currentDriverId = null;
+        
+        // Clear driver session from localStorage
+        localStorage.removeItem('driverId');
+        localStorage.removeItem('driverRole');
+        localStorage.removeItem('driverUserId');
+        
         this.showLogin();
         this.showNotification('Logged out successfully.', 'info');
     }
@@ -117,6 +173,10 @@ class DriverInterface {
     loadDriverData() {
         this.updateDriverInfo();
         this.startRequestsPolling();
+        this.loadRideHistory();
+        
+        // Hide active ride panel initially (driver starts with no active ride)
+        this.updateActiveRidePanelVisibility();
     }
 
     /**
@@ -163,30 +223,90 @@ class DriverInterface {
      * Update driver display
      */
     updateDriverDisplay(driver) {
+        // Update welcome message
+        const welcomeMessageElement = document.getElementById('welcomeMessage');
+        if (welcomeMessageElement) {
+            welcomeMessageElement.textContent = driver.name || driver.Name || 'Unknown Driver';
+        }
+
+        // Update vehicle info
+        const vehicleInfoElement = document.getElementById('vehicleInfo');
+        if (vehicleInfoElement) {
+            const vehicleName = driver.vehicleName || driver.VehicleName || 'Unknown Vehicle';
+            const vehicleId = driver.vehicleId || driver.VehicleId || 'Unknown ID';
+            vehicleInfoElement.textContent = `${vehicleName} #${vehicleId}`;
+        }
+
+        // Update status badge
+        const statusBadgeElement = document.getElementById('statusBadge');
+        if (statusBadgeElement) {
+            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            const statusText = isAvailable ? 'Available' : 'Unavailable';
+            const statusClass = isAvailable ? 'bg-success' : 'bg-danger';
+            const statusIcon = isAvailable ? 'bi-check-circle' : 'bi-x-circle';
+            statusBadgeElement.innerHTML = `<i class="bi ${statusIcon} me-1"></i>${statusText}`;
+            statusBadgeElement.className = `badge ${statusClass} fs-6 mb-2`;
+        }
+
+        // Update status text
+        const statusTextElement = document.getElementById('statusText');
+        if (statusTextElement) {
+            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            statusTextElement.textContent = isAvailable ? 'Available' : 'Unavailable';
+        }
+
+        // Update status indicator circle
+        const statusIndicator = document.getElementById('statusIndicator');
+        if (statusIndicator) {
+            const icon = statusIndicator.querySelector('i');
+            if (icon) {
+                const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+                icon.className = isAvailable ? 'bi bi-circle-fill text-success fs-1' : 'bi bi-circle-fill text-danger fs-1';
+            }
+        }
+
+        // Update status subtext
+        const statusSubtext = document.getElementById('statusSubtext');
+        if (statusSubtext) {
+            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            statusSubtext.textContent = isAvailable ? 'Ready to accept rides' : 'Not accepting rides';
+        }
+
+        // Update toggle button
+        const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+        if (toggleStatusBtn) {
+            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            if (isAvailable) {
+                toggleStatusBtn.innerHTML = '<i class="bi bi-power me-2"></i>Go Unavailable';
+                toggleStatusBtn.className = 'btn btn-outline-danger';
+            } else {
+                toggleStatusBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Go Available';
+                toggleStatusBtn.className = 'btn btn-outline-success';
+            }
+        }
+
         const driverNameElement = document.querySelector('.driver-name');
         if (driverNameElement) {
-            driverNameElement.textContent = driver.Name;
+            driverNameElement.textContent = driver.name || driver.Name || 'Unknown Driver';
         }
 
         const driverStatusElement = document.querySelector('.driver-status');
         if (driverStatusElement) {
-            driverStatusElement.textContent = driver.Status;
-            driverStatusElement.className = `driver-status badge ${driver.IsAvailable ? 'bg-success' : 'bg-danger'}`;
-        }
-
-        const batteryElement = document.querySelector('.battery-level');
-        if (batteryElement) {
-            batteryElement.textContent = `${driver.BatteryLevel}%`;
+            const status = driver.status || driver.Status || 'Unknown';
+            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            driverStatusElement.textContent = status;
+            driverStatusElement.className = `driver-status badge ${isAvailable ? 'bg-success' : 'bg-danger'}`;
         }
 
         const ratingElement = document.querySelector('.driver-rating');
         if (ratingElement) {
-            ratingElement.textContent = driver.Rating.toFixed(1);
+            const rating = driver.rating || driver.Rating || 0;
+            ratingElement.textContent = rating.toFixed(1);
         }
 
         const totalRidesElement = document.querySelector('.total-rides');
         if (totalRidesElement) {
-            totalRidesElement.textContent = driver.TotalRides;
+            totalRidesElement.textContent = driver.totalRides || driver.TotalRides || 0;
         }
     }
 
@@ -326,6 +446,7 @@ class DriverInterface {
     async acceptRequest(requestId) {
         try {
             console.log('Accepting ride request:', requestId, 'with driver ID:', this.currentDriverId);
+            
             const ride = await apiService.acceptRideRequest(requestId, this.currentDriverId);
             console.log('Ride accepted, received data:', ride);
             
@@ -366,12 +487,17 @@ class DriverInterface {
     showActiveRideUI(ride) {
         console.log('Showing active ride UI with ride data:', ride);
         
-        const activeRideSection = document.getElementById('active-ride-section');
-        if (!activeRideSection) {
-            console.error('Active ride section element not found');
-            return;
-        }
+        // Update the hardcoded HTML elements with dynamic data
+        this.updateActiveRideDetails(ride);
+        
+        // Show the active ride panel
+        this.updateActiveRidePanelVisibility();
+    }
 
+    /**
+     * Update the hardcoded ride details with dynamic data
+     */
+    updateActiveRideDetails(ride) {
         // Handle both camelCase and PascalCase property names
         const riderName = ride.RiderName || ride.riderName || 'Unknown Rider';
         const estimatedFare = ride.EstimatedFare || ride.estimatedFare || 0;
@@ -379,52 +505,27 @@ class DriverInterface {
         const dropoffLocation = ride.DropoffLocation || ride.dropoffLocation || 'Unknown';
         const passengerCount = ride.PassengerCount || ride.passengerCount || 1;
         const cartSize = ride.CartSize || ride.cartSize || 'Standard';
+        
+        // Update the hardcoded HTML elements
+        const passengerNameElement = document.getElementById('passengerName');
+        if (passengerNameElement) {
+            passengerNameElement.textContent = riderName;
+        }
 
-        activeRideSection.style.display = 'block';
-        activeRideSection.innerHTML = `
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Active Ride</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Rider:</strong><br>
-                            <span>${riderName}</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Fare:</strong><br>
-                            <span class="text-success">$${estimatedFare.toFixed(2)}</span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>From:</strong><br>
-                            <span>${pickupLocation}</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>To:</strong><br>
-                            <span>${dropoffLocation}</span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Passengers:</strong><br>
-                            <span>${passengerCount}</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Cart Size:</strong><br>
-                            <span>${cartSize}</span>
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <button class="btn btn-success btn-lg" onclick="driverInterface.completeRide()">
-                            <i class="bi bi-check-circle me-2"></i>Complete Ride
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        const pickupLocationElement = document.getElementById('pickupLocation');
+        if (pickupLocationElement) {
+            pickupLocationElement.textContent = pickupLocation;
+        }
+
+        const dropoffLocationElement = document.getElementById('dropoffLocation');
+        if (dropoffLocationElement) {
+            dropoffLocationElement.textContent = dropoffLocation;
+        }
+
+        const rideFareElement = document.getElementById('rideFare');
+        if (rideFareElement) {
+            rideFareElement.textContent = `$${estimatedFare.toFixed(2)}`;
+        }
     }
 
     /**
@@ -457,7 +558,12 @@ class DriverInterface {
                 return;
             }
 
-            const result = await apiService.completeRide(this.currentDriverId, this.currentRide.Id || this.currentRide.id);
+            // Call POST /api/drivers/{id}/complete-ride with { rideId }
+            const completeData = {
+                RideId: this.currentRide.Id || this.currentRide.id
+            };
+            
+            const result = await apiService.completeRide(this.currentDriverId, completeData);
             
             if (result) {
                 // Send completion message to rider
@@ -474,6 +580,9 @@ class DriverInterface {
                 this.hideActiveRideUI();
                 this.hideChatInterface();
                 this.showRequestsUI();
+                
+                // Refresh ride history to show the completed ride
+                await this.loadRideHistory();
                 
                 // Clear current ride
                 this.currentRide = null;
@@ -640,15 +749,224 @@ class DriverInterface {
     }
 
     /**
+     * Toggle driver status between available and unavailable
+     */
+    async toggleDriverStatus() {
+        if (!this.currentDriverId) {
+            this.showNotification('Please log in first.', 'warning');
+            return;
+        }
+
+        try {
+            // Get current driver status
+            const driver = await apiService.getDriver(this.currentDriverId);
+            const currentStatus = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
+            
+            // Toggle the status
+            const newStatus = !currentStatus;
+            await this.updateDriverStatus(newStatus);
+            
+            // Update button text and UI
+            this.updateToggleButton(newStatus);
+            this.updateActiveRidePanelVisibility();
+            
+        } catch (error) {
+            console.error('Error toggling driver status:', error);
+            this.showNotification('Failed to toggle status.', 'danger');
+        }
+    }
+
+    /**
+     * Update toggle button appearance
+     */
+    updateToggleButton(isAvailable) {
+        const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+        if (toggleStatusBtn) {
+            if (isAvailable) {
+                toggleStatusBtn.innerHTML = '<i class="bi bi-power me-2"></i>Go Unavailable';
+                toggleStatusBtn.className = 'btn btn-outline-danger';
+            } else {
+                toggleStatusBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Go Available';
+                toggleStatusBtn.className = 'btn btn-outline-success';
+            }
+        }
+
+        // Update status badge
+        const statusBadge = document.getElementById('statusBadge');
+        if (statusBadge) {
+            if (isAvailable) {
+                statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>Available';
+                statusBadge.className = 'badge bg-success fs-6 mb-2';
+            } else {
+                statusBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i>Unavailable';
+                statusBadge.className = 'badge bg-danger fs-6 mb-2';
+            }
+        }
+
+        // Update status text
+        const statusText = document.getElementById('statusText');
+        if (statusText) {
+            statusText.textContent = isAvailable ? 'Available' : 'Unavailable';
+        }
+
+        // Update status indicator circle
+        const statusIndicator = document.getElementById('statusIndicator');
+        if (statusIndicator) {
+            const icon = statusIndicator.querySelector('i');
+            if (icon) {
+                icon.className = isAvailable ? 'bi bi-circle-fill text-success fs-1' : 'bi bi-circle-fill text-danger fs-1';
+            }
+        }
+
+        // Update status subtext
+        const statusSubtext = document.getElementById('statusSubtext');
+        if (statusSubtext) {
+            statusSubtext.textContent = isAvailable ? 'Ready to accept rides' : 'Not accepting rides';
+        }
+    }
+
+    /**
+     * Update active ride panel visibility based on driver status
+     */
+    updateActiveRidePanelVisibility() {
+        const activeRidePanel = document.querySelector('.col-lg-8');
+        if (activeRidePanel) {
+            // Only show active ride panel if driver has a current ride
+            if (this.currentRideId) {
+                activeRidePanel.style.display = 'block';
+            } else {
+                activeRidePanel.style.display = 'none';
+            }
+        }
+    }
+
+    /**
      * Update driver status
      */
     async updateDriverStatus(isAvailable) {
         try {
-            await apiService.updateDriverStatus(this.currentDriverId, isAvailable);
+            await apiService.updateDriverStatus(this.currentDriverId, { IsAvailable: isAvailable });
             this.showNotification(`Status updated to ${isAvailable ? 'Available' : 'Offline'}`, 'success');
+            
+            // Update UI elements
+            this.updateToggleButton(isAvailable);
+            this.updateActiveRidePanelVisibility();
+            
         } catch (error) {
             console.error('Error updating driver status:', error);
             this.showNotification('Failed to update status.', 'danger');
+        }
+    }
+
+    /**
+     * Load ride history for the driver
+     */
+    async loadRideHistory() {
+        try {
+            const rideHistory = await apiService.getRideHistory();
+            this.updateRideHistoryTable(rideHistory);
+            this.updateDriverStats(rideHistory);
+        } catch (error) {
+            console.error('Error loading ride history:', error);
+            this.showNotification('Failed to load ride history.', 'warning');
+        }
+    }
+
+    /**
+     * Update ride history table with actual data
+     */
+    updateRideHistoryTable(rideHistory) {
+        const tableBody = document.getElementById('rideHistoryTable');
+        if (!tableBody) return;
+
+        if (!rideHistory || rideHistory.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-clock-history me-2"></i>No completed rides yet
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Filter rides for this driver and completed rides only
+        const driverRides = rideHistory.filter(ride => 
+            (ride.driverId || ride.DriverId) === this.currentDriverId && 
+            (ride.status || ride.Status) === 'Completed'
+        );
+
+        if (driverRides.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-clock-history me-2"></i>No completed rides yet
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Populate table with actual ride data
+        tableBody.innerHTML = driverRides.map(ride => {
+            const rideTime = new Date(ride.startTime || ride.StartTime).toLocaleString();
+            const riderName = ride.riderName || ride.RiderName || 'Unknown Rider';
+            const pickup = ride.pickupLocation || ride.PickupLocation || 'Unknown';
+            const dropoff = ride.dropoffLocation || ride.DropoffLocation || 'Unknown';
+            const fare = ride.estimatedFare || ride.EstimatedFare || 0;
+            const status = ride.status || ride.Status || 'Unknown';
+
+            return `
+                <tr>
+                    <td>${rideTime}</td>
+                    <td>${riderName}</td>
+                    <td>${pickup} → ${dropoff}</td>
+                    <td>$${fare.toFixed(2)}</td>
+                    <td><span class="badge bg-success">${status}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Update driver statistics
+     */
+    updateDriverStats(rideHistory) {
+        // Filter rides for this driver and completed rides only
+        const driverRides = rideHistory.filter(ride => 
+            (ride.driverId || ride.DriverId) === this.currentDriverId && 
+            (ride.status || ride.Status) === 'Completed'
+        );
+
+        // Calculate total earnings
+        const totalEarnings = driverRides.reduce((sum, ride) => {
+            return sum + (ride.estimatedFare || ride.EstimatedFare || 0);
+        }, 0);
+
+        // Update total earnings display
+        const totalEarningsElement = document.getElementById('totalEarnings');
+        if (totalEarningsElement) {
+            totalEarningsElement.textContent = `$${totalEarnings.toFixed(2)}`;
+        }
+
+        // Get driver's current rating from driver data
+        this.updateDriverRating();
+    }
+
+    /**
+     * Update driver rating display
+     */
+    async updateDriverRating() {
+        try {
+            const driver = await apiService.getDriver(this.currentDriverId);
+            const rating = driver.rating || driver.Rating || 0;
+            
+            const averageRatingElement = document.getElementById('averageRating');
+            if (averageRatingElement) {
+                averageRatingElement.textContent = rating.toFixed(1);
+            }
+        } catch (error) {
+            console.error('Error updating driver rating:', error);
         }
     }
 
@@ -690,29 +1008,6 @@ class DriverInterface {
         }, 5000);
     }
 
-    showNotification(message, type) {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.alert-notification');
-        existingNotifications.forEach(notification => notification.remove());
-
-        // Create new notification
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed alert-notification`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
-        notification.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 5000);
-    }
 }
 
 // Initialize driver interface when DOM is loaded

@@ -10,14 +10,20 @@ class ApiService {
     // Ride Request Methods
     async createRideRequest(rideData) {
         try {
-            console.log('Sending ride request to API:', rideData);
-            console.log('JSON string being sent:', JSON.stringify(rideData));
+            // Ensure riderName is included from logged-in user
+            const requestData = {
+                ...rideData,
+                RiderName: rideData.RiderName || this.getCurrentUserName() || 'Anonymous Rider'
+            };
+            
+            console.log('Sending ride request to API:', requestData);
+            console.log('JSON string being sent:', JSON.stringify(requestData));
             const response = await fetch(`${this.baseUrl}/riderequests`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(rideData)
+                body: JSON.stringify(requestData)
             });
 
             if (!response.ok) {
@@ -42,6 +48,19 @@ class ApiService {
             return await response.json();
         } catch (error) {
             console.error('Error fetching driver:', error);
+            throw error;
+        }
+    }
+
+    async getRideRequest(requestId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riderequests/${requestId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching ride request:', error);
             throw error;
         }
     }
@@ -187,6 +206,22 @@ class ApiService {
             return await response.json();
         } catch (error) {
             console.error('Error fetching active ride:', error);
+            throw error;
+        }
+    }
+
+    async getRideByRequestId(requestId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rides/by-request/${requestId}`);
+            if (response.status === 404) {
+                return null; // No ride found for this request
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching ride by request ID:', error);
             throw error;
         }
     }
@@ -339,6 +374,19 @@ class ApiService {
         }
     }
 
+    async getUser(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${userId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            throw error;
+        }
+    }
+
     async getUsersByRole(role) {
         try {
             const response = await fetch(`${this.baseUrl}/users/role/${role}`);
@@ -413,6 +461,34 @@ class ApiService {
             console.error('Error deleting user:', error);
             throw error;
         }
+    }
+
+    /**
+     * Get current user name based on logged-in user
+     */
+    getCurrentUserName() {
+        // Map user IDs to names for riders
+        const riderNames = {
+            4: 'James Wilson' // rider user ID
+        };
+        
+        // Map driver IDs to names for drivers
+        const driverNames = {
+            1: 'Stacy Streets', // stacy driver ID
+            2: 'Sarah Smith'    // sarah driver ID
+        };
+        
+        // If current user is a rider, return rider name
+        if (this.currentUserRole === 'Rider' && this.currentUserId) {
+            return riderNames[this.currentUserId] || 'Anonymous Rider';
+        }
+        
+        // If current user is a driver, return driver name
+        if (this.currentUserRole === 'Driver' && this.currentDriverId) {
+            return driverNames[this.currentDriverId] || 'Anonymous Driver';
+        }
+        
+        return 'Anonymous User';
     }
 
     logout() {

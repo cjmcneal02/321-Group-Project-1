@@ -28,7 +28,6 @@ class RiderInterface {
         
         if (this.campusData) {
             try {
-                this.shortestPath = new ShortestPathAlgorithm(this.campusData);
                 this.locationServices = new LocationServices(this.campusData);
             } catch (error) {
                 console.error('Failed to initialize dependent classes:', error);
@@ -50,22 +49,121 @@ class RiderInterface {
     }
 
     async init() {
-        // Check if user is already logged in as a rider
-        if (apiService.currentUserId && apiService.currentUserRole === 'Rider') {
-            this.showDashboard();
-            this.loadRiderData();
-        } else {
+        // Load available riders for login dropdown
+        await this.loadRiderUsers();
+        
+        // Check localStorage for existing login
+        const storedUser = localStorage.getItem('riderUser');
+        const storedUserId = localStorage.getItem('riderUserId');
+        const storedUserRole = localStorage.getItem('riderUserRole');
+        
+        if (storedUser && storedUserId && storedUserRole) {
+            try {
+                this.currentUser = JSON.parse(storedUser);
+                apiService.currentUserId = parseInt(storedUserId);
+                apiService.currentUserRole = storedUserRole;
+                
+                // Check if there's a pending ride request
+                const pendingRequestId = localStorage.getItem('pendingRideRequestId');
+                console.log('Found pending request ID in localStorage:', pendingRequestId);
+                if (pendingRequestId) {
+                    await this.loadPendingRideRequest(pendingRequestId);
+                } else {
+                    console.log('No pending request found, showing dashboard');
+                    this.showDashboard();
+                    this.loadRiderData();
+                }
+                return;
+            } catch (error) {
+                console.error('Error loading stored user data:', error);
+                // Clear invalid session data
+                localStorage.removeItem('riderUser');
+                localStorage.removeItem('riderUserId');
+                localStorage.removeItem('riderUserRole');
+            }
+        }
+        
+        // No valid session found, show login
             this.showLogin();
             await this.loadRiderUsers();
+    }
+
+    /**
+     * Load pending ride request from localStorage
+     */
+    async loadPendingRideRequest(requestId) {
+        try {
+            console.log('Loading pending ride request:', requestId);
+            const rideRequest = await apiService.getRideRequest(requestId);
+            console.log('Retrieved ride request:', rideRequest);
+            
+            if (!rideRequest) {
+                // Request no longer exists, clear session
+                console.log('Ride request not found, clearing session');
+                sessionStorage.removeItem('pendingRideRequestId');
+                this.showDashboard();
+                this.loadRiderData();
+                return;
+            }
+            
+            if (rideRequest.Status === 'Pending') {
+                // Still pending, show waiting screen
+                console.log('Ride request still pending, showing waiting modal');
+                this.currentRideRequestId = requestId;
+                this.showDashboard();
+                this.loadRiderData();
+                this.showWaitingForDriverStatus(rideRequest);
+                this.startStatusPolling(requestId);
+            } else if (rideRequest.Status === 'Accepted') {
+                // Accepted, get the ride and redirect
+                const ride = await apiService.getRideByRequestId(requestId);
+                if (ride) {
+                    sessionStorage.removeItem('pendingRideRequestId');
+                    sessionStorage.setItem('activeRideId', ride.Id.toString());
+                    window.location.href = `./active-ride.html?rideId=${ride.Id}`;
+                }
+            } else {
+                // Completed or cancelled, clear session and show dashboard
+                sessionStorage.removeItem('pendingRideRequestId');
+                this.showDashboard();
+                this.loadRiderData();
+            }
+        } catch (error) {
+            console.error('Error loading pending ride request:', error);
+            sessionStorage.removeItem('pendingRideRequestId');
+            this.showDashboard();
+            this.loadRiderData();
         }
     }
 
     async loadRiderUsers() {
-        // No need to load from API - using hardcoded options
+        try {
+            const riders = await apiService.getUsersByRole('Rider');
+            console.log('Loaded riders:', riders);
+            const riderSelect = document.getElementById('rider-select');
+            
+            if (riderSelect && riders) {
+                // Clear existing options except the first one
+                riderSelect.innerHTML = '<option value="">Select a rider...</option>';
+                
+                // Add rider options
+                riders.forEach(rider => {
+                    console.log('Adding rider:', rider);
+                    const option = document.createElement('option');
+                    option.value = rider.Id || rider.id;
+                    option.textContent = `${rider.FirstName || rider.firstName} ${rider.LastName || rider.lastName}`;
+                    riderSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading riders:', error);
+            this.showNotification('Failed to load rider accounts.', 'danger');
+        }
     }
 
     async loginRider() {
         const selectedRider = document.getElementById('rider-select').value;
+        console.log('Selected rider value:', selectedRider);
 
         if (!selectedRider) {
             this.showNotification('Please select a rider account.', 'warning');
@@ -73,28 +171,40 @@ class RiderInterface {
         }
 
         try {
-            // Map selected rider to user data
-            let userData;
+            // Get rider data from API instead of hardcoded values
+            const riderId = parseInt(selectedRider);
+            console.log('Parsed rider ID:', riderId);
+            const rider = await apiService.getUser(riderId);
             
-            if (selectedRider === 'rider') {
-                userData = {
-                    id: 4,
-                    username: 'rider',
-                    role: 'Rider',
-                    firstName: 'James',
-                    lastName: 'Wilson'
-                };
+            if (!rider) {
+                this.showNotification('Rider not found.', 'error');
+                return;
             }
+
+            // Set up user data from API response
+            const userData = {
+                id: rider.id || rider.Id,
+                username: rider.username || rider.Username,
+                role: rider.role || rider.Role,
+                firstName: rider.firstName || rider.FirstName,
+                lastName: rider.lastName || rider.LastName
+            };
 
             this.currentUser = userData;
             
             apiService.currentUserId = userData.id;
             apiService.currentUserRole = userData.role;
 
+            // Store user data in localStorage for persistence
+            localStorage.setItem('riderUser', JSON.stringify(userData));
+            localStorage.setItem('riderUserId', userData.id.toString());
+            localStorage.setItem('riderUserRole', userData.role);
+
             this.showDashboard();
             this.loadRiderData();
-            this.showNotification('Login successful!', 'success');
+            this.showNotification(`Welcome, ${userData.firstName}!`, 'success');
         } catch (error) {
+            console.error('Error logging in rider:', error);
             this.showNotification('Login failed. Please try again.', 'danger');
         }
     }
@@ -102,6 +212,14 @@ class RiderInterface {
     logout() {
         apiService.logout();
         this.currentUser = null;
+        
+        // Clear rider session from localStorage
+        localStorage.removeItem('riderUser');
+        localStorage.removeItem('riderUserId');
+        localStorage.removeItem('riderUserRole');
+        localStorage.removeItem('pendingRideRequestId');
+        localStorage.removeItem('activeRideId');
+        
         this.showLogin();
         this.showNotification('Logged out successfully.', 'info');
     }
@@ -117,8 +235,35 @@ class RiderInterface {
     }
 
     loadRiderData() {
+        // Update welcome message
+        this.updateWelcomeMessage();
+        
+        // Get current location automatically
+        this.getCurrentLocationOnLogin();
+        
         if (this.campusData && this.locationServices) {
             this.initializeInterface();
+        }
+    }
+
+    async getCurrentLocationOnLogin() {
+        try {
+            // Try to get current location automatically
+            await this.useCurrentLocation();
+        } catch (error) {
+            console.log('Could not get current location automatically:', error);
+            // Set a default message if location can't be determined
+            const currentLocationElement = document.getElementById('current-location');
+            if (currentLocationElement) {
+                currentLocationElement.textContent = 'Location not available';
+            }
+        }
+    }
+
+    updateWelcomeMessage() {
+        const riderNameElement = document.getElementById('rider-name');
+        if (riderNameElement && this.currentUser) {
+            riderNameElement.textContent = `${this.currentUser.firstName} ${this.currentUser.lastName}`;
         }
     }
 
@@ -236,11 +381,15 @@ class RiderInterface {
      */
     async confirmRide() {
         try {
+            // Close the confirmation modal first
+            this.cancelRideConfirmation();
+            
             const pickupLocation = document.getElementById('pickup-location')?.value?.trim();
             const dropoffLocation = document.getElementById('dropoff-location')?.value?.trim();
-            const passengerCount = parseInt(document.getElementById('passenger-count')?.value) || 1;
-            const cartSize = document.getElementById('cart-size')?.value || 'Standard';
-            const riderName = document.getElementById('rider-name')?.value?.trim() || 'Anonymous Rider';
+            const passengerCount = parseInt(document.getElementById('passenger-count-select')?.value) || 2;
+            const cartSize = this.getCartSizeFromPassengerCount(passengerCount);
+            const riderName = document.getElementById('rider-name')?.textContent?.trim() || 'James Wilson';
+            const specialNotes = document.getElementById('special-requests')?.value?.trim() || '';
 
             if (!pickupLocation || !dropoffLocation) {
                 this.showNotification('Please select both pickup and dropoff locations.', 'warning');
@@ -250,36 +399,180 @@ class RiderInterface {
             // Calculate fare estimate
             const fareEstimate = this.calculateFareEstimate(pickupLocation, dropoffLocation, passengerCount, cartSize);
 
-            // Create ride request data with proper PascalCase property names
+            // Create ride request data
             const rideRequestData = {
                 RiderName: riderName,
                 PickupLocation: pickupLocation,
                 DropoffLocation: dropoffLocation,
                 PassengerCount: passengerCount,
                 CartSize: cartSize,
-                EstimatedFare: parseFloat(fareEstimate.toFixed(2)) // Ensure proper decimal format
+                SpecialNotes: specialNotes,
+                EstimatedFare: parseFloat(fareEstimate.toFixed(2))
             };
 
+            // Hide confirmation modal
+            this.hideAllModals();
 
-            // Show loading modal
+            // Show loading notification
             this.showNotification('Requesting ride...', 'info');
 
             // Create ride request via API
             const rideRequest = await apiService.createRideRequest(rideRequestData);
             console.log('Created ride request:', rideRequest);
+            console.log('RideRequest ID:', rideRequest?.Id || rideRequest?.id);
             
             if (rideRequest) {
-                const rideId = rideRequest.Id || rideRequest.id;
-                console.log('Using ride ID:', rideId);
-                this.currentRideId = rideId;
-                this.currentRideRequest = rideRequest;
-                this.showFullScreenLoadingModal(rideId, rideRequest);
-                this.startStatusPolling(rideId);
+                // All requests start as "Pending" - show waiting status
+                const requestId = rideRequest.Id || rideRequest.id;
+                this.currentRideRequestId = requestId;
+                
+                // Store requestId in sessionStorage for persistence
+                sessionStorage.setItem('pendingRideRequestId', requestId.toString());
+                
+                this.showWaitingForDriverStatus(rideRequest);
+                this.startStatusPolling(requestId);
             }
 
         } catch (error) {
             console.error('Error confirming ride:', error);
             this.showNotification('Failed to request ride. Please try again.', 'danger');
+        }
+    }
+
+    /**
+     * Get cart size based on passenger count
+     */
+    getCartSizeFromPassengerCount(passengerCount) {
+        if (passengerCount <= 2) return 'Small';
+        if (passengerCount <= 4) return 'Medium';
+        if (passengerCount <= 6) return 'Large';
+        return 'Extra Large';
+    }
+
+    /**
+     * Show waiting for driver status
+     */
+    showWaitingForDriverStatus(rideRequest) {
+        console.log('Showing waiting for driver status for:', rideRequest);
+        // Show notification that ride request was submitted
+        this.showNotification('Ride request submitted! Waiting for driver...', 'success');
+        
+        // Show cancel button in a modal or notification
+        this.showCancelRideModal(rideRequest);
+    }
+
+    /**
+     * Show cancel ride modal
+     */
+    showCancelRideModal(rideRequest) {
+        // Create a simple modal with cancel button
+        const modalHtml = `
+            <div class="modal fade" id="cancelRideModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">
+                                <i class="bi bi-clock-history me-2"></i>Ride Request Submitted
+                            </h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="mb-3">
+                                <div class="spinner-border text-success mb-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h6 class="fw-bold">Waiting for driver...</h6>
+                                <p class="text-muted">Your ride request has been submitted</p>
+                            </div>
+                            
+                            <div class="border rounded p-3 mb-3 bg-light">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>From:</strong><br>
+                                        <small class="text-muted">${rideRequest.PickupLocation || rideRequest.pickupLocation || 'Unknown'}</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>To:</strong><br>
+                                        <small class="text-muted">${rideRequest.DropoffLocation || rideRequest.dropoffLocation || 'Unknown'}</small>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-6">
+                                        <strong>Passengers:</strong><br>
+                                        <small class="text-muted">${rideRequest.PassengerCount || rideRequest.passengerCount || 2}</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Fare:</strong><br>
+                                        <small class="text-success fw-bold">$${(rideRequest.EstimatedFare || rideRequest.estimatedFare || 0).toFixed(2)}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-danger" onclick="riderInterface.cancelPendingRide()">
+                                <i class="bi bi-x-circle me-1"></i>Cancel Ride
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if it exists
+        const existingModal = document.getElementById('cancelRideModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('cancelRideModal'));
+        modal.show();
+    }
+
+    /**
+     * Cancel pending ride request
+     */
+    async cancelPendingRide() {
+        if (!this.currentRideRequestId) {
+            this.showNotification('No pending ride to cancel.', 'warning');
+            return;
+        }
+
+        try {
+            // Show confirmation dialog
+            const confirmed = confirm('Are you sure you want to cancel this ride request?');
+            if (!confirmed) return;
+
+            // Delete the ride request
+            await apiService.deleteRideRequest(this.currentRideRequestId);
+            
+            // Clear session storage
+            sessionStorage.removeItem('pendingRideRequestId');
+            
+            // Close modal and reset UI
+            const modal = document.getElementById('cancelRideModal');
+            if (modal) {
+                const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                if (bootstrapModal) {
+                    bootstrapModal.hide();
+                }
+                modal.remove();
+            }
+            this.currentRideRequestId = null;
+            
+            // Stop polling
+            if (this.statusPollingInterval) {
+                clearInterval(this.statusPollingInterval);
+                this.statusPollingInterval = null;
+            }
+            
+            this.showNotification('Ride request cancelled.', 'success');
+            
+        } catch (error) {
+            console.error('Error cancelling ride request:', error);
+            this.showNotification('Failed to cancel ride request. Please try again.', 'danger');
         }
     }
 
@@ -291,8 +584,7 @@ class RiderInterface {
         
         this.statusPollingInterval = setInterval(async () => {
             try {
-                console.log('Polling check...');
-                await this.checkRideStatus(requestId);
+                await this.checkRideRequestStatus(requestId);
             } catch (error) {
                 console.error('Error checking ride status:', error);
             }
@@ -302,7 +594,7 @@ class RiderInterface {
         this.driverSearchTimeout = setTimeout(() => {
             console.log('Driver search timeout reached (2 minutes)');
             this.showDriverSearchTimeout();
-        }, 120000); // 2 minutes timeout - give drivers more time
+        }, 120000); // 2 minutes timeout
         
         console.log('Status polling started, timeout set for 2 minutes');
     }
@@ -322,37 +614,17 @@ class RiderInterface {
     }
 
     /**
-     * Check ride status
+     * Check ride request status by polling GET /api/riderequests/{id}
      */
-    async checkRideStatus(requestId) {
+    async checkRideRequestStatus(requestId) {
         try {
-            console.log('Checking ride status for ID:', requestId);
+            console.log('Checking ride request status for ID:', requestId);
             
-            // Check if there's an active ride
-            const activeRide = await apiService.getActiveRide();
-            console.log('Active ride check result:', activeRide);
+            // Get the specific ride request
+            const rideRequest = await apiService.getRideRequest(requestId);
+            console.log('Ride request status:', rideRequest);
             
-            if (activeRide && (activeRide.RideRequestId || activeRide.rideRequestId) === requestId) {
-                // Driver accepted the ride
-                console.log('Driver accepted ride!');
-                this.stopStatusPolling();
-                this.hideFullScreenLoadingModal();
-                this.showNotification('Driver found! Redirecting to ride page...', 'success');
-                
-                // Redirect to active ride page
-                setTimeout(() => {
-                    window.location.href = `./active-ride.html?rideId=${activeRide.Id}`;
-                }, 1000);
-                return;
-            }
-
-            // Check if request still exists
-            const requests = await apiService.getRideRequests();
-            console.log('All pending requests:', requests);
-            const ourRequest = requests.find(r => (r.Id || r.id) === requestId);
-            console.log('Our request found:', ourRequest);
-            
-            if (!ourRequest) {
+            if (!rideRequest) {
                 // Request was removed (declined or cancelled)
                 console.log('Request not found, stopping polling');
                 this.stopStatusPolling();
@@ -361,8 +633,31 @@ class RiderInterface {
                 return;
             }
 
+            if (rideRequest.Status === "Accepted") {
+                // Driver accepted the ride - get the ride using request ID
+                console.log('Driver accepted ride!');
+                const ride = await apiService.getRideByRequestId(requestId);
+                
+                if (ride) {
+                    this.stopStatusPolling();
+                    this.hideRideStatusCard();
+                    
+                    // Clear pending request and set active ride
+                    sessionStorage.removeItem('pendingRideRequestId');
+                    sessionStorage.setItem('activeRideId', ride.Id.toString());
+                    
+                this.showNotification('Driver found! Redirecting to ride page...', 'success');
+                
+                // Redirect to active ride page
+                setTimeout(() => {
+                        window.location.href = `./active-ride.html?rideId=${ride.Id}`;
+                }, 1000);
+                }
+            }
+            // If status is still "Pending", continue polling
+
         } catch (error) {
-            console.error('Error checking ride status:', error);
+            console.error('Error checking ride request status:', error);
         }
     }
 
@@ -417,7 +712,7 @@ class RiderInterface {
                                     <div class="row text-start">
                                         <div class="col-6">
                                             <strong>Passengers:</strong><br>
-                                            <span class="text-muted">${rideRequest?.PassengerCount || 1}</span>
+                                            <span class="text-muted">${rideRequest?.PassengerCount || 2}</span>
                                         </div>
                                         <div class="col-6">
                                             <strong>Cart Size:</strong><br>
@@ -459,6 +754,19 @@ class RiderInterface {
     hideFullScreenLoadingModal() {
         const modal = document.getElementById('fullscreen-loading-modal');
         if (modal) {
+            modal.remove();
+        }
+    }
+
+    hideRideStatusCard() {
+        // Method no longer needed - ride status is handled by modal
+        // Close any open modals
+        const modal = document.getElementById('cancelRideModal');
+        if (modal) {
+            const bootstrapModal = bootstrap.Modal.getInstance(modal);
+            if (bootstrapModal) {
+                bootstrapModal.hide();
+            }
             modal.remove();
         }
     }
@@ -537,30 +845,11 @@ class RiderInterface {
      * Calculate fare estimate
      */
     calculateFareEstimate(pickupLocation, dropoffLocation, passengerCount, cartSize) {
+        // Simple fare calculation: $7 per passenger
+        const farePerPassenger = 7.00;
+        const totalFare = farePerPassenger * passengerCount;
         
-        if (!this.shortestPath) {
-            return 5.00;
-        }
-
-        try {
-            const route = this.shortestPath.findShortestPath(pickupLocation, dropoffLocation);
-            if (!route || route.length === 0) return 5.00;
-
-            const baseFare = 3.00;
-            const perMinuteRate = 0.50;
-            const estimatedTime = route.length * 2; // 2 minutes per segment
-            const passengerMultiplier = passengerCount > 2 ? 1.2 : 1.0;
-            const cartSizeMultiplier = cartSize === 'Large' ? 1.3 : 1.0;
-
-            const fare = (baseFare + (estimatedTime * perMinuteRate)) * passengerMultiplier * cartSizeMultiplier;
-            
-            // Ensure we return a valid number
-            const finalFare = isNaN(fare) ? 5.00 : fare;
-            return finalFare;
-        } catch (error) {
-            console.error('Error calculating fare:', error);
-            return 5.00;
-        }
+        return totalFare;
     }
 
     /**
@@ -602,7 +891,7 @@ class RiderInterface {
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-secondary" onclick="riderInterface.cancelRideConfirmation()">Cancel</button>
                             <button type="button" class="btn btn-primary" onclick="riderInterface.confirmRide()">Confirm Ride</button>
                         </div>
                     </div>
@@ -611,6 +900,16 @@ class RiderInterface {
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    /**
+     * Cancel ride confirmation modal
+     */
+    cancelRideConfirmation() {
+        const modal = document.getElementById('ride-confirmation-modal');
+        if (modal) {
+            modal.remove();
+        }
     }
 
     /**
@@ -701,49 +1000,481 @@ class RiderInterface {
      * Populate location suggestions
      */
     populateLocationSuggestions() {
-        if (!this.campusData) return;
-
         const pickupInput = document.getElementById('pickup-location');
         const dropoffInput = document.getElementById('dropoff-location');
 
-        if (pickupInput) {
-            this.setupLocationAutocomplete(pickupInput);
+        [pickupInput, dropoffInput].forEach(input => {
+            if (input) {
+                // Enhanced event listeners
+                input.addEventListener('input', (e) => {
+                    this.handleLocationInput(e.target);
+                });
+
+                input.addEventListener('focus', (e) => {
+                    this.handleLocationFocus(e.target);
+                });
+
+                input.addEventListener('blur', (e) => {
+                    this.handleLocationBlur(e.target);
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    this.handleLocationKeydown(e);
+                });
+
+                // Initialize popular locations
+                this.populatePopularLocations(input);
+            }
+        });
+
+        // Click outside to close dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.location-input-container')) {
+                this.closeAllDropdowns();
+            }
+        });
+    }
+
+    /**
+     * Handle location input for autocomplete
+     * @param {HTMLElement} input - Input element
+     */
+    handleLocationInput(input) {
+        const value = input.value.trim();
+        const suggestionsContainer = this.getSuggestionsContainer(input);
+        const popularContainer = this.getPopularContainer(input);
+        
+        // Hide popular locations when typing
+        popularContainer.classList.remove('show');
+        
+        if (value.length < 1) {
+            suggestionsContainer.classList.remove('show');
+            this.updateValidationIcon(input, 'neutral');
+            return;
         }
 
-        if (dropoffInput) {
-            this.setupLocationAutocomplete(dropoffInput);
+        const suggestions = this.locationServices.getLocationSuggestions(value);
+        this.showLocationSuggestions(input, suggestions);
+        this.updateValidationIcon(input, suggestions.length > 0 ? 'valid' : 'invalid');
+    }
+
+    /**
+     * Handle location focus
+     * @param {HTMLElement} input - Input element
+     */
+    handleLocationFocus(input) {
+        const popularContainer = this.getPopularContainer(input);
+        const suggestionsContainer = this.getSuggestionsContainer(input);
+        
+        // Show popular locations when focused and empty
+        if (!input.value.trim()) {
+            popularContainer.classList.add('show');
+        }
+        
+        // Hide other dropdowns
+        this.closeOtherDropdowns(input);
+    }
+
+    /**
+     * Handle location blur
+     * @param {HTMLElement} input - Input element
+     */
+    handleLocationBlur(input) {
+        // Delay to allow click events on suggestions
+        setTimeout(() => {
+            this.validateLocationInput(input);
+            this.closeDropdown(input);
+        }, 150);
+    }
+
+    /**
+     * Handle keyboard navigation
+     * @param {KeyboardEvent} e - Keyboard event
+     */
+    handleLocationKeydown(e) {
+        const input = e.target;
+        const suggestionsContainer = this.getSuggestionsContainer(input);
+        
+        if (!suggestionsContainer.classList.contains('show')) return;
+        
+        const suggestions = suggestionsContainer.querySelectorAll('.location-suggestion-item');
+        const selected = suggestionsContainer.querySelector('.location-suggestion-item.selected');
+        let currentIndex = -1;
+        
+        if (selected) {
+            currentIndex = Array.from(suggestions).indexOf(selected);
+        }
+        
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                currentIndex = Math.min(currentIndex + 1, suggestions.length - 1);
+                this.selectSuggestion(suggestions[currentIndex]);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                currentIndex = Math.max(currentIndex - 1, 0);
+                this.selectSuggestion(suggestions[currentIndex]);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selected) {
+                    this.selectLocationFromSuggestion(input, selected);
+                }
+                break;
+            case 'Escape':
+                this.closeDropdown(input);
+                input.blur();
+                break;
         }
     }
 
     /**
-     * Setup location autocomplete
+     * Show location suggestions
+     * @param {HTMLElement} input - Input element
+     * @param {Array} suggestions - Array of suggestion strings
      */
-    setupLocationAutocomplete(input) {
-        if (!this.campusData) return;
-
-        const locations = this.campusData.getLocations();
+    showLocationSuggestions(input, suggestions) {
+        const suggestionsContainer = this.getSuggestionsContainer(input);
         
-        input.addEventListener('input', () => {
-            const value = input.value.toLowerCase();
-            const matches = locations.filter(loc => 
-                loc.toLowerCase().includes(value)
-            );
+        // Clear existing suggestions
+        suggestionsContainer.innerHTML = '';
+        
+        if (suggestions.length === 0) {
+            suggestionsContainer.classList.remove('show');
+            return;
+        }
 
-            // Simple autocomplete implementation
-            if (matches.length > 0 && value.length > 0) {
-                input.setAttribute('list', 'location-suggestions');
-                
-                let datalist = document.getElementById('location-suggestions');
-                if (!datalist) {
-                    datalist = document.createElement('datalist');
-                    datalist.id = 'location-suggestions';
-                    document.body.appendChild(datalist);
-                }
+        // Create suggestion items
+        suggestions.forEach(suggestion => {
+            const locationData = this.campusData.getLocationCoordinates(suggestion);
+            const suggestionItem = this.createSuggestionItem(suggestion, locationData);
+            suggestionsContainer.appendChild(suggestionItem);
+        });
 
-                datalist.innerHTML = matches.map(match => 
-                    `<option value="${match}">`
-                ).join('');
+        suggestionsContainer.classList.add('show');
+    }
+
+    /**
+     * Create a suggestion item
+     * @param {string} locationName - Location name
+     * @param {Object} locationData - Location data
+     * @returns {HTMLElement} Suggestion item element
+     */
+    createSuggestionItem(locationName, locationData) {
+        const item = document.createElement('div');
+        item.className = 'location-suggestion-item';
+        item.setAttribute('role', 'option');
+        
+        const icon = this.getBuildingTypeIcon(locationData.type);
+        const iconElement = document.createElement('div');
+        iconElement.className = `location-suggestion-icon ${locationData.type}`;
+        iconElement.innerHTML = icon;
+        
+        const content = document.createElement('div');
+        content.className = 'location-suggestion-content';
+        content.innerHTML = `
+            <div class="location-suggestion-name">${locationName}</div>
+            <div class="location-suggestion-type">${locationData.type}</div>
+        `;
+        
+        item.appendChild(iconElement);
+        item.appendChild(content);
+        
+        item.addEventListener('click', () => {
+            this.selectLocationFromSuggestion(item.closest('.location-input-container').querySelector('input'), item);
+        });
+        
+        item.addEventListener('mouseenter', () => {
+            this.selectSuggestion(item);
+        });
+        
+        return item;
+    }
+
+    /**
+     * Get building type icon
+     * @param {string} type - Building type
+     * @returns {string} Icon HTML
+     */
+    getBuildingTypeIcon(type) {
+        // Add default fallback
+        if (!type) {
+            console.warn('Building type is null/undefined, using default');
+            type = 'academic'; // Default fallback
+        }
+        
+        const icons = {
+            'academic': '<i class="bi bi-mortarboard"></i>',
+            'residential': '<i class="bi bi-house"></i>',
+            'dining': '<i class="bi bi-cup-hot"></i>',
+            'recreation': '<i class="bi bi-trophy"></i>',
+            'parking': '<i class="bi bi-p-square"></i>',
+            'hub': '<i class="bi bi-building"></i>',
+            'landmark': '<i class="bi bi-geo-alt"></i>'
+        };
+        return icons[type] || '<i class="bi bi-geo-alt"></i>'; // Fallback icon
+    }
+
+    /**
+     * Select a suggestion item
+     * @param {HTMLElement} item - Suggestion item
+     */
+    selectSuggestion(item) {
+        const container = item.closest('.location-suggestions');
+        container.querySelectorAll('.location-suggestion-item').forEach(i => {
+            i.classList.remove('selected');
+        });
+        item.classList.add('selected');
+    }
+
+    /**
+     * Select location from suggestion
+     * @param {HTMLElement} input - Input element
+     * @param {HTMLElement} suggestionItem - Suggestion item
+     */
+    selectLocationFromSuggestion(input, suggestionItem) {
+        const locationName = suggestionItem.querySelector('.location-suggestion-name').textContent;
+        input.value = locationName;
+        this.validateLocationInput(input);
+        this.closeDropdown(input);
+        
+        // Update map if available
+        if (this.mapIntegration && input.id === 'pickup-location') {
+            const locationData = this.campusData.getLocationCoordinates(locationName);
+            if (locationData) {
+                this.mapIntegration.setPickupFromCoords(locationData.lat, locationData.lng, locationName);
             }
+        } else if (this.mapIntegration && input.id === 'dropoff-location') {
+            const locationData = this.campusData.getLocationCoordinates(locationName);
+            if (locationData) {
+                this.mapIntegration.setDropoffFromCoords(locationData.lat, locationData.lng, locationName);
+            }
+        }
+    }
+
+    /**
+     * Validate location input with enhanced feedback
+     * @param {HTMLElement} input - Input element
+     */
+    validateLocationInput(input) {
+        const value = input.value.trim();
+        
+        // Clear previous validation states
+        input.classList.remove('is-valid', 'is-invalid');
+        
+        if (value.length === 0) {
+            // Empty input - neutral state
+            this.updateValidationIcon(input, 'neutral');
+            return;
+        }
+        
+        // Check if location exists in campus data
+        const isValid = this.locationServices.isValidLocation(value);
+        const locationData = this.campusData.getLocationCoordinates(value);
+        
+        if (isValid && locationData) {
+            // Valid location found
+            input.classList.add('is-valid');
+            this.updateValidationIcon(input, 'valid');
+            
+            // Update map if available
+            if (this.mapIntegration && this.mapIntegration.initialized) {
+                const isPickup = input.id === 'pickup-location';
+                if (isPickup) {
+                    this.mapIntegration.setPickupLocation(value, locationData.lat, locationData.lng);
+                } else {
+                    this.mapIntegration.setDropoffLocation(value, locationData.lat, locationData.lng);
+                }
+            }
+        } else {
+            // Invalid location
+            input.classList.add('is-invalid');
+            this.updateValidationIcon(input, 'invalid');
+            
+            // Show helpful error message
+            this.showLocationError(input, value);
+        }
+    }
+
+    /**
+     * Show location error message
+     * @param {HTMLElement} input - Input element
+     * @param {string} value - Input value
+     */
+    showLocationError(input, value) {
+        // Remove existing error message
+        const existingError = input.parentNode.querySelector('.location-error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'location-error-message text-danger small mt-1';
+        
+        // Get suggestions for similar locations
+        const suggestions = this.campusData.getLocationSuggestions(value);
+        if (suggestions.length > 0) {
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Location not found. Did you mean: 
+                <strong>${suggestions.slice(0, 2).join('</strong> or <strong>')}</strong>?
+            `;
+        } else {
+            errorDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Location not found. Please select from available campus locations.
+            `;
+        }
+        
+        input.parentNode.appendChild(errorDiv);
+        
+        // Auto-remove error after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+
+    /**
+     * Update validation icon
+     * @param {HTMLElement} input - Input element
+     * @param {string} state - Validation state (valid, invalid, neutral)
+     */
+    updateValidationIcon(input, state) {
+        const icon = input.parentNode.querySelector('.input-validation-icon');
+        if (icon) {
+            icon.className = `input-validation-icon ${state}`;
+            icon.innerHTML = state === 'valid' ? '<i class="bi bi-check-circle-fill"></i>' : 
+                           state === 'invalid' ? '<i class="bi bi-x-circle-fill"></i>' : 
+                           '<i class="bi bi-circle"></i>';
+        }
+    }
+
+    /**
+     * Populate popular locations
+     * @param {HTMLElement} input - Input element
+     */
+    populatePopularLocations(input) {
+        const popularContainer = this.getPopularContainer(input);
+        const chipsContainer = popularContainer.querySelector('.popular-chips');
+        
+        // Define comprehensive list of popular campus locations
+        const popularLocationNames = [
+            'Ferguson Student Center',
+            'Gorgas Library', 
+            'Student Recreation Center',
+            'Tutwiler Hall',
+            'Burke Dining Hall',
+            'Ten Hoor Hall',
+            'Ridgecrest South',
+            'Bryant-Denny Stadium',
+            'Hewson Hall',
+            'Presidential Village',
+            'Bidgood Hall',
+            'Lakeside Dining Hall',
+            'Ridgecrest North',
+            'Paty Hall',
+            'Manly Hall',
+            'Lloyd Hall',
+            'Smith Hall',
+            'Morgan Hall',
+            'Clark Hall',
+            'Rowand-Johnson Hall'
+        ];
+        
+        // Create chips for popular locations
+        popularLocationNames.slice(0, 8).forEach(locationName => {
+            const locationData = this.campusData.getLocationCoordinates(locationName);
+            
+            // Add null check here
+            if (!locationData) {
+                console.warn(`Location "${locationName}" not found in campus data`);
+                return; // Skip this location
+            }
+            
+            const chip = document.createElement('div');
+            chip.className = 'popular-chip';
+            
+            // Safer icon handling
+            const iconHtml = this.getBuildingTypeIcon(locationData.type);
+            const iconClass = iconHtml.match(/class="([^"]+)"/);
+            const iconClassName = iconClass ? iconClass[1] : 'bi-geo-alt';
+            
+            chip.innerHTML = `
+                <i class="${iconClassName}"></i>
+                ${locationName}
+            `;
+            
+            chip.addEventListener('click', () => {
+                input.value = locationName;
+                this.validateLocationInput(input);
+                this.closeDropdown(input);
+                
+                // Update map if available
+                if (this.mapIntegration && input.id === 'pickup-location') {
+                    this.mapIntegration.setPickupFromCoords(locationData.lat, locationData.lng, locationName);
+                } else if (this.mapIntegration && input.id === 'dropoff-location') {
+                    this.mapIntegration.setDropoffFromCoords(locationData.lat, locationData.lng, locationName);
+                }
+            });
+            
+            chipsContainer.appendChild(chip);
+        });
+    }
+
+    /**
+     * Get suggestions container for input
+     * @param {HTMLElement} input - Input element
+     * @returns {HTMLElement} Suggestions container
+     */
+    getSuggestionsContainer(input) {
+        return input.closest('.location-input-container').querySelector('.location-suggestions');
+    }
+
+    /**
+     * Get popular locations container for input
+     * @param {HTMLElement} input - Input element
+     * @returns {HTMLElement} Popular locations container
+     */
+    getPopularContainer(input) {
+        return input.closest('.location-input-container').querySelector('.popular-locations');
+    }
+
+    /**
+     * Close dropdown for specific input
+     * @param {HTMLElement} input - Input element
+     */
+    closeDropdown(input) {
+        const suggestionsContainer = this.getSuggestionsContainer(input);
+        const popularContainer = this.getPopularContainer(input);
+        
+        suggestionsContainer.classList.remove('show');
+        popularContainer.classList.remove('show');
+    }
+
+    /**
+     * Close other dropdowns except for the specified input
+     * @param {HTMLElement} currentInput - Current input element
+     */
+    closeOtherDropdowns(currentInput) {
+        const allInputs = document.querySelectorAll('#pickup-location, #dropoff-location');
+        allInputs.forEach(input => {
+            if (input !== currentInput) {
+                this.closeDropdown(input);
+            }
+        });
+    }
+
+    /**
+     * Close all dropdowns
+     */
+    closeAllDropdowns() {
+        const allInputs = document.querySelectorAll('#pickup-location, #dropoff-location');
+        allInputs.forEach(input => {
+            this.closeDropdown(input);
         });
     }
 
@@ -767,27 +1498,50 @@ class RiderInterface {
     }
 
     /**
-     * Use current location
+     * Use current GPS location
      */
-    useCurrentLocation() {
-        if (!this.locationServices) {
-            this.showNotification('Location services not available.', 'warning');
-            return;
-        }
-
-        this.locationServices.getCurrentLocation()
-            .then(location => {
+    async useCurrentLocation() {
+        try {
+            const locationData = await this.locationServices.getCurrentLocationWithBuilding();
+            
+            // Set pickup location
                 const pickupInput = document.getElementById('pickup-location');
-                if (pickupInput) {
-                    pickupInput.value = location;
-                    this.updateFareEstimate();
-                }
-                this.showNotification(`Set pickup location to: ${location}`, 'success');
-            })
-            .catch(error => {
-                console.error('Error getting current location:', error);
-                this.showNotification('Unable to get current location.', 'danger');
-            });
+            pickupInput.value = locationData.nearestBuilding;
+            pickupInput.classList.add('is-valid');
+            
+            // Update current location display
+            const currentLocationElement = document.getElementById('current-location');
+            if (currentLocationElement) {
+                currentLocationElement.textContent = locationData.nearestBuilding;
+            }
+            
+            // Update map if available
+            if (this.mapIntegration) {
+                this.mapIntegration.setPickupFromCoords(
+                    locationData.lat, 
+                    locationData.lng, 
+                    locationData.nearestBuilding
+                );
+            }
+            
+            let message, notificationType;
+            
+            if (locationData.isOnCampus) {
+                message = `Location set to ${locationData.nearestBuilding}`;
+                notificationType = 'success';
+            } else if (locationData.isFarFromCampus) {
+                message = `You're ${locationData.distanceToCampus.toFixed(1)}km from campus. Default set to ${locationData.nearestBuilding}`;
+                notificationType = 'warning';
+            } else {
+                message = `Location set to ${locationData.nearestBuilding} (nearest campus building)`;
+                notificationType = 'info';
+            }
+            
+            this.showNotification(message, notificationType);
+            
+        } catch (error) {
+            this.showNotification('Could not get current location. Please try again.', 'warning');
+        }
     }
 
     /**
@@ -826,7 +1580,7 @@ class RiderInterface {
         try {
             if (this.campusData && this.locationServices) {
                 this.mapIntegration = new MapIntegration(this.campusData, this.locationServices);
-                this.mapIntegration.initMap('rider-map');
+                this.mapIntegration.initMap('campus-map');
             }
         } catch (error) {
             console.error('Error initializing map:', error);
@@ -834,17 +1588,50 @@ class RiderInterface {
     }
 
     /**
-     * Track ride
+     * Track ride - redirect to active ride page
      */
     trackRide() {
-        this.showNotification('Ride tracking feature coming soon!', 'info');
+        if (this.currentRideId) {
+            window.location.href = `active-ride.html?rideId=${this.currentRideId}`;
+        } else {
+            this.showNotification('No active ride to track.', 'warning');
+        }
     }
 
     /**
      * Cancel ride
      */
-    cancelRide() {
-        this.showNotification('Ride cancellation feature coming soon!', 'info');
+    async cancelRide() {
+        if (!this.currentRideId) {
+            this.showNotification('No active ride to cancel.', 'warning');
+            return;
+        }
+
+        try {
+            // Show confirmation dialog
+            const confirmed = confirm('Are you sure you want to cancel this ride?');
+            if (!confirmed) return;
+
+            // Cancel the ride request
+            await this.cancelRideRequest(this.currentRideId);
+            
+            // Reset UI
+            this.hideRideStatusCard();
+            this.currentRideId = null;
+            this.currentRide = null;
+            
+            // Stop polling
+            if (this.statusPollingInterval) {
+                clearInterval(this.statusPollingInterval);
+                this.statusPollingInterval = null;
+            }
+            
+            this.showNotification('Ride cancelled successfully.', 'success');
+            
+        } catch (error) {
+            console.error('Error cancelling ride:', error);
+            this.showNotification('Failed to cancel ride. Please try again.', 'danger');
+        }
     }
 }
 

@@ -300,48 +300,6 @@ class CampusData {
     }
 
     /**
-     * Get available drivers
-     * @returns {Array} Available drivers
-     */
-    getAvailableDrivers() {
-        if (typeof appState !== 'undefined') {
-            return appState.getDrivers().filter(driver => driver.available);
-        }
-        console.warn('AppState not available, returning empty array');
-        return [];
-    }
-
-    /**
-     * Get driver by ID
-     * @param {string} driverId - Driver ID
-     * @returns {Object|null} Driver object or null
-     */
-    getDriverById(driverId) {
-        if (typeof appState !== 'undefined') {
-            return appState.getDrivers().find(driver => driver.id === driverId) || null;
-        }
-        console.warn('AppState not available, returning null');
-        return null;
-    }
-
-    /**
-     * Update driver availability
-     * @param {string} driverId - Driver ID
-     * @param {boolean} available - Availability status
-     * @param {string|null} rideId - Current ride ID
-     */
-    updateDriverAvailability(driverId, available, rideId = null) {
-        if (typeof appState !== 'undefined') {
-            appState.updateDriver(driverId, {
-                available: available,
-                currentRide: rideId
-            });
-        } else {
-            console.warn('AppState not available, cannot update driver availability');
-        }
-    }
-
-    /**
      * Get location coordinates
      * @param {string} locationName - Location name
      * @returns {Object|null} Coordinates or null
