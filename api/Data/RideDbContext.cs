@@ -11,6 +11,7 @@ namespace api.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Driver> Drivers { get; set; }
+        public DbSet<Rider> Riders { get; set; }
         public DbSet<RideRequest> RideRequests { get; set; }
         public DbSet<Ride> Rides { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
@@ -45,6 +46,12 @@ namespace api.Data
                 .HasForeignKey<Driver>(d => d.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Rider>()
+                .HasOne(r => r.User)
+                .WithOne(u => u.Rider)
+                .HasForeignKey<Rider>(r => r.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<RideRequest>()
                 .HasOne(r => r.User)
                 .WithMany()
@@ -57,8 +64,8 @@ namespace api.Data
                 {
                     Id = 1,
                     Name = "Stacy Streets",
-                    VehicleId = "SC-001",
-                    VehicleName = "Solar Golf Cart Alpha",
+                    VehicleId = "GC-001",
+                    VehicleName = "Golf Cart Alpha",
                     Location = "Hewson Hall",
                     IsAvailable = true,
                     TotalRides = 23,
@@ -72,14 +79,29 @@ namespace api.Data
                 {
                     Id = 2,
                     Name = "Sarah Smith",
-                    VehicleId = "SC-002",
-                    VehicleName = "Solar Golf Cart Beta",
+                    VehicleId = "GC-002",
+                    VehicleName = "Golf Cart Beta",
                     Location = "Presidential Village",
                     IsAvailable = true,
                     TotalRides = 18,
                     AverageTip = 42.15m,
                     Rating = 4.8m,
                     Status = "Active",
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
+            // Seed rider data
+            modelBuilder.Entity<Rider>().HasData(
+                new Rider
+                {
+                    Id = 1,
+                    UserId = 4, // James Wilson
+                    Name = "James Wilson",
+                    TotalRides = 0,
+                    RiderStatus = "New",
+                    AverageRating = 0.0m,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }

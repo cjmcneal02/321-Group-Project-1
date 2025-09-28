@@ -70,8 +70,8 @@ class RiderInterface {
                     await this.loadPendingRideRequest(pendingRequestId);
                 } else {
                     console.log('No pending request found, showing dashboard');
-                    this.showDashboard();
-                    this.loadRiderData();
+            this.showDashboard();
+            this.loadRiderData();
                 }
                 return;
             } catch (error) {
@@ -138,7 +138,7 @@ class RiderInterface {
 
     async loadRiderUsers() {
         try {
-            const riders = await apiService.getUsersByRole('Rider');
+            const riders = await apiService.getRiders();
             console.log('Loaded riders:', riders);
             const riderSelect = document.getElementById('rider-select');
             
@@ -150,8 +150,8 @@ class RiderInterface {
                 riders.forEach(rider => {
                     console.log('Adding rider:', rider);
                     const option = document.createElement('option');
-                    option.value = rider.Id || rider.id;
-                    option.textContent = `${rider.FirstName || rider.firstName} ${rider.LastName || rider.lastName}`;
+                    option.value = rider.UserId || rider.userId;
+                    option.textContent = rider.Name || rider.name;
                     riderSelect.appendChild(option);
                 });
             }
@@ -172,9 +172,9 @@ class RiderInterface {
 
         try {
             // Get rider data from API instead of hardcoded values
-            const riderId = parseInt(selectedRider);
-            console.log('Parsed rider ID:', riderId);
-            const rider = await apiService.getUser(riderId);
+            const userId = parseInt(selectedRider);
+            console.log('Parsed user ID:', userId);
+            const rider = await apiService.getRiderByUserId(userId);
             
             if (!rider) {
                 this.showNotification('Rider not found.', 'error');
@@ -183,11 +183,16 @@ class RiderInterface {
 
             // Set up user data from API response
             const userData = {
-                id: rider.id || rider.Id,
-                username: rider.username || rider.Username,
-                role: rider.role || rider.Role,
-                firstName: rider.firstName || rider.FirstName,
-                lastName: rider.lastName || rider.LastName
+                id: rider.UserId || rider.userId,
+                username: rider.Name || rider.name, // Use rider name as username
+                role: 'Rider', // Set role explicitly since we removed User include
+                firstName: rider.Name || rider.name, // Use rider name as first name
+                lastName: '', // No separate last name in rider data
+                riderId: rider.Id || rider.id,
+                riderName: rider.Name || rider.name,
+                totalRides: rider.TotalRides || rider.totalRides,
+                riderStatus: rider.RiderStatus || rider.riderStatus,
+                averageRating: rider.AverageRating || rider.averageRating
             };
 
             this.currentUser = userData;
@@ -241,6 +246,9 @@ class RiderInterface {
         
         // Get current location automatically
         this.getCurrentLocationOnLogin();
+        
+        // Update ride statistics
+        this.updateRideStatistics();
         
         if (this.campusData && this.locationServices) {
             this.initializeInterface();
@@ -1531,7 +1539,7 @@ class RiderInterface {
             console.log('Fresh location obtained and cached:', locationData.nearestBuilding);
             
             // Set pickup location
-            const pickupInput = document.getElementById('pickup-location');
+                const pickupInput = document.getElementById('pickup-location');
             pickupInput.value = locationData.nearestBuilding;
             pickupInput.classList.add('is-valid');
             
@@ -1595,8 +1603,17 @@ class RiderInterface {
                 `;
             }
 
+            // Update the main total rides display
+            const totalRidesElement = document.getElementById('total-rides');
+            if (totalRidesElement) {
+                totalRidesElement.textContent = totalRides;
+            }
+
             // Update ride history list
             this.updateRideHistoryList(rideHistory);
+            
+            // Update VIP progress
+            this.updateVipProgress(totalRides);
         } catch (error) {
             console.error('Error updating ride statistics:', error);
             
@@ -1619,6 +1636,51 @@ class RiderInterface {
                     </div>
                 `;
             }
+            
+            // Update the main total rides display to 0
+            const totalRidesElement = document.getElementById('total-rides');
+            if (totalRidesElement) {
+                totalRidesElement.textContent = '0';
+            }
+            
+            // Update VIP progress for new riders
+            this.updateVipProgress(0);
+        }
+    }
+
+    /**
+     * Update VIP progress bar based on ride count with tiered system
+     */
+    updateVipProgress(totalRides) {
+        const progressBar = document.getElementById('ride-progress-bar');
+        const progressText = document.getElementById('vip-progress-text');
+        
+        if (!progressBar || !progressText) return;
+        
+        if (totalRides >= 20) {
+            // VIP Rider (20+ rides)
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('bg-success', 'bg-primary');
+            progressBar.classList.add('bg-warning');
+            progressText.textContent = '🎉 VIP Rider Status Achieved!';
+        } else if (totalRides >= 10) {
+            // Regular Rider (10-19 rides)
+            const progress = ((totalRides - 10) / 10) * 100; // Progress within regular tier
+            const ridesNeeded = 20 - totalRides;
+            
+            progressBar.style.width = `${progress}%`;
+            progressBar.classList.remove('bg-success', 'bg-warning');
+            progressBar.classList.add('bg-primary');
+            progressText.textContent = `${ridesNeeded} rides to VIP Rider`;
+        } else {
+            // New Rider (0-9 rides)
+            const progress = (totalRides / 10) * 100; // Progress within new rider tier
+            const ridesNeeded = 10 - totalRides;
+            
+            progressBar.style.width = `${progress}%`;
+            progressBar.classList.remove('bg-primary', 'bg-warning');
+            progressBar.classList.add('bg-success');
+            progressText.textContent = `${ridesNeeded} rides to Regular Rider`;
         }
     }
 
@@ -1647,19 +1709,25 @@ class RiderInterface {
         }
 
         // Sort rides by date (most recent first)
-        const sortedRides = rideHistory.sort((a, b) => new Date(b.EndTime || b.StartTime) - new Date(a.EndTime || a.StartTime));
+        const sortedRides = rideHistory.sort((a, b) => {
+            const aTime = new Date(a.EndTime || a.endTime || a.StartTime || a.startTime);
+            const bTime = new Date(b.EndTime || b.endTime || b.StartTime || b.startTime);
+            return bTime - aTime;
+        });
 
-        // Show only the 5 most recent rides
-        const recentRides = sortedRides.slice(0, 5);
+        // Show only the 3 most recent rides
+        const recentRides = sortedRides.slice(0, 3);
 
         rideHistoryContainer.innerHTML = recentRides.map(ride => {
-            const startTime = new Date(ride.StartTime);
-            const endTime = ride.EndTime ? new Date(ride.EndTime) : null;
+            const startTime = new Date(ride.StartTime || ride.startTime);
+            const endTime = (ride.EndTime || ride.endTime) ? new Date(ride.EndTime || ride.endTime) : null;
             const displayTime = endTime || startTime;
             
             // Format date and time
             const timeAgo = this.getTimeAgo(displayTime);
-            const route = `${ride.PickupLocation || 'Unknown'} → ${ride.DropoffLocation || 'Unknown'}`;
+            const pickupLocation = ride.PickupLocation || ride.pickupLocation || 'Unknown';
+            const dropoffLocation = ride.DropoffLocation || ride.dropoffLocation || 'Unknown';
+            const route = `${pickupLocation} → ${dropoffLocation}`;
             
             return `
                 <div class="list-group-item border-0 px-0">
@@ -1681,16 +1749,19 @@ class RiderInterface {
     getTimeAgo(date) {
         const now = new Date();
         const diffMs = now - date;
+        const diffYears = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365));
+        const diffWeeks = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
-        if (diffDays > 0) {
-            return `${diffDays} day${diffDays > 1 ? 's' : ''} ago, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        if (diffYears > 0) {
+            return `${diffYears} year${diffYears > 1 ? 's' : ''} ago`;
+        } else if (diffWeeks > 0) {
+            return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
+        } else if (diffDays > 0) {
+            return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
         } else if (diffHours > 0) {
             return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        } else if (diffMinutes > 0) {
-            return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
         } else {
             return 'Just now';
         }

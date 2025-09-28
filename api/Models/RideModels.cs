@@ -23,6 +23,21 @@ namespace api.Models
         public User? User { get; set; }
     }
 
+    public class Rider
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; } // Foreign key to User
+        public string Name { get; set; } = string.Empty;
+        public int TotalRides { get; set; } = 0;
+        public string RiderStatus { get; set; } = "New"; // "New", "Regular", "VIP"
+        public decimal AverageRating { get; set; } = 0.0m;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation property
+        public User? User { get; set; }
+    }
+
     public class RideRequest
     {
         public int Id { get; set; }
@@ -48,6 +63,7 @@ namespace api.Models
         public int Id { get; set; }
         public int RideRequestId { get; set; }
         public int DriverId { get; set; }
+        public int? RiderId { get; set; } // Foreign key to Rider
         public string RiderName { get; set; } = string.Empty;
         public string PickupLocation { get; set; } = string.Empty;
         public string DropoffLocation { get; set; } = string.Empty;
@@ -148,6 +164,7 @@ namespace api.Models
         
         // Navigation properties
         public Driver? Driver { get; set; }
+        public Rider? Rider { get; set; }
     }
 
     public class CreateUserDto

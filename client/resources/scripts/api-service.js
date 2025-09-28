@@ -228,10 +228,11 @@ class ApiService {
 
     async getRideHistory() {
         try {
-            // Get ride history for the current rider by name
-            const riderName = this.getCurrentUserName();
-            if (!riderName) {
-                console.log('No current user name, returning empty ride history');
+            // Get ride history for the current rider by ID
+            const riderId = this.getCurrentRiderId();
+            console.log('getRideHistory - Current rider ID:', riderId);
+            if (!riderId) {
+                console.log('No current rider ID, returning empty ride history');
                 return [];
             }
             
@@ -240,12 +241,71 @@ class ApiService {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const allRides = await response.json();
+            console.log('getRideHistory - All rides from API:', allRides);
             
-            // Filter rides by current rider's name
-            const riderRides = allRides.filter(ride => ride.RiderName === riderName);
+            // Filter rides by current rider's ID (handle both camelCase and PascalCase)
+            const riderRides = allRides.filter(ride => {
+                const rideRiderId = ride.RiderId || ride.riderId;
+                console.log('Filtering ride:', ride.id, 'riderId:', rideRiderId, 'target riderId:', riderId, 'match:', rideRiderId === riderId);
+                return rideRiderId === riderId;
+            });
+            console.log('getRideHistory - Filtered rides for rider ID', riderId, ':', riderRides);
             return riderRides;
         } catch (error) {
             console.error('Error fetching ride history:', error);
+            throw error;
+        }
+    }
+
+    // Rider Methods
+    async getRiders() {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching riders:', error);
+            throw error;
+        }
+    }
+
+    async getRider(riderId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders/${riderId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rider:', error);
+            throw error;
+        }
+    }
+
+    async getRiderByUserId(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders/user/${userId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rider by user ID:', error);
+            throw error;
+        }
+    }
+
+    async getRecentRides(riderId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders/${riderId}/recent-rides`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching recent rides:', error);
             throw error;
         }
     }
@@ -477,28 +537,61 @@ class ApiService {
     /**
      * Get current user name based on logged-in user
      */
-    getCurrentUserName() {
-        // Map user IDs to names for riders
-        const riderNames = {
-            4: 'James Wilson' // rider user ID
-        };
+    getCurrentRiderId() {
+        console.log('getCurrentRiderId - currentUserRole:', this.currentUserRole, 'currentUserId:', this.currentUserId);
         
-        // Map driver IDs to names for drivers
-        const driverNames = {
-            1: 'Stacy Streets', // stacy driver ID
-            2: 'Sarah Smith'    // sarah driver ID
-        };
-        
-        // If current user is a rider, return rider name
+        // For riders, get the rider ID from localStorage
         if (this.currentUserRole === 'Rider' && this.currentUserId) {
-            return riderNames[this.currentUserId] || 'Anonymous Rider';
+            const riderUser = localStorage.getItem('riderUser');
+            console.log('getCurrentRiderId - riderUser from localStorage:', riderUser);
+            if (riderUser) {
+                const userData = JSON.parse(riderUser);
+                console.log('getCurrentRiderId - parsed userData:', userData);
+                const riderId = userData.riderId;
+                console.log('getCurrentRiderId - returning riderId:', riderId);
+                return riderId;
+            }
         }
         
-        // If current user is a driver, return driver name
+        console.log('getCurrentRiderId - returning null');
+        return null;
+    }
+
+    getCurrentUserName() {
+        console.log('getCurrentUserName - currentUserRole:', this.currentUserRole, 'currentUserId:', this.currentUserId);
+        
+        // For riders, we can get the name from the current user data
+        if (this.currentUserRole === 'Rider' && this.currentUserId) {
+            // Try to get name from localStorage first
+            const riderUser = localStorage.getItem('riderUser');
+            console.log('getCurrentUserName - riderUser from localStorage:', riderUser);
+            if (riderUser) {
+                const userData = JSON.parse(riderUser);
+                console.log('getCurrentUserName - parsed userData:', userData);
+                const name = userData.riderName || userData.firstName || 'Anonymous Rider';
+                console.log('getCurrentUserName - returning name:', name);
+                return name;
+            }
+            
+            // Fallback to hardcoded mapping
+            const riderNames = {
+                4: 'James Wilson' // rider user ID
+            };
+            const fallbackName = riderNames[this.currentUserId] || 'Anonymous Rider';
+            console.log('getCurrentUserName - returning fallback name:', fallbackName);
+            return fallbackName;
+        }
+        
+        // For drivers, use hardcoded mapping
         if (this.currentUserRole === 'Driver' && this.currentDriverId) {
+            const driverNames = {
+                1: 'Stacy Streets', // stacy driver ID
+                2: 'Sarah Smith'    // sarah driver ID
+            };
             return driverNames[this.currentDriverId] || 'Anonymous Driver';
         }
         
+        console.log('getCurrentUserName - returning Anonymous User');
         return 'Anonymous User';
     }
 
