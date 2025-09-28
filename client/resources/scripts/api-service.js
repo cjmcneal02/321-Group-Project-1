@@ -16,8 +16,6 @@ class ApiService {
                 RiderName: rideData.RiderName || this.getCurrentUserName() || 'Anonymous Rider'
             };
             
-            console.log('Sending ride request to API:', requestData);
-            console.log('JSON string being sent:', JSON.stringify(requestData));
             const response = await fetch(`${this.baseUrl}/riderequests`, {
                 method: 'POST',
                 headers: {
@@ -230,9 +228,7 @@ class ApiService {
         try {
             // Get ride history for the current rider by ID
             const riderId = this.getCurrentRiderId();
-            console.log('getRideHistory - Current rider ID:', riderId);
             if (!riderId) {
-                console.log('No current rider ID, returning empty ride history');
                 return [];
             }
             
@@ -241,15 +237,12 @@ class ApiService {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const allRides = await response.json();
-            console.log('getRideHistory - All rides from API:', allRides);
             
             // Filter rides by current rider's ID (handle both camelCase and PascalCase)
             const riderRides = allRides.filter(ride => {
                 const rideRiderId = ride.RiderId || ride.riderId;
-                console.log('Filtering ride:', ride.id, 'riderId:', rideRiderId, 'target riderId:', riderId, 'match:', rideRiderId === riderId);
                 return rideRiderId === riderId;
             });
-            console.log('getRideHistory - Filtered rides for rider ID', riderId, ':', riderRides);
             return riderRides;
         } catch (error) {
             console.error('Error fetching ride history:', error);
@@ -538,38 +531,29 @@ class ApiService {
      * Get current user name based on logged-in user
      */
     getCurrentRiderId() {
-        console.log('getCurrentRiderId - currentUserRole:', this.currentUserRole, 'currentUserId:', this.currentUserId);
         
         // For riders, get the rider ID from localStorage
         if (this.currentUserRole === 'Rider' && this.currentUserId) {
             const riderUser = localStorage.getItem('riderUser');
-            console.log('getCurrentRiderId - riderUser from localStorage:', riderUser);
             if (riderUser) {
                 const userData = JSON.parse(riderUser);
-                console.log('getCurrentRiderId - parsed userData:', userData);
                 const riderId = userData.riderId;
-                console.log('getCurrentRiderId - returning riderId:', riderId);
                 return riderId;
             }
         }
         
-        console.log('getCurrentRiderId - returning null');
         return null;
     }
 
     getCurrentUserName() {
-        console.log('getCurrentUserName - currentUserRole:', this.currentUserRole, 'currentUserId:', this.currentUserId);
         
         // For riders, we can get the name from the current user data
         if (this.currentUserRole === 'Rider' && this.currentUserId) {
             // Try to get name from localStorage first
             const riderUser = localStorage.getItem('riderUser');
-            console.log('getCurrentUserName - riderUser from localStorage:', riderUser);
             if (riderUser) {
                 const userData = JSON.parse(riderUser);
-                console.log('getCurrentUserName - parsed userData:', userData);
                 const name = userData.riderName || userData.firstName || 'Anonymous Rider';
-                console.log('getCurrentUserName - returning name:', name);
                 return name;
             }
             
@@ -578,7 +562,6 @@ class ApiService {
                 4: 'James Wilson' // rider user ID
             };
             const fallbackName = riderNames[this.currentUserId] || 'Anonymous Rider';
-            console.log('getCurrentUserName - returning fallback name:', fallbackName);
             return fallbackName;
         }
         
@@ -591,7 +574,6 @@ class ApiService {
             return driverNames[this.currentDriverId] || 'Anonymous Driver';
         }
         
-        console.log('getCurrentUserName - returning Anonymous User');
         return 'Anonymous User';
     }
 

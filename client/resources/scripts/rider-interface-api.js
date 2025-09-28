@@ -65,11 +65,9 @@ class RiderInterface {
                 
                 // Check if there's a pending ride request
                 const pendingRequestId = localStorage.getItem('pendingRideRequestId');
-                console.log('Found pending request ID in localStorage:', pendingRequestId);
                 if (pendingRequestId) {
                     await this.loadPendingRideRequest(pendingRequestId);
                 } else {
-                    console.log('No pending request found, showing dashboard');
             this.showDashboard();
             this.loadRiderData();
                 }
@@ -93,13 +91,10 @@ class RiderInterface {
      */
     async loadPendingRideRequest(requestId) {
         try {
-            console.log('Loading pending ride request:', requestId);
             const rideRequest = await apiService.getRideRequest(requestId);
-            console.log('Retrieved ride request:', rideRequest);
             
             if (!rideRequest) {
                 // Request no longer exists, clear session
-                console.log('Ride request not found, clearing session');
                 localStorage.removeItem('pendingRideRequestId');
                 this.showDashboard();
                 this.loadRiderData();
@@ -108,7 +103,6 @@ class RiderInterface {
             
             if (rideRequest.Status === 'Pending') {
                 // Still pending, show waiting screen
-                console.log('Ride request still pending, showing waiting modal');
                 this.currentRideRequestId = requestId;
                 this.showDashboard();
                 this.loadRiderData();
@@ -139,7 +133,6 @@ class RiderInterface {
     async loadRiderUsers() {
         try {
             const riders = await apiService.getRiders();
-            console.log('Loaded riders:', riders);
             const riderSelect = document.getElementById('rider-select');
             
             if (riderSelect && riders) {
@@ -148,7 +141,6 @@ class RiderInterface {
                 
                 // Add rider options
                 riders.forEach(rider => {
-                    console.log('Adding rider:', rider);
                     const option = document.createElement('option');
                     option.value = rider.UserId || rider.userId;
                     option.textContent = rider.Name || rider.name;
@@ -163,7 +155,6 @@ class RiderInterface {
 
     async loginRider() {
         const selectedRider = document.getElementById('rider-select').value;
-        console.log('Selected rider value:', selectedRider);
 
         if (!selectedRider) {
             this.showNotification('Please select a rider account.', 'warning');
@@ -173,7 +164,6 @@ class RiderInterface {
         try {
             // Get rider data from API instead of hardcoded values
             const userId = parseInt(selectedRider);
-            console.log('Parsed user ID:', userId);
             const rider = await apiService.getRiderByUserId(userId);
             
             if (!rider) {
@@ -265,10 +255,8 @@ class RiderInterface {
                 if (currentLocationElement) {
                     currentLocationElement.textContent = locationData.nearestBuilding;
                 }
-                console.log('Using cached location:', locationData.nearestBuilding);
                 return;
             } catch (error) {
-                console.log('Invalid cached location data, clearing cache');
                 localStorage.removeItem('cachedLocation');
             }
         }
@@ -438,8 +426,6 @@ class RiderInterface {
 
             // Create ride request via API
             const rideRequest = await apiService.createRideRequest(rideRequestData);
-            console.log('Created ride request:', rideRequest);
-            console.log('RideRequest ID:', rideRequest?.Id || rideRequest?.id);
             
             if (rideRequest) {
                 // All requests start as "Pending" - show waiting status
@@ -473,7 +459,6 @@ class RiderInterface {
      * Show waiting for driver status
      */
     showWaitingForDriverStatus(rideRequest) {
-        console.log('Showing waiting for driver status for:', rideRequest);
         // Show notification that ride request was submitted
         this.showNotification('Ride request submitted! Waiting for driver...', 'success');
         
@@ -600,7 +585,6 @@ class RiderInterface {
      * Start polling for ride status updates
      */
     startStatusPolling(requestId) {
-        console.log('Starting status polling for request ID:', requestId);
         
         this.statusPollingInterval = setInterval(async () => {
             try {
@@ -612,11 +596,9 @@ class RiderInterface {
 
         // Set timeout for driver search
         this.driverSearchTimeout = setTimeout(() => {
-            console.log('Driver search timeout reached (2 minutes)');
             this.showDriverSearchTimeout();
         }, 120000); // 2 minutes timeout
         
-        console.log('Status polling started, timeout set for 2 minutes');
     }
 
     /**
@@ -638,15 +620,12 @@ class RiderInterface {
      */
     async checkRideRequestStatus(requestId) {
         try {
-            console.log('Checking ride request status for ID:', requestId);
             
             // Get the specific ride request
             const rideRequest = await apiService.getRideRequest(requestId);
-            console.log('Ride request status:', rideRequest);
             
             if (!rideRequest) {
                 // Request was removed (declined or cancelled)
-                console.log('Request not found, stopping polling');
                 this.stopStatusPolling();
                 this.hideFullScreenLoadingModal();
                 this.showNotification('No driver available. Please try again.', 'warning');
@@ -655,7 +634,6 @@ class RiderInterface {
 
             if (rideRequest.Status === "Accepted") {
                 // Driver accepted the ride - get the ride using request ID
-                console.log('Driver accepted ride!');
                 const ride = await apiService.getRideByRequestId(requestId);
                 
                 if (ride) {
@@ -1064,12 +1042,10 @@ class RiderInterface {
      * @param {HTMLElement} input - Input element
      */
     handleLocationFocus(input) {
-        console.log(`Focus event for ${input.id}`);
         const popularContainer = this.getPopularContainer(input);
         const suggestionsContainer = this.getSuggestionsContainer(input);
         
         // Always show popular locations when focused (regardless of existing text)
-        console.log(`Showing popular locations for ${input.id}`);
         popularContainer.classList.add('show');
         
         // Hide other dropdowns
@@ -1362,7 +1338,6 @@ class RiderInterface {
         const popularContainer = this.getPopularContainer(input);
         const chipsContainer = popularContainer.querySelector('.popular-chips');
         
-        console.log(`Populating popular locations for ${input.id}:`, popularContainer, chipsContainer);
         
         // Define comprehensive list of popular campus locations
         const popularLocationNames = [
@@ -1428,7 +1403,6 @@ class RiderInterface {
                 // Update fare estimate after location change
                 this.updateFareEstimate();
                 
-                console.log(`Selected ${locationName} for ${input.id}`);
             });
             
             chipsContainer.appendChild(chip);
@@ -1517,7 +1491,6 @@ class RiderInterface {
             
             // Cache the fresh location data for future page loads
             localStorage.setItem('cachedLocation', JSON.stringify(locationData));
-            console.log('Fresh location obtained and cached:', locationData.nearestBuilding);
             
             // Set pickup location
                 const pickupInput = document.getElementById('pickup-location');
@@ -1671,7 +1644,6 @@ class RiderInterface {
     updateRideHistoryList(rideHistory) {
         const rideHistoryContainer = document.getElementById('ride-history-list');
         if (!rideHistoryContainer) {
-            console.log('Ride history container not found');
             return;
         }
 

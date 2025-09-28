@@ -56,7 +56,6 @@ class DriverInterface {
     async loadAvailableDrivers() {
         try {
             const drivers = await apiService.getDrivers();
-            console.log('Loaded drivers:', drivers);
             const driverSelect = document.getElementById('driver-select');
             
             if (driverSelect && drivers) {
@@ -65,7 +64,6 @@ class DriverInterface {
                 
                 // Add driver options
                 drivers.forEach(driver => {
-                    console.log('Adding driver:', driver);
                     const option = document.createElement('option');
                     option.value = driver.id || driver.Id;
                     option.textContent = driver.name || driver.Name;
@@ -97,7 +95,6 @@ class DriverInterface {
 
     async loginDriver() {
         const selectedDriver = document.getElementById('driver-select').value;
-        console.log('Selected driver value:', selectedDriver);
 
         if (!selectedDriver) {
             this.showNotification('Please select a driver account.', 'warning');
@@ -107,7 +104,6 @@ class DriverInterface {
         try {
             // Get driver data from API instead of hardcoded values
             const driverId = parseInt(selectedDriver);
-            console.log('Parsed driver ID:', driverId);
             const driver = await apiService.getDriver(driverId);
             
             if (!driver) {
@@ -445,10 +441,8 @@ class DriverInterface {
      */
     async acceptRequest(requestId) {
         try {
-            console.log('Accepting ride request:', requestId, 'with driver ID:', this.currentDriverId);
             
             const ride = await apiService.acceptRideRequest(requestId, this.currentDriverId);
-            console.log('Ride accepted, received data:', ride);
             
             if (ride) {
                 this.currentRide = ride;
@@ -485,7 +479,6 @@ class DriverInterface {
      * Show active ride UI
      */
     showActiveRideUI(ride) {
-        console.log('Showing active ride UI with ride data:', ride);
         
         // Update the hardcoded HTML elements with dynamic data
         this.updateActiveRideDetails(ride);
