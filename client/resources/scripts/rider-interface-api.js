@@ -1079,11 +1079,9 @@ class RiderInterface {
         const popularContainer = this.getPopularContainer(input);
         const suggestionsContainer = this.getSuggestionsContainer(input);
         
-        // Show popular locations when focused and empty
-        if (!input.value.trim()) {
-            console.log(`Showing popular locations for ${input.id}`);
-            popularContainer.classList.add('show');
-        }
+        // Always show popular locations when focused (regardless of existing text)
+        console.log(`Showing popular locations for ${input.id}`);
+        popularContainer.classList.add('show');
         
         // Hide other dropdowns
         this.closeOtherDropdowns(input);
@@ -1425,16 +1423,23 @@ class RiderInterface {
             `;
             
             chip.addEventListener('click', () => {
+                // Replace existing content with new location
                 input.value = locationName;
+                input.classList.add('is-valid');
                 this.validateLocationInput(input);
                 this.closeDropdown(input);
                 
-                // Update map if available
+                // Update map markers (this will replace existing markers)
                 if (this.mapIntegration && input.id === 'pickup-location') {
                     this.mapIntegration.setPickupFromCoords(locationData.lat, locationData.lng, locationName);
                 } else if (this.mapIntegration && input.id === 'dropoff-location') {
                     this.mapIntegration.setDropoffFromCoords(locationData.lat, locationData.lng, locationName);
                 }
+                
+                // Update fare estimate after location change
+                this.updateFareEstimate();
+                
+                console.log(`Selected ${locationName} for ${input.id}`);
             });
             
             chipsContainer.appendChild(chip);
