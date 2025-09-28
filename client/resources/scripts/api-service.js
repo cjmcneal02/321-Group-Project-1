@@ -713,7 +713,6 @@ class ApiService {
      * Get current user name based on logged-in user
      */
     getCurrentRiderId() {
-        
         // For riders, get the rider ID from localStorage
         if (this.currentUserRole === 'Rider' && this.currentUserId) {
             const riderUser = localStorage.getItem('riderUser');
@@ -721,6 +720,19 @@ class ApiService {
                 const userData = JSON.parse(riderUser);
                 const riderId = userData.riderId;
                 return riderId;
+            }
+        }
+        
+        // Fallback: try to get rider ID directly from localStorage even if currentUserRole is not set
+        const riderUser = localStorage.getItem('riderUser');
+        if (riderUser) {
+            try {
+                const userData = JSON.parse(riderUser);
+                if (userData.riderId) {
+                    return userData.riderId;
+                }
+            } catch (error) {
+                console.error('Error parsing riderUser from localStorage:', error);
             }
         }
         
@@ -757,6 +769,69 @@ class ApiService {
         }
         
         return 'Anonymous User';
+    }
+
+    // Rating Methods
+    async submitRating(ratingData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rideRatings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratingData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            throw error;
+        }
+    }
+
+    async getDriverRatings(driverId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rideRatings/driver/${driverId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching driver ratings:', error);
+            throw error;
+        }
+    }
+
+    async getDriverRatingStats(driverId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rideRatings/stats/driver/${driverId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching driver rating stats:', error);
+            throw error;
+        }
+    }
+
+    async getRiderRatingStats(riderId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rideRatings/stats/rider/${riderId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rider rating stats:', error);
+            throw error;
+        }
     }
 
     logout() {

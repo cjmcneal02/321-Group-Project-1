@@ -133,6 +133,85 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Rating Modal -->
+                    <div class="modal fade" id="rating-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-star me-2"></i>Rate Your Experience
+                                    </h5>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="text-center mb-4">
+                                        <h6>How was your ride with Tide Rides?</h6>
+                                        <p class="text-muted">Your feedback helps us improve our service</p>
+                                    </div>
+                                    
+                                    <!-- Star Rating -->
+                                    <div class="text-center mb-4">
+                                        <div class="star-rating" id="star-rating">
+                                            <i class="bi bi-star star" data-rating="1"></i>
+                                            <i class="bi bi-star star" data-rating="2"></i>
+                                            <i class="bi bi-star star" data-rating="3"></i>
+                                            <i class="bi bi-star star" data-rating="4"></i>
+                                            <i class="bi bi-star star" data-rating="5"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span id="rating-text" class="text-muted">Tap a star to rate</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Comments -->
+                                    <div class="mb-3">
+                                        <label for="rating-comments" class="form-label">Additional Comments (Optional)</label>
+                                        <textarea class="form-control" id="rating-comments" rows="3" 
+                                                placeholder="Tell us about your experience..."></textarea>
+                                    </div>
+
+                                    <!-- Driver Info -->
+                                    <div class="card bg-light">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person-circle me-3" style="font-size: 2rem;"></i>
+                                                <div>
+                                                    <h6 class="mb-1" id="rating-driver-name">Driver Name</h6>
+                                                    <small class="text-muted" id="rating-ride-details">Ride Details</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="skipRating()">
+                                        <i class="bi bi-skip-forward me-2"></i>Skip Rating
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="submit-rating-btn" onclick="submitRating()" disabled>
+                                        <i class="bi bi-star-fill me-2"></i>Submit Rating
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thank You Modal -->
+                    <div class="modal fade" id="thank-you-modal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body text-center py-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h4 class="text-success mb-3">Thank you for your feedback!</h4>
+                                    <p class="text-muted">Your rating helps us improve our service for all riders.</p>
+                                    <button type="button" class="btn btn-success" onclick="closeThankYouModal()">
+                                        <i class="bi bi-check me-2"></i>Continue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

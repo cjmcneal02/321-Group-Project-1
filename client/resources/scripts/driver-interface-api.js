@@ -1217,6 +1217,18 @@ class DriverInterface {
             // Complete the ride
             await apiService.completeRide(this.currentDriverId, this.currentRideId);
             
+            // Send completion message to rider to trigger rating modal
+            const message = {
+                rideId: parseInt(this.currentRideId),
+                driverId: this.currentDriverId,
+                riderId: null,
+                sender: 'driver',
+                senderName: 'Driver',
+                content: 'Ride completed! Please confirm completion.'
+            };
+            
+            await apiService.sendChatMessage(message);
+            
             this.showNotification('Ride completed successfully!', 'success');
             
             // Wait 2 seconds then reset
