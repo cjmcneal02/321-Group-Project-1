@@ -365,8 +365,8 @@ class RiderInterface {
         try {
             const pickupLocation = document.getElementById('pickup-location')?.value?.trim();
             const dropoffLocation = document.getElementById('dropoff-location')?.value?.trim();
-            const passengerCount = parseInt(document.getElementById('passenger-count')?.value) || 1;
-            const cartSize = document.getElementById('cart-size')?.value || 'Standard';
+            const passengerCount = parseInt(document.getElementById('passenger-count-select')?.value) || 1;
+            const cartSize = this.getCartSizeFromPassengerCount(passengerCount);
 
             if (!pickupLocation || !dropoffLocation) {
                 this.showNotification('Please select both pickup and dropoff locations.', 'warning');
@@ -876,59 +876,40 @@ class RiderInterface {
      * Show ride confirmation modal
      */
     showRideConfirmation(rideData) {
-        const modalHtml = `
-            <div id="ride-confirmation-modal" class="modal fade show" style="display: block;" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Confirm Ride Request</h5>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <strong>From:</strong><br>
-                                    <span class="text-muted">${rideData.pickupLocation}</span>
-                                </div>
-                                <div class="col-6">
-                                    <strong>To:</strong><br>
-                                    <span class="text-muted">${rideData.dropoffLocation}</span>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <strong>Passengers:</strong><br>
-                                    <span class="text-muted">${rideData.passengerCount}</span>
-                                </div>
-                                <div class="col-6">
-                                    <strong>Cart Size:</strong><br>
-                                    <span class="text-muted">${rideData.cartSize}</span>
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="text-center">
-                                <strong>Estimated Fare:</strong><br>
-                                <span class="text-success fs-4">$${rideData.estimatedFare.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" onclick="riderInterface.cancelRideConfirmation()">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="riderInterface.confirmRide()">Confirm Ride</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Get modal elements
+        const modalPickup = document.getElementById('modal-pickup');
+        const modalDropoff = document.getElementById('modal-dropoff');
+        const modalPassengerCount = document.getElementById('modal-passenger-count');
+        const modalCartSize = document.getElementById('modal-cart-size');
+        const modalEstimatedFare = document.getElementById('modal-estimated-fare');
+        
+        // Check if elements exist
+        if (!modalPickup || !modalDropoff || !modalPassengerCount || !modalCartSize || !modalEstimatedFare) {
+            console.error('Modal elements not found!');
+            return;
+        }
+        
+        // Populate the modal with dynamic data
+        modalPickup.textContent = rideData.pickupLocation;
+        modalDropoff.textContent = rideData.dropoffLocation;
+        modalPassengerCount.textContent = rideData.passengerCount;
+        modalCartSize.textContent = rideData.cartSize;
+        modalEstimatedFare.textContent = `$${rideData.estimatedFare.toFixed(2)}`;
 
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        // Use setTimeout to ensure DOM is updated before showing modal
+        setTimeout(() => {
+            const modal = new bootstrap.Modal(document.getElementById('ride-confirmation-modal'));
+            modal.show();
+        }, 10);
     }
 
     /**
      * Cancel ride confirmation modal
      */
     cancelRideConfirmation() {
-        const modal = document.getElementById('ride-confirmation-modal');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ride-confirmation-modal'));
         if (modal) {
-            modal.remove();
+            modal.hide();
         }
     }
 

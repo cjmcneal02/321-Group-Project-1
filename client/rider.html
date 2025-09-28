@@ -306,22 +306,6 @@
                                 </small>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <strong>From:</strong><br>
-                            <span id="modal-pickup">Loading...</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>To:</strong><br>
-                            <span id="modal-dropoff">Loading...</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Passengers:</strong><br>
-                            <span id="modal-passenger-count">Loading...</span>
-                        </div>
-                        <div class="col-6">
-                            <strong>Cart Size:</strong><br>
-                            <span id="modal-cart-size">Loading...</span>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -348,6 +332,48 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
+    <!-- Ride Confirmation Modal -->
+    <div id="ride-confirmation-modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Ride Request</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>From:</strong><br>
+                            <span class="text-muted" id="modal-pickup">Loading...</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>To:</strong><br>
+                            <span class="text-muted" id="modal-dropoff">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Passengers:</strong><br>
+                            <span class="text-muted" id="modal-passenger-count">Loading...</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Cart Size:</strong><br>
+                            <span class="text-muted" id="modal-cart-size">Loading...</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <strong>Estimated Fare:</strong><br>
+                        <span class="text-success fs-4" id="modal-estimated-fare">Loading...</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="riderInterface.cancelRideConfirmation()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="riderInterface.confirmRide()">Confirm Ride</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Core JavaScript Modules -->
     <script src="./resources/scripts/api-service.js"></script>
     <script src="./resources/scripts/campus-data.js"></script>
