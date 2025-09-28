@@ -40,6 +40,8 @@ namespace api.Controllers
             var message = new ChatMessage
             {
                 RideId = dto.RideId,
+                DriverId = dto.DriverId,
+                RiderId = dto.RiderId,
                 Sender = dto.Sender,
                 SenderName = dto.SenderName,
                 Content = dto.Content,

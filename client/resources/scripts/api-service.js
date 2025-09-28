@@ -342,19 +342,14 @@ class ApiService {
         }
     }
 
-    async sendChatMessage(rideId, sender, senderName, content) {
+    async sendChatMessage(messageData) {
         try {
             const response = await fetch(`${this.baseUrl}/chatmessages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    rideId,
-                    sender,
-                    senderName,
-                    content
-                })
+                body: JSON.stringify(messageData)
             });
 
             if (!response.ok) {

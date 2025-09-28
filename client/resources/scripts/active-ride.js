@@ -117,8 +117,11 @@ async function sendMessage() {
     if (!chatInput || !chatInput.value.trim()) return;
     
     try {
+        const riderId = apiService.getCurrentRiderId();
         const message = {
             rideId: parseInt(activeRideId),
+            driverId: null,
+            riderId: riderId,
             sender: 'rider',
             senderName: 'You',
             content: chatInput.value.trim()
@@ -149,14 +152,19 @@ async function loadChatMessages() {
             return;
         }
         
-        messagesContainer.innerHTML = messages.map(msg => `
-            <div class="message mb-3 ${msg.Sender === 'rider' || msg.sender === 'rider' ? 'text-end' : 'text-start'}">
-                <div class="message-bubble d-inline-block p-3 rounded-3 ${msg.Sender === 'rider' || msg.sender === 'rider' ? 'message-rider' : 'message-driver'}">
-                    <small class="d-block opacity-75 mb-1">${msg.SenderName || msg.senderName || 'Unknown'}</small>
-                    ${msg.Content || msg.content || ''}
-                </div>
-            </div>
-        `).join('');
+                messagesContainer.innerHTML = messages.map(msg => {
+                    const isRider = msg.Sender === 'rider' || msg.sender === 'rider';
+                    const senderName = isRider ? 'You' : (currentRide?.Driver?.Name || currentRide?.driver?.name || 'Driver');
+                    
+                    return `
+                        <div class="message mb-3 ${isRider ? 'text-end' : 'text-start'}">
+                            <div class="message-bubble d-inline-block p-3 rounded-3 ${isRider ? 'message-rider' : 'message-driver'}">
+                                <small class="d-block opacity-75 mb-1">${senderName}</small>
+                                ${msg.Content || msg.content || ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
         
         // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;

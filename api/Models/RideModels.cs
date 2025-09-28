@@ -66,13 +66,17 @@ namespace api.Models
     {
         public int Id { get; set; }
         public int RideId { get; set; }
+        public int? DriverId { get; set; } // NULL if sent by rider
+        public int? RiderId { get; set; } // NULL if sent by driver
         public string Sender { get; set; } = string.Empty; // "rider" or "driver"
         public string SenderName { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
-        // Navigation property
+        // Navigation properties
         public Ride? Ride { get; set; }
+        public Driver? Driver { get; set; }
+        public Rider? Rider { get; set; }
     }
 
     // DTOs for API requests/responses
@@ -107,6 +111,8 @@ namespace api.Models
     {
         [Required]
         public int RideId { get; set; }
+        public int? DriverId { get; set; } // NULL if sent by rider
+        public int? RiderId { get; set; } // NULL if sent by driver
         [Required]
         public string Sender { get; set; } = string.Empty;
         [Required]

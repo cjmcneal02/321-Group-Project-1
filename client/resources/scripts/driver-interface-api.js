@@ -17,6 +17,7 @@ class DriverInterface {
         this.requestsPollingInterval = null;
         this.chatPollingInterval = null;
         this.currentRideId = null;
+        this.rideButtonsInitialized = false;
 
         this.init();
     }
@@ -908,6 +909,11 @@ class DriverInterface {
      * Initialize ride action buttons
      */
     initializeRideButtons() {
+        // Prevent duplicate initialization
+        if (this.rideButtonsInitialized) {
+            return;
+        }
+        
         const onWayBtn = document.getElementById('onWayBtn');
         const arrivedBtn = document.getElementById('arrivedBtn');
         const completeBtn = document.getElementById('completeRideBtn');
@@ -921,6 +927,8 @@ class DriverInterface {
         if (completeBtn) {
             completeBtn.addEventListener('click', () => this.completeRide());
         }
+        
+        this.rideButtonsInitialized = true;
     }
 
     /**
@@ -933,8 +941,10 @@ class DriverInterface {
         try {
             const message = {
                 rideId: parseInt(this.currentRideId),
+                driverId: this.currentDriverId,
+                riderId: null,
                 sender: 'driver',
-                senderName: 'Driver',
+                senderName: 'You',
                 content: chatInput.value.trim()
             };
             
@@ -966,14 +976,19 @@ class DriverInterface {
                 return;
             }
             
-            messagesContainer.innerHTML = messages.map(msg => `
-                <div class="message mb-2 ${msg.Sender === 'driver' || msg.sender === 'driver' ? 'text-end' : 'text-start'}">
-                    <div class="d-inline-block p-2 rounded-3 ${msg.Sender === 'driver' || msg.sender === 'driver' ? 'bg-primary text-white' : 'bg-light text-dark'}" style="max-width: 70%;">
-                        <small class="d-block opacity-75 mb-1">${msg.SenderName || msg.senderName || 'Unknown'}</small>
-                        ${msg.Content || msg.content || ''}
+            messagesContainer.innerHTML = messages.map(msg => {
+                const isDriver = msg.Sender === 'driver' || msg.sender === 'driver';
+                const senderName = isDriver ? 'You' : (this.currentRide?.RiderName || this.currentRide?.riderName || 'Rider');
+                
+                return `
+                    <div class="message mb-2 ${isDriver ? 'text-end' : 'text-start'}">
+                        <div class="d-inline-block p-2 rounded-3 ${isDriver ? 'bg-primary text-white' : 'bg-light text-dark'}" style="max-width: 70%;">
+                            <small class="d-block opacity-75 mb-1">${senderName}</small>
+                            ${msg.Content || msg.content || ''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -993,8 +1008,10 @@ class DriverInterface {
             // Send message to rider
             const message = {
                 rideId: parseInt(this.currentRideId),
+                driverId: this.currentDriverId,
+                riderId: null,
                 sender: 'driver',
-                senderName: 'Driver',
+                senderName: 'You',
                 content: 'I\'m on my way to pick you up!'
             };
             
@@ -1029,8 +1046,10 @@ class DriverInterface {
             // Send message to rider
             const message = {
                 rideId: parseInt(this.currentRideId),
+                driverId: this.currentDriverId,
+                riderId: null,
                 sender: 'driver',
-                senderName: 'Driver',
+                senderName: 'You',
                 content: 'I\'ve arrived at your pickup location!'
             };
             

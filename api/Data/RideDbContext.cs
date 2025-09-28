@@ -32,6 +32,18 @@ namespace api.Data
                 .HasForeignKey(c => c.RideId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(c => c.Driver)
+                .WithMany()
+                .HasForeignKey(c => c.DriverId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(c => c.Rider)
+                .WithMany()
+                .HasForeignKey(c => c.RiderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // User relationships
             modelBuilder.Entity<Driver>()
                 .HasOne(d => d.User)
