@@ -606,9 +606,16 @@ class DriverInterface {
         
         // Set button states based on driver location
         switch (driverLocation) {
+            case 'PreRide':
+                // Only "On Way to Pickup" button enabled
+                if (onWayBtn) onWayBtn.disabled = false;
+                if (arrivedBtn) arrivedBtn.disabled = true;
+                if (completeBtn) completeBtn.disabled = true;
+                break;
             case 'OnWay':
                 if (onWayBtn) onWayBtn.disabled = true;
                 if (arrivedBtn) arrivedBtn.disabled = false;
+                if (completeBtn) completeBtn.disabled = true;
                 break;
             case 'AtPickup':
                 if (onWayBtn) onWayBtn.disabled = true;
@@ -621,7 +628,10 @@ class DriverInterface {
                 if (completeBtn) completeBtn.disabled = false;
                 break;
             default:
-                // Default state - only "On Way" button enabled
+                // Default state - only "On Way" button enabled (PreRide behavior)
+                if (onWayBtn) onWayBtn.disabled = false;
+                if (arrivedBtn) arrivedBtn.disabled = true;
+                if (completeBtn) completeBtn.disabled = true;
                 break;
         }
     }

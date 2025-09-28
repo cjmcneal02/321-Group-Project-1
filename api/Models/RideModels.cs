@@ -52,7 +52,7 @@ namespace api.Models
         public string SpecialNotes { get; set; } = string.Empty;
         public decimal EstimatedFare { get; set; }
         public string Status { get; set; } = "Requested"; // "Requested", "In Progress", "Completed", "Cancelled"
-        public string DriverLocation { get; set; } = "OnWay"; // "OnWay", "AtPickup", "AtDropoff"
+        public string DriverLocation { get; set; } = "PreRide"; // "PreRide", "OnWay", "AtPickup", "AtDropoff"
         public DateTime? StartTime { get; set; } // NULL until driver accepts
         public DateTime? EndTime { get; set; } // NULL until completed
         public int Distance { get; set; }
@@ -133,7 +133,7 @@ namespace api.Models
     public class UpdateDriverLocationDto
     {
         [Required]
-        public string DriverLocation { get; set; } = string.Empty; // "OnWay", "AtPickup", "AtDropoff"
+        public string DriverLocation { get; set; } = string.Empty; // "PreRide", "OnWay", "AtPickup", "AtDropoff"
     }
 
     public class User

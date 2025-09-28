@@ -170,9 +170,9 @@ namespace api.Controllers
             }
 
             // Validate driver location values
-            if (!new[] { "OnWay", "AtPickup", "AtDropoff" }.Contains(dto.DriverLocation))
+            if (!new[] { "PreRide", "OnWay", "AtPickup", "AtDropoff" }.Contains(dto.DriverLocation))
             {
-                return BadRequest("Invalid driver location. Must be 'OnWay', 'AtPickup', or 'AtDropoff'.");
+                return BadRequest("Invalid driver location. Must be 'PreRide', 'OnWay', 'AtPickup', or 'AtDropoff'.");
             }
 
             ride.DriverLocation = dto.DriverLocation;
