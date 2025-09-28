@@ -518,8 +518,9 @@ class DriverInterface {
             noRideState.classList.add('d-none');
         }
         
-        // Load chat messages
+        // Load chat messages and start polling
         this.loadChatMessages();
+        this.startChatPolling();
         
         // Hide requests UI
         this.hideRequestsUI();
@@ -576,6 +577,44 @@ class DriverInterface {
             } else {
                 specialNotesElement.innerHTML = '<em>No special notes</em>';
             }
+        }
+
+        // Update button states based on driver location
+        this.updateDriverLocationButtons(ride.DriverLocation || ride.driverLocation);
+    }
+
+    /**
+     * Update driver location buttons based on current driver location
+     */
+    updateDriverLocationButtons(driverLocation) {
+        const onWayBtn = document.getElementById('onWayBtn');
+        const arrivedBtn = document.getElementById('arrivedBtn');
+        const completeBtn = document.getElementById('completeRideBtn');
+        
+        // Reset all buttons to default state
+        if (onWayBtn) onWayBtn.disabled = false;
+        if (arrivedBtn) arrivedBtn.disabled = true;
+        if (completeBtn) completeBtn.disabled = true;
+        
+        // Set button states based on driver location
+        switch (driverLocation) {
+            case 'OnWay':
+                if (onWayBtn) onWayBtn.disabled = true;
+                if (arrivedBtn) arrivedBtn.disabled = false;
+                break;
+            case 'AtPickup':
+                if (onWayBtn) onWayBtn.disabled = true;
+                if (arrivedBtn) arrivedBtn.disabled = true;
+                if (completeBtn) completeBtn.disabled = false;
+                break;
+            case 'AtDropoff':
+                if (onWayBtn) onWayBtn.disabled = true;
+                if (arrivedBtn) arrivedBtn.disabled = true;
+                if (completeBtn) completeBtn.disabled = false;
+                break;
+            default:
+                // Default state - only "On Way" button enabled
+                break;
         }
     }
 
@@ -903,6 +942,33 @@ class DriverInterface {
         
         // Load existing messages
         this.loadChatMessages();
+        
+        // Start chat polling for real-time updates
+        this.startChatPolling();
+    }
+
+    /**
+     * Start chat polling for real-time message updates
+     */
+    startChatPolling() {
+        // Clear any existing polling
+        this.stopChatPolling();
+        
+        this.chatPollingInterval = setInterval(async () => {
+            if (this.currentRideId) {
+                await this.loadChatMessages();
+            }
+        }, 2000); // Poll every 2 seconds
+    }
+
+    /**
+     * Stop chat polling
+     */
+    stopChatPolling() {
+        if (this.chatPollingInterval) {
+            clearInterval(this.chatPollingInterval);
+            this.chatPollingInterval = null;
+        }
     }
 
     /**
@@ -1005,6 +1071,9 @@ class DriverInterface {
         if (!this.currentRideId) return;
         
         try {
+            // Update driver location in database
+            await apiService.updateDriverLocation(this.currentRideId, 'OnWay');
+            
             // Send message to rider
             const message = {
                 rideId: parseInt(this.currentRideId),
@@ -1043,6 +1112,9 @@ class DriverInterface {
         if (!this.currentRideId) return;
         
         try {
+            // Update driver location in database
+            await apiService.updateDriverLocation(this.currentRideId, 'AtPickup');
+            
             // Send message to rider
             const message = {
                 rideId: parseInt(this.currentRideId),
@@ -1081,6 +1153,9 @@ class DriverInterface {
         if (!this.currentRideId) return;
         
         try {
+            // Update driver location to AtDropoff before completing
+            await apiService.updateDriverLocation(this.currentRideId, 'AtDropoff');
+            
             // Complete the ride
             await apiService.completeRide(this.currentDriverId, this.currentRideId);
             
@@ -1102,6 +1177,9 @@ class DriverInterface {
     resetActiveRide() {
         this.currentRide = null;
         this.currentRideId = null;
+        
+        // Stop chat polling
+        this.stopChatPolling();
         
         // Hide active ride state, show no ride state
         const activeRideState = document.getElementById('activeRideState');

@@ -183,6 +183,27 @@ class ApiService {
         }
     }
 
+    async updateDriverLocation(rideId, driverLocation) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rides/${rideId}/driver-location`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ driverLocation })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.text(); // NoContent response
+        } catch (error) {
+            console.error('Error updating driver location:', error);
+            throw error;
+        }
+    }
+
     async completeRide(driverId, rideId) {
         try {
             const response = await fetch(`${this.baseUrl}/rides/${rideId}/complete`, {

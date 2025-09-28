@@ -153,6 +153,36 @@ namespace api.Controllers
             return NoContent();
         }
 
+        // PUT: api/rides/{id}/driver-location
+        [HttpPut("{id}/driver-location")]
+        public async Task<IActionResult> UpdateDriverLocation(int id, [FromBody] UpdateDriverLocationDto dto)
+        {
+            var ride = await _context.Rides.FindAsync(id);
+
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            if (ride.Status != "In Progress")
+            {
+                return BadRequest("This ride is not in progress.");
+            }
+
+            // Validate driver location values
+            if (!new[] { "OnWay", "AtPickup", "AtDropoff" }.Contains(dto.DriverLocation))
+            {
+                return BadRequest("Invalid driver location. Must be 'OnWay', 'AtPickup', or 'AtDropoff'.");
+            }
+
+            ride.DriverLocation = dto.DriverLocation;
+            ride.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         // PUT: api/rides/{id}/complete
         [HttpPut("{id}/complete")]
         public async Task<IActionResult> CompleteRide(int id, CompleteRideDto completeRideDto)
