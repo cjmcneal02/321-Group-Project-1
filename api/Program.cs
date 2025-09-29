@@ -143,7 +143,7 @@ using (var scope = app.Services.CreateScope())
                 IsAvailable = true,
                 TotalRides = 23,
                 AverageTip = 45.20m,
-                Rating = 4.9m,
+                AverageRating = 4.9m,
                 Status = "Active"
             },
             new api.Models.Driver
@@ -155,7 +155,7 @@ using (var scope = app.Services.CreateScope())
                 IsAvailable = true,
                 TotalRides = 18,
                 AverageTip = 42.15m,
-                Rating = 4.8m,
+                AverageRating = 4.8m,
                 Status = "Active"
             }
         });

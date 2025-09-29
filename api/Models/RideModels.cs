@@ -13,7 +13,7 @@ namespace api.Models
         public bool IsAvailable { get; set; } = true;
         public int TotalRides { get; set; }
         public decimal AverageTip { get; set; }
-        public decimal Rating { get; set; }
+        public decimal AverageRating { get; set; }
         public string Status { get; set; } = "Active";
         public int? CurrentRideId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

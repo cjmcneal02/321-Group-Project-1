@@ -46,7 +46,7 @@ namespace api.Controllers
                 .ToListAsync();
             
             // Order by rating on client side since SQLite doesn't support decimal in ORDER BY
-            return drivers.OrderByDescending(d => d.Rating).ToList();
+            return drivers.OrderByDescending(d => d.AverageRating).ToList();
         }
 
         // PUT: api/drivers/{id}/status
