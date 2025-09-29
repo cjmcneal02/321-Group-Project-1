@@ -3175,19 +3175,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\pappa\\.nuget\\packages\\": {}
+    "/Users/mollywaldron/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\api.csproj",
+      "projectUniqueName": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/api.csproj",
       "projectName": "api",
-      "projectPath": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\api.csproj",
-      "packagesPath": "C:\\Users\\pappa\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\obj\\",
+      "projectPath": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/api.csproj",
+      "packagesPath": "/Users/mollywaldron/.nuget/packages/",
+      "outputPath": "/Users/mollywaldron/Documents/MIS321/group_project_1/321-Group-Project-1/api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\pappa\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/Users/mollywaldron/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -3211,7 +3211,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -3253,7 +3253,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.102/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

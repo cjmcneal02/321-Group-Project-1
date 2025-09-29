@@ -65,6 +65,7 @@ namespace api.Models
         
         // Navigation properties
         public Driver? Driver { get; set; }
+        public Rider? Rider { get; set; }
     }
 
     public class ChatMessage
@@ -253,5 +254,67 @@ namespace api.Models
         public string Username { get; set; } = string.Empty;
         [Required]
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class RiderRating
+    {
+        public int Id { get; set; }
+        public int RideId { get; set; }
+        public int DriverId { get; set; }
+        public int RiderId { get; set; }
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public Ride? Ride { get; set; }
+        public Driver? Driver { get; set; }
+        public Rider? Rider { get; set; }
+    }
+
+    public class DriverRating
+    {
+        public int Id { get; set; }
+        public int RideId { get; set; }
+        public int DriverId { get; set; }
+        public int RiderId { get; set; }
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Navigation properties
+        public Ride? Ride { get; set; }
+        public Driver? Driver { get; set; }
+        public Rider? Rider { get; set; }
+    }
+
+    public class CreateRiderRatingDto
+    {
+        [Required]
+        public int RideId { get; set; }
+        [Required]
+        public int DriverId { get; set; }
+        [Required]
+        public int RiderId { get; set; }
+        [Required]
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    public class CreateDriverRatingDto
+    {
+        [Required]
+        public int RideId { get; set; }
+        [Required]
+        public int DriverId { get; set; }
+        [Required]
+        public int RiderId { get; set; }
+        [Required]
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
     }
 }
