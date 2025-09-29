@@ -18,6 +18,7 @@ class DriverInterface {
         this.chatPollingInterval = null;
         this.currentRideId = null;
         this.rideButtonsInitialized = false;
+        this.selectedRating = 0;
 
         this.init();
     }
@@ -28,6 +29,9 @@ class DriverInterface {
         
         // Set up toggle status button
         this.setupToggleStatusButton();
+        
+        // Initialize rating system
+        this.initializeRatingSystem();
         
         // Check if user is already logged in as a driver from localStorage
         const savedDriverId = localStorage.getItem('driverId');
@@ -116,7 +120,7 @@ class DriverInterface {
             const userData = {
                 id: driver.userId || driver.UserId || driverId,
                 username: (driver.name || driver.Name || '').toLowerCase().replace(' ', ''),
-                role: 'Driver',
+                    role: 'Driver',
                 firstName: (driver.name || driver.Name || '').split(' ')[0],
                 lastName: (driver.name || driver.Name || '').split(' ')[1] || ''
             };
@@ -1217,12 +1221,24 @@ class DriverInterface {
             // Complete the ride
             await apiService.completeRide(this.currentDriverId, this.currentRideId);
             
+            // Send completion message to rider to trigger rating modal
+            const message = {
+                rideId: parseInt(this.currentRideId),
+                driverId: this.currentDriverId,
+                riderId: null,
+                sender: 'driver',
+                senderName: 'Driver',
+                content: 'Ride completed! Please confirm completion.'
+            };
+            
+            await apiService.sendChatMessage(message);
+            
             this.showNotification('Ride completed successfully!', 'success');
             
-            // Wait 2 seconds then reset
+            // Show rating modal after completion
             setTimeout(() => {
-                this.resetActiveRide();
-            }, 2000);
+                this.showRatingModal();
+            }, 1000);
             
         } catch (error) {
             console.error('Error completing ride:', error);
@@ -1484,6 +1500,165 @@ class DriverInterface {
         }, 5000);
     }
 
+    // ===== RATING SYSTEM =====
+    showRatingModal() {
+        // Update rider info in rating modal
+        if (this.currentRide) {
+            document.getElementById('rating-rider-name').textContent = this.currentRide.RiderName || this.currentRide.riderName || 'Unknown Rider';
+            document.getElementById('rating-ride-details').textContent = 
+                `${this.currentRide.PickupLocation || this.currentRide.pickupLocation} → ${this.currentRide.DropoffLocation || this.currentRide.dropoffLocation}`;
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('rating-modal'));
+        modal.show();
+    }
+
+    initializeRatingSystem() {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            star.addEventListener('click', () => this.selectRating(index + 1));
+            star.addEventListener('mouseenter', () => this.highlightStars(index + 1));
+        });
+        
+        const starContainer = document.getElementById('star-rating');
+        if (starContainer) {
+            starContainer.addEventListener('mouseleave', () => this.resetStarHighlight());
+        }
+    }
+
+    selectRating(rating) {
+        this.selectedRating = rating;
+        this.updateStarDisplay(rating);
+        this.updateRatingText(rating);
+        this.updateSubmitButton();
+    }
+
+    highlightStars(rating) {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('active');
+                star.className = 'bi bi-star-fill star active'; // Use filled star
+            } else {
+                star.classList.remove('active');
+                star.className = 'bi bi-star star'; // Use outline star
+            }
+        });
+    }
+
+    resetStarHighlight() {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            star.classList.remove('active');
+            star.className = 'bi bi-star star'; // Reset to outline star
+        });
+        
+        if (this.selectedRating > 0) {
+            this.updateStarDisplay(this.selectedRating);
+        }
+    }
+
+    updateStarDisplay(rating) {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('active');
+                star.className = 'bi bi-star-fill star active'; // Use filled star
+            } else {
+                star.classList.remove('active');
+                star.className = 'bi bi-star star'; // Use outline star
+            }
+        });
+    }
+
+    updateRatingText(rating) {
+        const ratingText = document.getElementById('rating-text');
+        if (ratingText) {
+            const texts = {
+                1: 'Poor',
+                2: 'Fair',
+                3: 'Good',
+                4: 'Very Good',
+                5: 'Excellent'
+            };
+            ratingText.textContent = texts[rating] || 'Tap a star to rate';
+        }
+    }
+
+    updateSubmitButton() {
+        const submitBtn = document.getElementById('submit-rating-btn');
+        if (submitBtn) {
+            submitBtn.disabled = this.selectedRating === 0;
+        }
+    }
+
+    async submitRating() {
+        if (this.selectedRating === 0) return;
+        
+        try {
+            const comments = document.getElementById('rating-comments').value;
+            const ratingData = {
+                rideId: parseInt(this.currentRideId),
+                rating: this.selectedRating,
+                comments: comments
+            };
+            
+            await apiService.submitRiderRating(ratingData);
+            
+            // Hide rating modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('rating-modal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Show thank you modal
+        setTimeout(() => {
+                this.showThankYouModal();
+            }, 300);
+            
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            const errorMessage = error.message || 'Unknown error occurred';
+            alert(`Error submitting rating: ${errorMessage}`);
+        }
+    }
+
+    showThankYouModal() {
+        const modal = new bootstrap.Modal(document.getElementById('thank-you-modal'));
+        modal.show();
+    }
+
+    closeThankYouModal() {
+        // Hide thank you modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('thank-you-modal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Reset active ride and clear localStorage
+        this.resetActiveRide();
+        localStorage.removeItem('activeRideId');
+    }
+
+}
+
+// Global functions for modal buttons
+function skipRating() {
+    if (window.driverInterface) {
+        window.driverInterface.closeThankYouModal();
+    }
+}
+
+function submitRating() {
+    if (window.driverInterface) {
+        window.driverInterface.submitRating();
+    }
+}
+
+function closeThankYouModal() {
+    if (window.driverInterface) {
+        window.driverInterface.closeThankYouModal();
+    }
 }
 
 // Initialize driver interface when DOM is loaded

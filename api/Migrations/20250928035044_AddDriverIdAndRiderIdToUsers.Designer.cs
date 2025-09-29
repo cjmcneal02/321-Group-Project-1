@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using api.Data;
 
@@ -10,9 +11,11 @@ using api.Data;
 namespace api.Migrations
 {
     [DbContext(typeof(RideDbContext))]
-    partial class RideDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250928035044_AddDriverIdAndRiderIdToUsers")]
+    partial class AddDriverIdAndRiderIdToUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -45,7 +48,7 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CampusLocations", (string)null);
+                    b.ToTable("CampusLocations");
 
                     b.HasData(
                         new
@@ -378,7 +381,7 @@ namespace api.Migrations
 
                     b.HasIndex("RiderId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("api.Models.Driver", b =>
@@ -436,7 +439,7 @@ namespace api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Drivers", (string)null);
+                    b.ToTable("Drivers");
 
                     b.HasData(
                         new
@@ -536,7 +539,7 @@ namespace api.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.ToTable("Rides", (string)null);
+                    b.ToTable("Rides");
                 });
 
             modelBuilder.Entity("api.Models.Rider", b =>
@@ -573,7 +576,7 @@ namespace api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Riders", (string)null);
+                    b.ToTable("Riders");
 
                     b.HasData(
                         new
@@ -634,7 +637,7 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("api.Models.ChatMessage", b =>

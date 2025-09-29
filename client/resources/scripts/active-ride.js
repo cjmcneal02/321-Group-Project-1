@@ -1,6 +1,7 @@
 let activeRideId = null;
 let chatPollingInterval = null;
 let currentRide = null;
+let selectedRating = 0;
 
 // Initialize the active ride page
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,9 +15,32 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Restore API service properties from localStorage
+    restoreApiServiceFromLocalStorage();
+    
     // Initialize the ride page
     initializeRidePage();
 });
+
+function restoreApiServiceFromLocalStorage() {
+    try {
+        const storedUserId = localStorage.getItem('riderUserId');
+        const storedUserRole = localStorage.getItem('riderUserRole');
+        
+        if (storedUserId && storedUserRole) {
+            apiService.currentUserId = parseInt(storedUserId);
+            apiService.currentUserRole = storedUserRole;
+            console.log('API service properties restored from localStorage:', {
+                currentUserId: apiService.currentUserId,
+                currentUserRole: apiService.currentUserRole
+            });
+        } else {
+            console.warn('No stored user data found in localStorage');
+        }
+    } catch (error) {
+        console.error('Error restoring API service from localStorage:', error);
+    }
+}
 
 async function initializeRidePage() {
     try {
@@ -34,6 +58,9 @@ async function initializeRidePage() {
         
         // Initialize chat
         initializeChat();
+        
+        // Initialize rating system
+        initializeRatingSystem();
         
         // Start polling for updates
         startPolling();
@@ -181,20 +208,16 @@ function showRideCompletionModal() {
 
 async function confirmRideCompletion() {
     try {
-        // Hide modal
+        // Hide completion modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('ride-completion-modal'));
         if (modal) {
             modal.hide();
         }
         
-        // Clear localStorage
-        localStorage.removeItem('activeRideId');
-        
-        // Show success message and redirect
+        // Show rating modal
         setTimeout(() => {
-            alert('Ride completed successfully! Thank you for using Tide Rides.');
-            window.location.href = './rider.html';
-        }, 500);
+            showRatingModal();
+        }, 300);
         
     } catch (error) {
         console.error('Error confirming ride completion:', error);
@@ -236,6 +259,176 @@ function startPolling() {
 
 function goBack() {
     window.location.href = './rider.html';
+}
+
+// Rating System Functions
+function initializeRatingSystem() {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+        star.addEventListener('click', () => selectRating(index + 1));
+        star.addEventListener('mouseenter', () => highlightStars(index + 1));
+    });
+    
+    const starContainer = document.getElementById('star-rating');
+    if (starContainer) {
+        starContainer.addEventListener('mouseleave', resetStarHighlight);
+    }
+}
+
+function selectRating(rating) {
+    selectedRating = rating;
+    updateStarDisplay(rating);
+    updateRatingText(rating);
+    updateSubmitButton();
+}
+
+function highlightStars(rating) {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.className = 'bi bi-star-fill star active'; // Use filled star
+        } else {
+            star.classList.remove('active');
+            star.className = 'bi bi-star star'; // Use outline star
+        }
+    });
+}
+
+function resetStarHighlight() {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach(star => {
+        star.classList.remove('active');
+        star.className = 'bi bi-star star'; // Reset to outline star
+    });
+    
+    if (selectedRating > 0) {
+        updateStarDisplay(selectedRating);
+    }
+}
+
+function updateStarDisplay(rating) {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.className = 'bi bi-star-fill star active'; // Use filled star
+        } else {
+            star.classList.remove('active');
+            star.className = 'bi bi-star star'; // Use outline star
+        }
+    });
+}
+
+function updateRatingText(rating) {
+    const ratingText = document.getElementById('rating-text');
+    if (ratingText) {
+        const texts = {
+            1: 'Poor',
+            2: 'Fair',
+            3: 'Good',
+            4: 'Very Good',
+            5: 'Excellent'
+        };
+        ratingText.textContent = texts[rating] || 'Tap a star to rate';
+    }
+}
+
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('submit-rating-btn');
+    if (submitBtn) {
+        submitBtn.disabled = selectedRating === 0;
+    }
+}
+
+function showRatingModal() {
+    // Update driver info in rating modal
+    if (currentRide && currentRide.Driver) {
+        const driver = currentRide.Driver;
+        document.getElementById('rating-driver-name').textContent = driver.Name || driver.name || 'Unknown Driver';
+        document.getElementById('rating-ride-details').textContent = 
+            `${currentRide.PickupLocation || currentRide.pickupLocation} → ${currentRide.DropoffLocation || currentRide.dropoffLocation}`;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('rating-modal'));
+    modal.show();
+}
+
+function skipRating() {
+    // Hide rating modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('rating-modal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Show thank you modal
+    setTimeout(() => {
+        showThankYouModal();
+    }, 300);
+}
+
+async function submitRating() {
+    if (selectedRating === 0) return;
+    
+    try {
+        const riderId = apiService.getCurrentRiderId();
+        const driverId = currentRide.Driver?.Id || currentRide.driver?.id;
+        
+        
+        // Validate required data
+        if (!riderId) {
+            throw new Error('Rider ID not found. Please ensure you are logged in.');
+        }
+        if (!driverId) {
+            throw new Error('Driver ID not found. Unable to submit rating.');
+        }
+        if (!activeRideId) {
+            throw new Error('Ride ID not found. Unable to submit rating.');
+        }
+        
+        const ratingData = {
+            rideId: parseInt(activeRideId),
+            rating: selectedRating,
+            comments: document.getElementById('rating-comments').value.trim() || ''
+        };
+        
+        await apiService.submitRating(ratingData);
+        
+        // Hide rating modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('rating-modal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Show thank you modal
+        setTimeout(() => {
+            showThankYouModal();
+        }, 300);
+        
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        const errorMessage = error.message || 'Unknown error occurred';
+        alert(`Error submitting rating: ${errorMessage}`);
+    }
+}
+
+function showThankYouModal() {
+    const modal = new bootstrap.Modal(document.getElementById('thank-you-modal'));
+    modal.show();
+}
+
+function closeThankYouModal() {
+    // Hide thank you modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('thank-you-modal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Clear localStorage and redirect
+    localStorage.removeItem('activeRideId');
+    setTimeout(() => {
+        window.location.href = './rider.html';
+    }, 500);
 }
 
 // Clean up on page unload

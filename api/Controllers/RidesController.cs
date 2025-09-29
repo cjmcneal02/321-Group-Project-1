@@ -242,5 +242,103 @@ namespace api.Controllers
 
             return NoContent();
         }
+
+        // POST: api/rides/{id}/rate-driver
+        [HttpPost("{id}/rate-driver")]
+        public async Task<IActionResult> RateDriver(int id, [FromBody] SubmitDriverRatingDto ratingDto)
+        {
+            if (ratingDto.RideId != id)
+            {
+                return BadRequest("Ride ID mismatch.");
+            }
+
+            var ride = await _context.Rides.FindAsync(id);
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            if (ride.Status != "Completed")
+            {
+                return BadRequest("Can only rate completed rides.");
+            }
+
+            ride.DriverRating = ratingDto.Rating;
+            ride.DriverComments = ratingDto.Comments;
+            ride.UpdatedAt = DateTime.UtcNow;
+
+            // Update driver's average rating
+            if (ride.DriverId.HasValue)
+            {
+                var driver = await _context.Drivers.FindAsync(ride.DriverId.Value);
+                if (driver != null)
+                {
+                    // Calculate average rating for this driver
+                    var driverRatings = await _context.Rides
+                        .Where(r => r.DriverId == ride.DriverId && r.DriverRating.HasValue)
+                        .Select(r => r.DriverRating.Value)
+                        .ToListAsync();
+
+                    if (driverRatings.Any())
+                    {
+                        driver.AverageRating = (decimal)driverRatings.Average();
+                        driver.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // POST: api/rides/{id}/rate-rider
+        [HttpPost("{id}/rate-rider")]
+        public async Task<IActionResult> RateRider(int id, [FromBody] SubmitRiderRatingDto ratingDto)
+        {
+            if (ratingDto.RideId != id)
+            {
+                return BadRequest("Ride ID mismatch.");
+            }
+
+            var ride = await _context.Rides.FindAsync(id);
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            if (ride.Status != "Completed")
+            {
+                return BadRequest("Can only rate completed rides.");
+            }
+
+            ride.RiderRating = ratingDto.Rating;
+            ride.RiderComments = ratingDto.Comments;
+            ride.UpdatedAt = DateTime.UtcNow;
+
+            // Update rider's average rating
+            if (ride.RiderId.HasValue)
+            {
+                var rider = await _context.Riders.FindAsync(ride.RiderId.Value);
+                if (rider != null)
+                {
+                    // Calculate average rating for this rider
+                    var riderRatings = await _context.Rides
+                        .Where(r => r.RiderId == ride.RiderId && r.RiderRating.HasValue)
+                        .Select(r => r.RiderRating.Value)
+                        .ToListAsync();
+
+                    if (riderRatings.Any())
+                    {
+                        rider.AverageRating = (decimal)riderRatings.Average();
+                        rider.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
