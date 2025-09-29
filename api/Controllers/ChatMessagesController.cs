@@ -16,6 +16,15 @@ namespace api.Controllers
             _context = context;
         }
 
+        // GET: api/chatmessages
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ChatMessage>>> GetAllChatMessages()
+        {
+            return await _context.ChatMessages
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+        }
+
         // GET: api/chatmessages/{rideId}
         [HttpGet("{rideId}")]
         public async Task<ActionResult<IEnumerable<ChatMessage>>> GetChatMessages(int rideId)

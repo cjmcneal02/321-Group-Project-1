@@ -300,6 +300,33 @@ class ApiService {
         }
     }
 
+    // Admin Methods
+    async getAllRides() {
+        try {
+            const response = await fetch(`${this.baseUrl}/rides`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching all rides:', error);
+            throw error;
+        }
+    }
+
+    async getAllMessages() {
+        try {
+            const response = await fetch(`${this.baseUrl}/chatmessages`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching all messages:', error);
+            throw error;
+        }
+    }
+
     // Rider Methods
     async getRiders() {
         try {
