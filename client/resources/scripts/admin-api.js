@@ -1382,7 +1382,91 @@ class AdminInterface {
     }
 
     updateCharts() {
-        // Placeholder
+        this.updateRidesStatusChart();
+        this.updateUsersRoleChart();
+    }
+
+    updateRidesStatusChart() {
+        const ctx = document.getElementById('ridesStatusChart');
+        if (!ctx) return;
+
+        // Count rides by status
+        const statusCounts = {};
+        this.rides.forEach(ride => {
+            statusCounts[ride.status] = (statusCounts[ride.status] || 0) + 1;
+        });
+
+        const labels = Object.keys(statusCounts);
+        const data = Object.values(statusCounts);
+        const colors = {
+            'Requested': '#ffc107',
+            'In Progress': '#0d6efd',
+            'Completed': '#198754',
+            'Cancelled': '#dc3545'
+        };
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: labels.map(label => colors[label] || '#6c757d'),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    updateUsersRoleChart() {
+        const ctx = document.getElementById('usersRoleChart');
+        if (!ctx) return;
+
+        // Count users by role
+        const roleCounts = {};
+        this.users.forEach(user => {
+            roleCounts[user.role] = (roleCounts[user.role] || 0) + 1;
+        });
+
+        const labels = Object.keys(roleCounts);
+        const data = Object.values(roleCounts);
+        const colors = {
+            'Admin': '#dc3545',
+            'Driver': '#0d6efd',
+            'Rider': '#198754'
+        };
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: labels.map(label => colors[label] || '#6c757d'),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
     }
 }
 
