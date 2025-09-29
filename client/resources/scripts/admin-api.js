@@ -146,6 +146,7 @@ class AdminInterface {
     async loadUsers() {
         try {
             this.users = await apiService.getUsers();
+            console.log('Loaded users:', this.users);
             this.updateUsersTable();
             this.updateUsersSummary();
         } catch (error) {
@@ -165,11 +166,14 @@ class AdminInterface {
                 apiService.getRiders(),
                 apiService.getDrivers()
             ]);
-            
+
             this.rides = rides;
             this.riders = riders;
             this.drivers = drivers;
-            
+
+            console.log('Loaded riders:', this.riders);
+            console.log('Loaded drivers:', this.drivers);
+
             this.updateRidesTable();
             this.updateRidesSummary();
             this.populateRideFilters();
@@ -258,10 +262,21 @@ class AdminInterface {
 
         paginatedUsers.forEach(user => {
             const row = document.createElement('tr');
+            
+            // Create clickable name based on role
+            let nameCell = '';
+            if (user.role === 'Rider') {
+                nameCell = `<a href="#" onclick="adminInterface.showRiderProfileByUserId(${user.id})" class="text-decoration-none">${user.firstName} ${user.lastName}</a>`;
+            } else if (user.role === 'Driver') {
+                nameCell = `<a href="#" onclick="adminInterface.showDriverProfileByUserId(${user.id})" class="text-decoration-none">${user.firstName} ${user.lastName}</a>`;
+            } else {
+                nameCell = `${user.firstName} ${user.lastName}`;
+            }
+            
             row.innerHTML = `
                 <td>${user.id}</td>
                 <td>${user.username}</td>
-                <td>${user.firstName} ${user.lastName}</td>
+                <td>${nameCell}</td>
                 <td>${user.email || 'N/A'}</td>
                 <td>
                     <span class="badge ${this.getRoleBadgeClass(user.role)}">${user.role}</span>
@@ -577,6 +592,23 @@ class AdminInterface {
         });
 
         this.updateRidesPagination(filteredRides.length);
+    }
+
+    updateRidesSummary() {
+        const totalRides = this.rides.length;
+        const completedRides = this.rides.filter(r => r.status === 'Completed').length;
+        const inProgressRides = this.rides.filter(r => r.status === 'In Progress').length;
+        const cancelledRides = this.rides.filter(r => r.status === 'Cancelled').length;
+
+        const totalEl = document.getElementById('total-rides');
+        const completedEl = document.getElementById('completed-rides');
+        const inProgressEl = document.getElementById('in-progress-rides');
+        const cancelledEl = document.getElementById('cancelled-rides');
+
+        if (totalEl) totalEl.textContent = totalRides;
+        if (completedEl) completedEl.textContent = completedRides;
+        if (inProgressEl) inProgressEl.textContent = inProgressRides;
+        if (cancelledEl) cancelledEl.textContent = cancelledRides;
     }
 
     // ===== UTILITY METHODS =====
@@ -942,6 +974,101 @@ class AdminInterface {
             modal.show();
         } catch (error) {
             console.error('Error loading driver profile:', error);
+            this.showNotification('Failed to load driver profile.', 'danger');
+        }
+    }
+
+    // ===== PROFILE METHODS BY USER ID =====
+    async showRiderProfileByUserId(userId) {
+        try {
+            console.log('showRiderProfileByUserId called with userId:', userId);
+            console.log('Available users:', this.users);
+            
+            // Ensure we have the latest data
+            if (this.riders.length === 0) {
+                console.log('Riders array is empty, loading riders...');
+                this.riders = await apiService.getRiders();
+                console.log('Loaded riders:', this.riders);
+            }
+            
+            // Find the user to get their RiderId
+            const user = this.users.find(u => u.id === userId);
+            console.log('Found user:', user);
+            
+            if (!user) {
+                this.showNotification('User not found.', 'warning');
+                return;
+            }
+            
+            if (!user.riderId) {
+                this.showNotification('No rider profile found for this user.', 'warning');
+                return;
+            }
+            
+            console.log('User riderId:', user.riderId);
+            console.log('Available riders:', this.riders);
+            
+            // Find the rider using the RiderId
+            const rider = this.riders.find(r => r.id === user.riderId);
+            console.log('Found rider:', rider);
+            
+            if (!rider) {
+                this.showNotification('No rider profile found for this user.', 'warning');
+                return;
+            }
+            
+            this.populateRiderProfileModal(rider);
+            const modal = new bootstrap.Modal(document.getElementById('riderProfileModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error loading rider profile by user ID:', error);
+            this.showNotification('Failed to load rider profile.', 'danger');
+        }
+    }
+
+    async showDriverProfileByUserId(userId) {
+        try {
+            console.log('showDriverProfileByUserId called with userId:', userId);
+            console.log('Available users:', this.users);
+            
+            // Ensure we have the latest data
+            if (this.drivers.length === 0) {
+                console.log('Drivers array is empty, loading drivers...');
+                this.drivers = await apiService.getDrivers();
+                console.log('Loaded drivers:', this.drivers);
+            }
+            
+            // Find the user to get their DriverId
+            const user = this.users.find(u => u.id === userId);
+            console.log('Found user:', user);
+            
+            if (!user) {
+                this.showNotification('User not found.', 'warning');
+                return;
+            }
+            
+            if (!user.driverId) {
+                this.showNotification('No driver profile found for this user.', 'warning');
+                return;
+            }
+            
+            console.log('User driverId:', user.driverId);
+            console.log('Available drivers:', this.drivers);
+            
+            // Find the driver using the DriverId
+            const driver = this.drivers.find(d => d.id === user.driverId);
+            console.log('Found driver:', driver);
+            
+            if (!driver) {
+                this.showNotification('No driver profile found for this user.', 'warning');
+                return;
+            }
+            
+            this.populateDriverProfileModal(driver);
+            const modal = new bootstrap.Modal(document.getElementById('driverProfileModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Error loading driver profile by user ID:', error);
             this.showNotification('Failed to load driver profile.', 'danger');
         }
     }

@@ -56,6 +56,10 @@ namespace api.Models
         public DateTime? StartTime { get; set; } // NULL until driver accepts
         public DateTime? EndTime { get; set; } // NULL until completed
         public int Distance { get; set; }
+        public int? DriverRating { get; set; } // Rating given by rider to driver (1-5)
+        public int? RiderRating { get; set; } // Rating given by driver to rider (1-5)
+        public string DriverComments { get; set; } = string.Empty; // Comments from rider about driver
+        public string RiderComments { get; set; } = string.Empty; // Comments from driver about rider
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         
@@ -136,6 +140,26 @@ namespace api.Models
         public string DriverLocation { get; set; } = string.Empty; // "PreRide", "OnWay", "AtPickup", "AtDropoff"
     }
 
+    public class SubmitDriverRatingDto
+    {
+        [Required]
+        public int RideId { get; set; }
+        [Required]
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
+    public class SubmitRiderRatingDto
+    {
+        [Required]
+        public int RideId { get; set; }
+        [Required]
+        [Range(1, 5)]
+        public int Rating { get; set; }
+        public string Comments { get; set; } = string.Empty;
+    }
+
     public class CampusLocation
     {
         public int Id { get; set; }
@@ -182,6 +206,8 @@ namespace api.Models
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+        public int? DriverId { get; set; } // Foreign key to Driver
+        public int? RiderId { get; set; } // Foreign key to Rider
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         

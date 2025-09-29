@@ -58,12 +58,26 @@ namespace api.Data
                 .HasForeignKey<Rider>(r => r.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // User to Driver/Rider relationships
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Driver)
+                .WithOne(d => d.User)
+                .HasForeignKey<User>(u => u.DriverId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Rider)
+                .WithOne(r => r.User)
+                .HasForeignKey<User>(u => u.RiderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
 
             // Seed initial data
             modelBuilder.Entity<Driver>().HasData(
                 new Driver
                 {
                     Id = 1,
+                    UserId = 2, // Stacy Streets
                     Name = "Stacy Streets",
                     VehicleId = "GC-001",
                     VehicleName = "Golf Cart Alpha",
@@ -79,7 +93,8 @@ namespace api.Data
                 new Driver
                 {
                     Id = 2,
-                    Name = "Sarah Smith",
+                    UserId = 3, // Sarah Johnson
+                    Name = "Sarah Johnson",
                     VehicleId = "GC-002",
                     VehicleName = "Golf Cart Beta",
                     Location = "Presidential Village",
@@ -100,9 +115,77 @@ namespace api.Data
                     Id = 1,
                     UserId = 4, // James Wilson
                     Name = "James Wilson",
-                    TotalRides = 0,
+                    TotalRides = 2,
                     RiderStatus = "New",
-                    AverageRating = 0.0m,
+                    AverageRating = 3.5m,
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
+            // Seed user data
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = 1,
+                    Username = "admin",
+                    Email = "admin@tiderides.com",
+                    Password = "admin123",
+                    Role = "Admin",
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    PhoneNumber = "555-0001",
+                    IsActive = true,
+                    DriverId = null,
+                    RiderId = null,
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new User
+                {
+                    Id = 2,
+                    Username = "stacy.streets",
+                    Email = "stacy@tiderides.com",
+                    Password = "driver123",
+                    Role = "Driver",
+                    FirstName = "Stacy",
+                    LastName = "Streets",
+                    PhoneNumber = "555-0002",
+                    IsActive = true,
+                    DriverId = 1,
+                    RiderId = null,
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new User
+                {
+                    Id = 3,
+                    Username = "sarah.johnson",
+                    Email = "sarah@tiderides.com",
+                    Password = "driver123",
+                    Role = "Driver",
+                    FirstName = "Sarah",
+                    LastName = "Johnson",
+                    PhoneNumber = "555-0003",
+                    IsActive = true,
+                    DriverId = 2,
+                    RiderId = null,
+                    CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new User
+                {
+                    Id = 4,
+                    Username = "james.wilson",
+                    Email = "james@tiderides.com",
+                    Password = "rider123",
+                    Role = "Rider",
+                    FirstName = "James",
+                    LastName = "Wilson",
+                    PhoneNumber = "555-0004",
+                    IsActive = true,
+                    DriverId = null,
+                    RiderId = 1,
                     CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }

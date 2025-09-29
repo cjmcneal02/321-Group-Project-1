@@ -774,12 +774,16 @@ class ApiService {
     // Rating Methods
     async submitRating(ratingData) {
         try {
-            const response = await fetch(`${this.baseUrl}/rideRatings`, {
+            const response = await fetch(`${this.baseUrl}/rides/${ratingData.rideId}/rate-driver`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(ratingData)
+                body: JSON.stringify({
+                    rideId: ratingData.rideId,
+                    rating: ratingData.rating,
+                    comments: ratingData.comments || ''
+                })
             });
 
             if (!response.ok) {
@@ -788,9 +792,46 @@ class ApiService {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
+            // Handle 204 No Content responses (no JSON body)
+            if (response.status === 204) {
+                return { success: true };
+            }
+
             return await response.json();
         } catch (error) {
             console.error('Error submitting rating:', error);
+            throw error;
+        }
+    }
+
+    async submitRiderRating(ratingData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/rides/${ratingData.rideId}/rate-rider`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    rideId: ratingData.rideId,
+                    rating: ratingData.rating,
+                    comments: ratingData.comments || ''
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            // Handle 204 No Content responses (no JSON body)
+            if (response.status === 204) {
+                return { success: true };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error submitting rider rating:', error);
             throw error;
         }
     }

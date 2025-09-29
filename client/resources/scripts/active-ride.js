@@ -287,15 +287,20 @@ function highlightStars(rating) {
     stars.forEach((star, index) => {
         if (index < rating) {
             star.classList.add('active');
+            star.className = 'bi bi-star-fill star active'; // Use filled star
         } else {
             star.classList.remove('active');
+            star.className = 'bi bi-star star'; // Use outline star
         }
     });
 }
 
 function resetStarHighlight() {
     const stars = document.querySelectorAll('.star');
-    stars.forEach(star => star.classList.remove('active'));
+    stars.forEach(star => {
+        star.classList.remove('active');
+        star.className = 'bi bi-star star'; // Reset to outline star
+    });
     
     if (selectedRating > 0) {
         updateStarDisplay(selectedRating);
@@ -307,8 +312,10 @@ function updateStarDisplay(rating) {
     stars.forEach((star, index) => {
         if (index < rating) {
             star.classList.add('active');
+            star.className = 'bi bi-star-fill star active'; // Use filled star
         } else {
             star.classList.remove('active');
+            star.className = 'bi bi-star star'; // Use outline star
         }
     });
 }
@@ -367,18 +374,6 @@ async function submitRating() {
         const riderId = apiService.getCurrentRiderId();
         const driverId = currentRide.Driver?.Id || currentRide.driver?.id;
         
-        // Debug logging
-        console.log('Submitting rating with data:', {
-            RideId: activeRideId,
-            DriverId: driverId,
-            RiderId: riderId,
-            Rating: selectedRating
-        });
-        
-        // Debug logging for troubleshooting
-        console.log('LocalStorage riderUser:', localStorage.getItem('riderUser'));
-        console.log('API Service currentUserRole:', apiService.currentUserRole);
-        console.log('API Service currentUserId:', apiService.currentUserId);
         
         // Validate required data
         if (!riderId) {
@@ -392,11 +387,9 @@ async function submitRating() {
         }
         
         const ratingData = {
-            RideId: parseInt(activeRideId),
-            DriverId: driverId,
-            RiderId: riderId,
-            Rating: selectedRating,
-            Comments: document.getElementById('rating-comments').value.trim() || null
+            rideId: parseInt(activeRideId),
+            rating: selectedRating,
+            comments: document.getElementById('rating-comments').value.trim() || ''
         };
         
         await apiService.submitRating(ratingData);

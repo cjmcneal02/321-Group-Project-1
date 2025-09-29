@@ -62,7 +62,7 @@ body {
 
 .star {
     color: #ddd;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     margin: 0 2px;
 }
 
@@ -85,6 +85,12 @@ body {
 .star-rating[data-rating="4"] .star:nth-child(-n+4),
 .star-rating[data-rating="5"] .star:nth-child(-n+5) {
     color: #ffc107;
+}
+
+/* Make stars solid when active/selected */
+.star.active {
+    color: #ffc107 !important;
+    text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
 }
 
 /* Rating Modal Styles */

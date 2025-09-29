@@ -242,5 +242,63 @@ namespace api.Controllers
 
             return NoContent();
         }
+
+        // POST: api/rides/{id}/rate-driver
+        [HttpPost("{id}/rate-driver")]
+        public async Task<IActionResult> RateDriver(int id, [FromBody] SubmitDriverRatingDto ratingDto)
+        {
+            if (ratingDto.RideId != id)
+            {
+                return BadRequest("Ride ID mismatch.");
+            }
+
+            var ride = await _context.Rides.FindAsync(id);
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            if (ride.Status != "Completed")
+            {
+                return BadRequest("Can only rate completed rides.");
+            }
+
+            ride.DriverRating = ratingDto.Rating;
+            ride.DriverComments = ratingDto.Comments;
+            ride.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // POST: api/rides/{id}/rate-rider
+        [HttpPost("{id}/rate-rider")]
+        public async Task<IActionResult> RateRider(int id, [FromBody] SubmitRiderRatingDto ratingDto)
+        {
+            if (ratingDto.RideId != id)
+            {
+                return BadRequest("Ride ID mismatch.");
+            }
+
+            var ride = await _context.Rides.FindAsync(id);
+            if (ride == null)
+            {
+                return NotFound();
+            }
+
+            if (ride.Status != "Completed")
+            {
+                return BadRequest("Can only rate completed rides.");
+            }
+
+            ride.RiderRating = ratingDto.Rating;
+            ride.RiderComments = ratingDto.Comments;
+            ride.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
