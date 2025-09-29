@@ -15,6 +15,8 @@ namespace api.Data
         public DbSet<Ride> Rides { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<CampusLocation> CampusLocations { get; set; }
+        public DbSet<RiderRating> RiderRatings { get; set; }
+        public DbSet<DriverRating> DriverRatings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +27,12 @@ namespace api.Data
                 .HasOne(r => r.Driver)
                 .WithMany()
                 .HasForeignKey(r => r.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Ride>()
+                .HasOne(r => r.Rider)
+                .WithMany()
+                .HasForeignKey(r => r.RiderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ChatMessage>()
@@ -70,6 +78,44 @@ namespace api.Data
                 .WithOne(r => r.User)
                 .HasForeignKey<User>(u => u.RiderId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // RiderRating relationships
+            modelBuilder.Entity<RiderRating>()
+                .HasOne(rr => rr.Ride)
+                .WithMany()
+                .HasForeignKey(rr => rr.RideId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RiderRating>()
+                .HasOne(rr => rr.Driver)
+                .WithMany()
+                .HasForeignKey(rr => rr.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiderRating>()
+                .HasOne(rr => rr.Rider)
+                .WithMany()
+                .HasForeignKey(rr => rr.RiderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // DriverRating relationships
+            modelBuilder.Entity<DriverRating>()
+                .HasOne(dr => dr.Ride)
+                .WithMany()
+                .HasForeignKey(dr => dr.RideId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DriverRating>()
+                .HasOne(dr => dr.Driver)
+                .WithMany()
+                .HasForeignKey(dr => dr.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DriverRating>()
+                .HasOne(dr => dr.Rider)
+                .WithMany()
+                .HasForeignKey(dr => dr.RiderId)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
             // Seed initial data
