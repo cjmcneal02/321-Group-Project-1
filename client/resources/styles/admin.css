@@ -126,6 +126,35 @@ body {
     border-left: 4px solid #28a745;
 }
 
+.nav-tabs {
+    background: var(--alabama-white);
+    border-bottom: 3px solid var(--alabama-crimson);
+}
+
+.nav-tabs .nav-link {
+    color: var(--alabama-crimson);
+    font-weight: 700;
+    background: var(--alabama-white);
+    border: 1px solid var(--alabama-crimson);
+    border-bottom: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    margin-right: 4px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.nav-tabs .nav-link:hover {
+    background: var(--alabama-crimson-dark);
+    color: var(--alabama-white);
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%);
+    color: var(--alabama-white) !important;
+    border-color: var(--alabama-crimson) var(--alabama-crimson) var(--alabama-white);
+    box-shadow: 0 4px 16px rgba(158, 27, 50, 0.08);
+    z-index: 2;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .card-body {
@@ -156,5 +185,78 @@ body {
     .d-flex.gap-3 {
         gap: 0.5rem !important;
     }
+}
+
+/* Stat cards styling - Crimson and White Theme */
+.card.bg-primary {
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%) !important;
+    border: 2px solid var(--alabama-white);
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+}
+
+.card.bg-success {
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%) !important;
+    border: 2px solid var(--alabama-white);
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+}
+
+.card.bg-warning {
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%) !important;
+    border: 2px solid var(--alabama-white);
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+}
+
+.card.bg-danger {
+    background: linear-gradient(135deg, var(--alabama-crimson-dark) 0%, #8B1530 100%) !important;
+    border: 2px solid var(--alabama-white);
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+}
+
+.card.bg-info {
+    background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%) !important;
+    border: 2px solid var(--alabama-white);
+    box-shadow: 0 4px 15px rgba(158, 27, 50, 0.2);
+}
+
+/* Ensure text remains white and styled */
+.card.bg-primary.text-white,
+.card.bg-success.text-white,
+.card.bg-warning.text-white,
+.card.bg-danger.text-white,
+.card.bg-info.text-white {
+    color: var(--alabama-white) !important;
+}
+
+.card.bg-primary h4,
+.card.bg-success h4,
+.card.bg-warning h4,
+.card.bg-danger h4,
+.card.bg-info h4 {
+    color: var(--alabama-white) !important;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    font-size: 2rem;
+}
+
+.card.bg-primary p,
+.card.bg-success p,
+.card.bg-warning p,
+.card.bg-danger p,
+.card.bg-info p {
+    color: var(--alabama-white) !important;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    margin: 0;
+}
+
+/* Hover effects for stat cards */
+.card.bg-primary:hover,
+.card.bg-success:hover,
+.card.bg-warning:hover,
+.card.bg-danger:hover,
+.card.bg-info:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(158, 27, 50, 0.3);
+    transition: all 0.3s ease;
 }
 
