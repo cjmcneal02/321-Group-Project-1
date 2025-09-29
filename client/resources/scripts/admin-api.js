@@ -161,7 +161,7 @@ class AdminInterface {
         try {
             // Load rides, riders, and drivers data
             const [rides, riders, drivers] = await Promise.all([
-                apiService.getRideHistory(),
+                apiService.getAllRides(),
                 apiService.getRiders(),
                 apiService.getDrivers()
             ]);
@@ -186,10 +186,7 @@ class AdminInterface {
     // ===== MESSAGES MANAGEMENT =====
     async loadMessages() {
         try {
-            // For admin, we need to get all messages, not just for a specific ride
-            // This would need a new API endpoint like GET /api/chatmessages/all
-            // For now, let's skip this and show placeholder
-            this.messages = [];
+            this.messages = await apiService.getAllMessages();
             this.updateMessagesTable();
             this.updateMessagesSummary();
             this.populateMessageFilters();
@@ -197,6 +194,7 @@ class AdminInterface {
             console.error('Failed to load messages:', error);
             this.messages = [];
             this.updateMessagesTable();
+            this.showNotification('Failed to load messages data.', 'warning');
         }
     }
 
@@ -627,12 +625,83 @@ class AdminInterface {
         paginationContainer.innerHTML = paginationHTML;
     }
 
+    filterRides() {
+        const statusFilter = document.getElementById('ride-status-filter')?.value || '';
+        const driverFilter = document.getElementById('driver-filter')?.value || '';
+        const riderFilter = document.getElementById('rider-filter')?.value || '';
+        const searchFilter = document.getElementById('ride-search')?.value || '';
+
+        this.filters.rides = {
+            status: statusFilter,
+            driver: driverFilter,
+            rider: riderFilter,
+            search: searchFilter
+        };
+
+        this.currentPage.rides = 1; // Reset to first page
+        this.updateRidesTable();
+    }
+
     goToRidesPage(page) {
         this.currentPage.rides = page;
         this.updateRidesTable();
     }
 
-    // ===== PLACEHOLDER METHODS FOR FUTURE IMPLEMENTATION =====
+    // ===== RIDE CRUD METHODS =====
+    showCreateRideModal() {
+        // Populate rider and driver dropdowns
+        const riderSelect = document.getElementById('create-ride-rider');
+        const driverSelect = document.getElementById('create-ride-driver');
+        
+        if (riderSelect) {
+            riderSelect.innerHTML = '<option value="">Select Rider</option>' +
+                this.riders.map(rider => `<option value="${rider.id}">${rider.name}</option>`).join('');
+        }
+        
+        if (driverSelect) {
+            driverSelect.innerHTML = '<option value="">Select Driver (optional)</option>' +
+                this.drivers.map(driver => `<option value="${driver.id}">${driver.name}</option>`).join('');
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('createRideModal'));
+        modal.show();
+    }
+
+    async createRide() {
+        const form = document.getElementById('create-ride-form');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const rideData = {
+            riderId: parseInt(document.getElementById('create-ride-rider').value),
+            driverId: document.getElementById('create-ride-driver').value ? parseInt(document.getElementById('create-ride-driver').value) : null,
+            pickupLocation: document.getElementById('create-ride-pickup').value,
+            dropoffLocation: document.getElementById('create-ride-dropoff').value,
+            passengerCount: parseInt(document.getElementById('create-ride-passengers').value),
+            cartSize: document.getElementById('create-ride-cart-size').value,
+            estimatedFare: parseFloat(document.getElementById('create-ride-fare').value),
+            status: document.getElementById('create-ride-status').value,
+            driverLocation: document.getElementById('create-ride-driver-location').value,
+            specialNotes: document.getElementById('create-ride-notes').value
+        };
+
+        try {
+            await apiService.createRide(rideData);
+            this.showNotification('Ride created successfully!', 'success');
+            
+            // Close modal and refresh data
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createRideModal'));
+            modal.hide();
+            
+            await this.loadRides();
+        } catch (error) {
+            console.error('Error creating ride:', error);
+            this.showNotification('Failed to create ride. Please try again.', 'danger');
+        }
+    }
+
     editRide(rideId) {
         this.showNotification('Edit ride functionality coming soon...', 'info');
     }
@@ -895,6 +964,18 @@ class AdminInterface {
         }
     }
 
+    updateRidesSummary() {
+        const totalRides = this.rides.length;
+        const completedRides = this.rides.filter(ride => ride.status === 'Completed').length;
+        const inProgressRides = this.rides.filter(ride => ride.status === 'In Progress').length;
+        const cancelledRides = this.rides.filter(ride => ride.status === 'Cancelled').length;
+
+        document.getElementById('total-rides').textContent = totalRides;
+        document.getElementById('completed-rides').textContent = completedRides;
+        document.getElementById('in-progress-rides').textContent = inProgressRides;
+        document.getElementById('cancelled-rides').textContent = cancelledRides;
+    }
+
     populateRideFilters() {
         // Populate driver filter
         const driverFilter = document.getElementById('driver-filter');
@@ -977,15 +1058,116 @@ class AdminInterface {
     updateMessagesTable() {
         const tbody = document.getElementById('messages-table-body');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Messages functionality coming soon...</td></tr>';
+
+        // Apply filters
+        let filteredMessages = this.messages;
+        
+        if (this.filters.messages.sender) {
+            filteredMessages = filteredMessages.filter(msg => msg.sender === this.filters.messages.sender);
+        }
+        
+        if (this.filters.messages.ride) {
+            filteredMessages = filteredMessages.filter(msg => msg.rideId == this.filters.messages.ride);
+        }
+        
+        if (this.filters.messages.date) {
+            const filterDate = new Date(this.filters.messages.date);
+            filteredMessages = filteredMessages.filter(msg => {
+                const msgDate = new Date(msg.createdAt);
+                return msgDate.toDateString() === filterDate.toDateString();
+            });
+        }
+        
+        if (this.filters.messages.search) {
+            const searchTerm = this.filters.messages.search.toLowerCase();
+            filteredMessages = filteredMessages.filter(msg => {
+                // Get the actual name for search
+                let actualName = 'Unknown';
+                if (msg.sender === 'driver' && msg.driverId) {
+                    const driver = this.drivers.find(d => d.id === msg.driverId);
+                    actualName = driver ? driver.name : 'Unknown Driver';
+                } else if (msg.sender === 'rider') {
+                    // For rider messages, try to get name from riderId first, then from ride data
+                    if (msg.riderId) {
+                        const rider = this.riders.find(r => r.id === msg.riderId);
+                        actualName = rider ? rider.name : 'Unknown Rider';
+                    } else {
+                        // If riderId is null, get rider name from the ride data
+                        const ride = this.rides.find(r => r.id === msg.rideId);
+                        actualName = ride ? ride.riderName : 'Unknown Rider';
+                    }
+                }
+                
+                return msg.content.toLowerCase().includes(searchTerm) ||
+                       actualName.toLowerCase().includes(searchTerm);
+            });
+        }
+
+        // Apply pagination
+        const startIndex = (this.currentPage.messages - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+
+        tbody.innerHTML = '';
+
+        paginatedMessages.forEach(message => {
+            // Get the actual name based on sender type
+            let actualName = 'Unknown';
+            if (message.sender === 'driver' && message.driverId) {
+                const driver = this.drivers.find(d => d.id === message.driverId);
+                actualName = driver ? driver.name : 'Unknown Driver';
+            } else if (message.sender === 'rider') {
+                // For rider messages, try to get name from riderId first, then from ride data
+                if (message.riderId) {
+                    const rider = this.riders.find(r => r.id === message.riderId);
+                    actualName = rider ? rider.name : 'Unknown Rider';
+                } else {
+                    // If riderId is null, get rider name from the ride data
+                    const ride = this.rides.find(r => r.id === message.rideId);
+                    actualName = ride ? ride.riderName : 'Unknown Rider';
+                }
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${message.id}</td>
+                <td>${message.rideId}</td>
+                <td>
+                    <span class="badge ${message.sender === 'driver' ? 'bg-primary' : 'bg-success'}">${message.sender}</span>
+                </td>
+                <td>${actualName}</td>
+                <td class="text-truncate" style="max-width: 200px;" title="${message.content}">${message.content}</td>
+                <td>${this.formatDate(message.createdAt)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="adminInterface.deleteMessage(${message.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        this.updateMessagesPagination(filteredMessages.length);
     }
 
     updateMessagesSummary() {
-        // Placeholder
+        const totalMessages = this.messages.length;
+        const driverMessages = this.messages.filter(msg => msg.sender === 'driver').length;
+        const riderMessages = this.messages.filter(msg => msg.sender === 'rider').length;
+
+        document.getElementById('total-messages').textContent = totalMessages;
+        document.getElementById('driver-messages').textContent = driverMessages;
+        document.getElementById('rider-messages').textContent = riderMessages;
     }
 
     populateMessageFilters() {
-        // Placeholder
+        // Populate ride filter
+        const rideFilter = document.getElementById('message-ride-filter');
+        if (rideFilter) {
+            const uniqueRideIds = [...new Set(this.messages.map(msg => msg.rideId))].sort((a, b) => a - b);
+            rideFilter.innerHTML = '<option value="">All Rides</option>' +
+                uniqueRideIds.map(rideId => `<option value="${rideId}">Ride ${rideId}</option>`).join('');
+        }
     }
 
     updateAnalyticsSummary() {
@@ -1008,6 +1190,68 @@ class AdminInterface {
         if (activeDriversEl) activeDriversEl.textContent = activeDrivers;
         if (totalEarningsEl) totalEarningsEl.textContent = `$${totalEarnings.toFixed(2)}`;
         if (avgRideFareEl) avgRideFareEl.textContent = `$${avgRideFare.toFixed(2)}`;
+    }
+
+    // ===== MESSAGE FILTERING AND PAGINATION =====
+    filterMessages() {
+        const senderFilter = document.getElementById('sender-filter')?.value || '';
+        const rideFilter = document.getElementById('message-ride-filter')?.value || '';
+        const dateFilter = document.getElementById('message-date-filter')?.value || '';
+        const searchFilter = document.getElementById('message-search')?.value || '';
+
+        this.filters.messages = {
+            sender: senderFilter,
+            ride: rideFilter,
+            date: dateFilter,
+            search: searchFilter
+        };
+
+        this.currentPage.messages = 1; // Reset to first page
+        this.updateMessagesTable();
+    }
+
+    updateMessagesPagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+        const paginationContainer = document.getElementById('messages-pagination');
+        
+        if (!paginationContainer) return;
+
+        let paginationHTML = '';
+        
+        // Previous button
+        if (this.currentPage.messages > 1) {
+            paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="adminInterface.goToMessagesPage(${this.currentPage.messages - 1})">Previous</a></li>`;
+        }
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            const isActive = i === this.currentPage.messages ? 'active' : '';
+            paginationHTML += `<li class="page-item ${isActive}"><a class="page-link" href="#" onclick="adminInterface.goToMessagesPage(${i})">${i}</a></li>`;
+        }
+        
+        // Next button
+        if (this.currentPage.messages < totalPages) {
+            paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="adminInterface.goToMessagesPage(${this.currentPage.messages + 1})">Next</a></li>`;
+        }
+        
+        paginationContainer.innerHTML = paginationHTML;
+    }
+
+    goToMessagesPage(page) {
+        this.currentPage.messages = page;
+        this.updateMessagesTable();
+    }
+
+    deleteMessage(messageId) {
+        if (confirm('Are you sure you want to delete this message?')) {
+            this.showNotification('Delete message functionality coming soon...', 'info');
+        }
+    }
+
+    clearAllMessages() {
+        if (confirm('Are you sure you want to clear all messages? This action cannot be undone.')) {
+            this.showNotification('Clear all messages functionality coming soon...', 'info');
+        }
     }
 
     updateCharts() {
