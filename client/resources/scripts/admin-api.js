@@ -481,14 +481,19 @@ class AdminInterface {
     }
 
     showNotification(message, type) {
-        // Remove existing notifications
+        // Remove existing notifications immediately
         const existingNotifications = document.querySelectorAll('.alert-notification');
-        existingNotifications.forEach(notification => notification.remove());
+        existingNotifications.forEach(notification => {
+            // Force immediate removal without animation
+            notification.style.transition = 'none';
+            notification.style.opacity = '0';
+            notification.remove();
+        });
 
         // Create new notification
         const notification = document.createElement('div');
         notification.className = `alert alert-${type} alert-dismissible fade show position-fixed alert-notification`;
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px; opacity: 1 !important; background-color: var(--bs-alert-bg) !important;';
         notification.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -1369,9 +1374,27 @@ class AdminInterface {
         this.updateMessagesTable();
     }
 
-    deleteMessage(messageId) {
-        if (confirm('Are you sure you want to delete this message?')) {
-            this.showNotification('Delete message functionality coming soon...', 'info');
+    async deleteMessage(messageId) {
+        if (!confirm('Are you sure you want to delete this message?')) {
+            return;
+        }
+
+        try {
+            const ok = await apiService.deleteChatMessage(messageId);
+            if (!ok) {
+                throw new Error('Failed to delete message');
+            }
+
+            // Remove from local state
+            this.messages = this.messages.filter(m => m.id !== messageId);
+            // Refresh table and summaries
+            this.updateMessagesTable();
+            this.updateMessagesSummary();
+
+            this.showNotification('Message deleted successfully.', 'success');
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            this.showNotification('Failed to delete message.', 'danger');
         }
     }
 

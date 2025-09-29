@@ -3175,19 +3175,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/sydneymarch/.nuget/packages/": {}
+    "C:\\Users\\pappa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/api.csproj",
+      "projectUniqueName": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\api.csproj",
       "projectName": "api",
-      "projectPath": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/api.csproj",
-      "packagesPath": "/Users/sydneymarch/.nuget/packages/",
-      "outputPath": "/Users/sydneymarch/Documents/Fall 2025/MIS321/GroupProject/321-Group-Project-1/api/obj/",
+      "projectPath": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\api.csproj",
+      "packagesPath": "C:\\Users\\pappa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\pappa\\Documents\\source\\Project1\\321-Group-Project-1\\api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/sydneymarch/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\pappa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -3253,7 +3253,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

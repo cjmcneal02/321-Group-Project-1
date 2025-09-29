@@ -79,5 +79,21 @@ namespace api.Controllers
 
             return NoContent();
         }
+
+        // DELETE: api/chatmessages/message/{id}
+        [HttpDelete("message/{id}")]
+        public async Task<IActionResult> DeleteMessage(int id)
+        {
+            var message = await _context.ChatMessages.FindAsync(id);
+            if (message == null)
+            {
+                return NotFound();
+            }
+
+            _context.ChatMessages.Remove(message);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

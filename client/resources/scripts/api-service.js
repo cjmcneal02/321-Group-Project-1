@@ -427,6 +427,18 @@ class ApiService {
         }
     }
 
+    async deleteChatMessage(messageId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/chatmessages/message/${messageId}`, {
+                method: 'DELETE'
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Error deleting chat message:', error);
+            throw error;
+        }
+    }
+
     // Helper method to find nearest available driver
     async findNearestDriver(pickupLocation) {
         try {

@@ -262,16 +262,6 @@ class DriverInterface {
             vehicleInfoElement.textContent = `${vehicleName} #${vehicleId}`;
         }
 
-        // Update status badge
-        const statusBadgeElement = document.getElementById('statusBadge');
-        if (statusBadgeElement) {
-            const isAvailable = driver.isAvailable !== undefined ? driver.isAvailable : driver.IsAvailable;
-            const statusText = isAvailable ? 'Available' : 'Unavailable';
-            const statusClass = isAvailable ? 'bg-success' : 'bg-danger';
-            const statusIcon = isAvailable ? 'bi-check-circle' : 'bi-x-circle';
-            statusBadgeElement.innerHTML = `<i class="bi ${statusIcon} me-1"></i>${statusText}`;
-            statusBadgeElement.className = `badge ${statusClass} fs-6 mb-2`;
-        }
 
         // Update status text
         const statusTextElement = document.getElementById('statusText');
@@ -942,17 +932,6 @@ class DriverInterface {
             }
         }
 
-        // Update status badge
-        const statusBadge = document.getElementById('statusBadge');
-        if (statusBadge) {
-            if (isAvailable) {
-                statusBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i>Available';
-                statusBadge.className = 'badge bg-success fs-6 mb-2';
-            } else {
-                statusBadge.innerHTML = '<i class="bi bi-x-circle me-1"></i>Unavailable';
-                statusBadge.className = 'badge bg-danger fs-6 mb-2';
-            }
-        }
 
         // Update status text
         const statusText = document.getElementById('statusText');
@@ -1474,6 +1453,15 @@ class DriverInterface {
      * Show notification
      */
     showNotification(message, type = 'info') {
+        // Remove existing notifications immediately
+        const existingNotifications = document.querySelectorAll('.alert');
+        existingNotifications.forEach(notification => {
+            // Force immediate removal without animation
+            notification.style.transition = 'none';
+            notification.style.opacity = '0';
+            notification.remove();
+        });
+
         const alertClass = {
             'success': 'alert-success',
             'danger': 'alert-danger',
@@ -1483,7 +1471,7 @@ class DriverInterface {
 
         const notificationHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-                 style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;" role="alert">
+                 style="top: 20px; right: 20px; z-index: 10000; min-width: 300px; opacity: 1 !important; background-color: var(--bs-alert-bg) !important;" role="alert">
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
