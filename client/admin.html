@@ -584,25 +584,65 @@
                                             </div>
                                         </div>
 
-                                        <!-- Charts Placeholder -->
+                                        <!-- Additional Analytics Cards -->
+                                        <div class="row mb-4">
+                                            <div class="col-md-3">
+                                                <div class="card bg-warning text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="requested-rides-analytics">0</h4>
+                                                        <p class="mb-0">Requested Rides</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-info text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="active-riders-analytics">0</h4>
+                                                        <p class="mb-0">Active Riders</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-secondary text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="cancelled-rides-analytics">0</h4>
+                                                        <p class="mb-0">Cancelled Rides</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="card bg-primary text-white">
+                                                    <div class="card-body text-center">
+                                                        <h4 id="in-progress-rides-analytics">0</h4>
+                                                        <p class="mb-0">In Progress</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Charts Section -->
                                         <div class="row">
                                             <div class="col-md-6">
                                                 <div class="card">
-                                                    <div class="card-header">
-                                                        <h6 class="mb-0">Rides by Status</h6>
+                                                    <div class="card-header" style="background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%); color: white;">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-pie-chart me-2"></i>Rides by Status
+                                                        </h6>
                                                     </div>
-                                                    <div class="card-body">
-                                                        <canvas id="ridesStatusChart" width="400" height="200"></canvas>
+                                                    <div class="card-body" style="height: 350px;">
+                                                        <canvas id="ridesStatusChart"></canvas>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="card">
-                                                    <div class="card-header">
-                                                        <h6 class="mb-0">Users by Role</h6>
+                                                    <div class="card-header" style="background: linear-gradient(135deg, var(--alabama-crimson) 0%, var(--alabama-crimson-dark) 100%); color: white;">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-people me-2"></i>Users by Role
+                                                        </h6>
                                                     </div>
-                                                    <div class="card-body">
-                                                        <canvas id="usersRoleChart" width="400" height="200"></canvas>
+                                                    <div class="card-body" style="height: 350px;">
+                                                        <canvas id="usersRoleChart"></canvas>
                                                     </div>
                                                 </div>
                                             </div>
