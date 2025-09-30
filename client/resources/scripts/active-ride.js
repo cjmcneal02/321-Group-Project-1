@@ -61,6 +61,7 @@ async function initializeRidePage() {
         
         // Initialize rating system
         initializeRatingSystem();
+        initializeDriverRatingSystem();
         
         // Start polling for updates
         startPolling();
@@ -214,9 +215,14 @@ async function confirmRideCompletion() {
             modal.hide();
         }
         
-        // Show rating modal
+        // Show appropriate rating modal based on user role
         setTimeout(() => {
-            showRatingModal();
+            const userRole = apiService.currentUserRole;
+            if (userRole === 'Driver') {
+                showDriverRatingModal();
+            } else {
+                showRatingModal();
+            }
         }, 300);
         
     } catch (error) {
@@ -388,6 +394,7 @@ async function submitRating() {
         
         const ratingData = {
             rideId: parseInt(activeRideId),
+            driverId: driverId,
             rating: selectedRating,
             comments: document.getElementById('rating-comments').value.trim() || ''
         };
@@ -429,6 +436,160 @@ function closeThankYouModal() {
     setTimeout(() => {
         window.location.href = './rider.html';
     }, 500);
+}
+
+// Driver Rating Functions
+let selectedDriverRating = 0;
+
+function initializeDriverRatingSystem() {
+    const stars = document.querySelectorAll('#driver-star-rating .star');
+    stars.forEach((star, index) => {
+        star.addEventListener('click', () => selectDriverRating(index + 1));
+        star.addEventListener('mouseenter', () => highlightDriverStars(index + 1));
+    });
+    
+    const starContainer = document.getElementById('driver-star-rating');
+    if (starContainer) {
+        starContainer.addEventListener('mouseleave', resetDriverStarHighlight);
+    }
+}
+
+function selectDriverRating(rating) {
+    selectedDriverRating = rating;
+    updateDriverStarDisplay(rating);
+    updateDriverRatingText(rating);
+    updateDriverSubmitButton();
+}
+
+function highlightDriverStars(rating) {
+    const stars = document.querySelectorAll('#driver-star-rating .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.className = 'bi bi-star-fill star active';
+        } else {
+            star.classList.remove('active');
+            star.className = 'bi bi-star star';
+        }
+    });
+}
+
+function resetDriverStarHighlight() {
+    const stars = document.querySelectorAll('#driver-star-rating .star');
+    stars.forEach(star => {
+        star.classList.remove('active');
+        star.className = 'bi bi-star star';
+    });
+    
+    if (selectedDriverRating > 0) {
+        updateDriverStarDisplay(selectedDriverRating);
+    }
+}
+
+function updateDriverStarDisplay(rating) {
+    const stars = document.querySelectorAll('#driver-star-rating .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.className = 'bi bi-star-fill star active';
+        } else {
+            star.classList.remove('active');
+            star.className = 'bi bi-star star';
+        }
+    });
+}
+
+function updateDriverRatingText(rating) {
+    const ratingText = document.getElementById('driver-rating-text');
+    if (ratingText) {
+        const texts = {
+            1: 'Poor',
+            2: 'Fair',
+            3: 'Good',
+            4: 'Very Good',
+            5: 'Excellent'
+        };
+        ratingText.textContent = texts[rating] || 'Tap a star to rate';
+    }
+}
+
+function updateDriverSubmitButton() {
+    const submitBtn = document.getElementById('submit-driver-rating-btn');
+    if (submitBtn) {
+        submitBtn.disabled = selectedDriverRating === 0;
+    }
+}
+
+function showDriverRatingModal() {
+    // Update rider info in rating modal
+    if (currentRide && currentRide.Rider) {
+        const rider = currentRide.Rider;
+        document.getElementById('driver-rating-rider-name').textContent = rider.Name || rider.name || 'Unknown Rider';
+        document.getElementById('driver-rating-ride-details').textContent = 
+            `${currentRide.PickupLocation || currentRide.pickupLocation} → ${currentRide.DropoffLocation || currentRide.dropoffLocation}`;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('driver-rating-modal'));
+    modal.show();
+}
+
+function skipDriverRating() {
+    // Hide driver rating modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('driver-rating-modal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Show thank you modal
+    setTimeout(() => {
+        showThankYouModal();
+    }, 300);
+}
+
+async function submitDriverRating() {
+    if (selectedDriverRating === 0) return;
+    
+    try {
+        const driverId = apiService.getCurrentDriverId();
+        const riderId = currentRide.Rider?.Id || currentRide.rider?.id;
+        
+        if (!activeRideId) {
+            throw new Error('Ride ID not found. Unable to submit rating.');
+        }
+        
+        // Validate required data
+        if (!driverId) {
+            throw new Error('Driver ID not found. Please ensure you are logged in.');
+        }
+        if (!riderId) {
+            throw new Error('Rider ID not found. Unable to submit rating.');
+        }
+        
+        const ratingData = {
+            rideId: parseInt(activeRideId),
+            riderId: riderId,
+            rating: selectedDriverRating,
+            comments: document.getElementById('driver-rating-comments').value.trim() || ''
+        };
+        
+        await apiService.submitRiderRating(ratingData);
+        
+        // Hide driver rating modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('driver-rating-modal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Show thank you modal
+        setTimeout(() => {
+            showThankYouModal();
+        }, 300);
+        
+    } catch (error) {
+        console.error('Error submitting driver rating:', error);
+        const errorMessage = error.message || 'Unknown error occurred';
+        alert(`Error submitting rating: ${errorMessage}`);
+    }
 }
 
 // Clean up on page unload

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -612,6 +613,127 @@
                                                     <div class="card-body text-center">
                                                         <h4 id="in-progress-rides-analytics">0</h4>
                                                         <p class="mb-0">In Progress</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Rating Analytics Section -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h5 class="mb-3 fw-bold" style="color: var(--primary-green);">
+                                                    <i class="bi bi-star me-2"></i>Rating Analytics - Current Month
+                                                </h5>
+                                                
+                                                <!-- Overall Rating Summary -->
+                                                <div class="card mb-4">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">Overall Rating Summary</h6>
+                                                    </div>
+                                                    <div class="card-body" id="overall-rating-summary">
+                                                        <div class="text-center text-muted">Loading rating data...</div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Rider Rating Analytics -->
+                                                <div class="card mb-4">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">Rider Rating Analytics</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="rider-rating-summary" class="mb-4">
+                                                            <div class="text-center text-muted">Loading rider rating data...</div>
+                                                        </div>
+                                                        
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="card">
+                                                                    <div class="card-header">
+                                                                        <h6 class="mb-0">Rider Rating Distribution</h6>
+                                                                    </div>
+                                                                    <div class="card-body" style="height: 300px;">
+                                                                        <canvas id="riderRatingChart"></canvas>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="card">
+                                                                    <div class="card-header">
+                                                                        <h6 class="mb-0">Top Rated Riders - Current Month</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <div class="table-responsive">
+                                                                            <table class="table table-sm">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Rank</th>
+                                                                                        <th>Rider Name</th>
+                                                                                        <th>Average Rating</th>
+                                                                                        <th>Total Ratings</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody id="top-riders-table-body">
+                                                                                    <tr>
+                                                                                        <td colspan="4" class="text-center text-muted">Loading...</td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Driver Rating Analytics -->
+                                                <div class="card mb-4">
+                                                    <div class="card-header">
+                                                        <h6 class="mb-0">Driver Rating Analytics</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="driver-rating-summary" class="mb-4">
+                                                            <div class="text-center text-muted">Loading driver rating data...</div>
+                                                        </div>
+                                                        
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="card">
+                                                                    <div class="card-header">
+                                                                        <h6 class="mb-0">Driver Rating Distribution</h6>
+                                                                    </div>
+                                                                    <div class="card-body" style="height: 300px;">
+                                                                        <canvas id="driverRatingChart"></canvas>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="card">
+                                                                    <div class="card-header">
+                                                                        <h6 class="mb-0">Top Rated Drivers - Current Month</h6>
+                                                                    </div>
+                                                                    <div class="card-body">
+                                                                        <div class="table-responsive">
+                                                                            <table class="table table-sm">
+                                                                                <thead>
+                                                                                    <tr>
+                                                                                        <th>Rank</th>
+                                                                                        <th>Driver Name</th>
+                                                                                        <th>Average Rating</th>
+                                                                                        <th>Total Ratings</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody id="top-drivers-table-body">
+                                                                                    <tr>
+                                                                                        <td colspan="4" class="text-center text-muted">Loading...</td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
