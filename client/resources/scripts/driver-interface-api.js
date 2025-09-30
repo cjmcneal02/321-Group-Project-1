@@ -25,7 +25,7 @@ class DriverInterface {
 
     async init() {
         // Load available drivers for login dropdown
-        await this.loadAvailableDrivers();
+        await this.loadDriverUsers();
         
         // Set up toggle status button
         this.setupToggleStatusButton();
@@ -85,55 +85,66 @@ class DriverInterface {
         try {
             const driverUsers = await apiService.getUsersByRole('Driver');
             const select = document.getElementById('driver-select');
-            select.innerHTML = '<option value="">Select a driver...</option>';
             
-            driverUsers.forEach(user => {
-                const option = document.createElement('option');
-                option.value = user.username;
-                option.textContent = `${user.firstName} ${user.lastName} (${user.username})`;
-                select.appendChild(option);
-            });
+            if (select && driverUsers) {
+                // Clear existing options except the first one
+                select.innerHTML = '<option value="">Select a driver...</option>';
+                
+                // Add driver options
+                driverUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.firstName} ${user.lastName}`;
+                    select.appendChild(option);
+                });
+            }
         } catch (error) {
+            console.error('Error loading driver users:', error);
             this.showNotification('Failed to load driver accounts.', 'danger');
         }
     }
 
     async loginDriver() {
-        const selectedDriver = document.getElementById('driver-select').value;
+        const selectedUserId = document.getElementById('driver-select').value;
 
-        if (!selectedDriver) {
+        if (!selectedUserId) {
             this.showNotification('Please select a driver account.', 'warning');
             return;
         }
 
         try {
-            // Get driver data from API instead of hardcoded values
-            const driverId = parseInt(selectedDriver);
-            const driver = await apiService.getDriver(driverId);
+            // Get user data from the already loaded users
+            const userId = parseInt(selectedUserId);
+            const driverUsers = await apiService.getUsersByRole('Driver');
+            const user = driverUsers.find(u => u.id === userId);
             
-            if (!driver) {
-                this.showNotification('Driver not found.', 'error');
+            if (!user) {
+                this.showNotification('User not found.', 'error');
                 return;
             }
 
+            // Get driver profile for this user
+            const drivers = await apiService.getDrivers();
+            const driver = drivers.find(d => d.userId === userId || d.UserId === userId);
+            
             // Set up user data from API response
             const userData = {
-                id: driver.userId || driver.UserId || driverId,
-                username: (driver.name || driver.Name || '').toLowerCase().replace(' ', ''),
-                    role: 'Driver',
-                firstName: (driver.name || driver.Name || '').split(' ')[0],
-                lastName: (driver.name || driver.Name || '').split(' ')[1] || ''
+                id: user.id,
+                username: user.username,
+                role: 'Driver',
+                firstName: user.firstName,
+                lastName: user.lastName
             };
 
             this.currentUser = userData;
-            this.currentDriverId = driverId;
+            this.currentDriverId = driver ? (driver.id || driver.Id) : null;
             
             apiService.currentUserId = userData.id;
             apiService.currentUserRole = userData.role;
-            apiService.currentDriverId = driverId;
+            apiService.currentDriverId = this.currentDriverId;
 
             // Save driver session to localStorage
-            localStorage.setItem('driverId', driverId.toString());
+            localStorage.setItem('driverId', this.currentDriverId.toString());
             localStorage.setItem('driverRole', 'Driver');
             localStorage.setItem('driverUserId', userData.id.toString());
 
@@ -1585,8 +1596,15 @@ class DriverInterface {
         
         try {
             const comments = document.getElementById('rating-comments').value;
+            const riderId = this.currentRide?.RiderId || this.currentRide?.riderId;
+            
+            if (!riderId) {
+                throw new Error('Rider ID not found in current ride data');
+            }
+            
             const ratingData = {
                 rideId: parseInt(this.currentRideId),
+                riderId: riderId,
                 rating: this.selectedRating,
                 comments: comments
             };

@@ -22,6 +22,7 @@ namespace api.Controllers
         {
             return await _context.Users
                 .Include(u => u.Driver)
+                .Where(u => u.IsActive)
                 .ToListAsync();
         }
 
@@ -85,6 +86,43 @@ namespace api.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            // Create corresponding profile based on role
+            if (dto.Role == "Rider")
+            {
+                var rider = new Rider
+                {
+                    UserId = user.Id,
+                    Name = $"{user.FirstName} {user.LastName}",
+                    TotalRides = 0,
+                    RiderStatus = "New",
+                    AverageRating = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Riders.Add(rider);
+                await _context.SaveChangesAsync();
+            }
+            else if (dto.Role == "Driver")
+            {
+                var driver = new Driver
+                {
+                    UserId = user.Id,
+                    Name = $"{user.FirstName} {user.LastName}",
+                    VehicleId = $"GC-{user.Id:D3}", // Generate unique vehicle ID
+                    VehicleName = $"Golf Cart {user.FirstName}",
+                    Location = "Campus Center",
+                    IsAvailable = true,
+                    TotalRides = 0,
+                    AverageTip = 0,
+                    AverageRating = 0,
+                    Status = "Available",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Drivers.Add(driver);
+                await _context.SaveChangesAsync();
+            }
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }

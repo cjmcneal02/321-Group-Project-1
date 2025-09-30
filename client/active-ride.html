@@ -178,6 +178,50 @@
                         </div>
                     </div>
 
+                    <!-- Driver Rating Modal (for drivers to rate riders) -->
+                    <div class="modal fade" id="driver-rating-modal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-star me-2"></i>Rate Your Rider
+                                    </h5>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <div class="d-flex align-items-center justify-content-center mb-4">
+                                        <i class="bi bi-person-circle me-3" style="font-size: 2rem;"></i>
+                                        <div>
+                                            <h6 class="mb-1" id="driver-rating-rider-name">Rider Name</h6>
+                                            <small class="text-muted" id="driver-rating-ride-details">Ride Details</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-center mb-4">
+                                        <div class="star-rating" id="driver-star-rating">
+                                            <i class="bi bi-star star" data-rating="1"></i>
+                                            <i class="bi bi-star star" data-rating="2"></i>
+                                            <i class="bi bi-star star" data-rating="3"></i>
+                                            <i class="bi bi-star star" data-rating="4"></i>
+                                            <i class="bi bi-star star" data-rating="5"></i>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span id="driver-rating-text" class="text-muted">Tap a star to rate</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="driver-rating-comments" class="form-label">Additional Comments (Optional)</label>
+                                        <textarea class="form-control" id="driver-rating-comments" rows="3" placeholder="Share your experience..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="skipDriverRating()">Skip Rating</button>
+                                    <button type="button" class="btn btn-primary" id="submit-driver-rating-btn" onclick="submitDriverRating()" disabled>Submit Rating</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Thank You Modal -->
                     <div class="modal fade" id="thank-you-modal" tabindex="-1" aria-labelledby="thank-you-modal-label" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">

@@ -159,57 +159,80 @@ class RiderInterface {
 
     async loadRiderUsers() {
         try {
-            const riders = await apiService.getRiders();
+            const riderUsers = await apiService.getUsersByRole('Rider');
             const riderSelect = document.getElementById('rider-select');
             
-            if (riderSelect && riders) {
+            if (riderSelect && riderUsers) {
                 // Clear existing options except the first one
                 riderSelect.innerHTML = '<option value="">Select a rider...</option>';
                 
                 // Add rider options
-                riders.forEach(rider => {
+                riderUsers.forEach(user => {
                     const option = document.createElement('option');
-                    option.value = rider.UserId || rider.userId;
-                    option.textContent = rider.Name || rider.name;
+                    option.value = user.id;
+                    option.textContent = `${user.firstName} ${user.lastName}`;
                     riderSelect.appendChild(option);
                 });
             }
         } catch (error) {
-            console.error('Error loading riders:', error);
+            console.error('Error loading rider users:', error);
             this.showNotification('Failed to load rider accounts.', 'danger');
         }
     }
 
     async loginRider() {
-        const selectedRider = document.getElementById('rider-select').value;
+        const selectedUserId = document.getElementById('rider-select').value;
 
-        if (!selectedRider) {
+        if (!selectedUserId) {
             this.showNotification('Please select a rider account.', 'warning');
             return;
         }
 
         try {
-            // Get rider data from API instead of hardcoded values
-            const userId = parseInt(selectedRider);
-            const rider = await apiService.getRiderByUserId(userId);
+            // Get user data from the already loaded users
+            const userId = parseInt(selectedUserId);
+            const riderUsers = await apiService.getUsersByRole('Rider');
+            const user = riderUsers.find(u => u.id === userId);
             
-            if (!rider) {
-                this.showNotification('Rider not found.', 'error');
+            if (!user) {
+                this.showNotification('User not found.', 'error');
                 return;
             }
 
+            // Get rider profile for this user
+            const riders = await apiService.getRiders();
+            let rider = riders.find(r => r.userId === userId || r.UserId === userId);
+            
+            // If no rider profile exists, create one
+            if (!rider) {
+                try {
+                    const newRiderData = {
+                        userId: userId,
+                        name: `${user.firstName} ${user.lastName}`,
+                        totalRides: 0,
+                        riderStatus: 'New',
+                        averageRating: 0
+                    };
+                    rider = await apiService.createRider(newRiderData);
+                    console.log('Created new rider profile:', rider);
+                } catch (error) {
+                    console.error('Error creating rider profile:', error);
+                    // Continue with null rider - will be handled gracefully
+                }
+            }
+            
             // Set up user data from API response
             const userData = {
-                id: rider.UserId || rider.userId,
-                username: rider.Name || rider.name, // Use rider name as username
-                role: 'Rider', // Set role explicitly since we removed User include
-                firstName: rider.Name || rider.name, // Use rider name as first name
-                lastName: '', // No separate last name in rider data
-                riderId: rider.Id || rider.id,
-                riderName: rider.Name || rider.name,
-                totalRides: rider.TotalRides || rider.totalRides,
-                riderStatus: rider.RiderStatus || rider.riderStatus,
-                averageRating: rider.AverageRating || rider.averageRating
+                id: user.id,
+                username: user.username,
+                role: 'Rider',
+                firstName: user.firstName,
+                lastName: user.lastName,
+                riderId: rider ? (rider.id || rider.Id) : null,
+                riderName: rider ? (rider.name || rider.Name) : `${user.firstName} ${user.lastName}`,
+                totalRides: rider ? (rider.TotalRides || rider.totalRides) : 0,
+                riderStatus: rider ? (rider.RiderStatus || rider.riderStatus) : 'New',
+                averageRating: rider ? (rider.AverageRating || rider.averageRating) : 0
             };
 
             this.currentUser = userData;

@@ -14,6 +14,12 @@ class AdminInterface {
         this.drivers = [];
         this.messages = [];
         this.campusLocations = [];
+        
+        // Chart instances for proper cleanup
+        this.riderRatingChart = null;
+        this.driverRatingChart = null;
+        this.ridesStatusChart = null;
+        this.usersRoleChart = null;
         this.currentPage = {
             users: 1,
             rides: 1,
@@ -206,9 +212,27 @@ class AdminInterface {
     async loadAnalytics() {
         try {
             await this.updateAnalyticsSummary();
+            await this.loadRatingAnalytics();
             this.updateCharts();
         } catch (error) {
             console.error('Error loading analytics:', error);
+        }
+    }
+
+    async loadRatingAnalytics() {
+        try {
+            const [riderAnalytics, driverAnalytics, ratingSummary] = await Promise.all([
+                apiService.getRiderRatingAnalytics(),
+                apiService.getDriverRatingAnalytics(),
+                apiService.getRatingSummary()
+            ]);
+
+            this.updateRiderRatingAnalytics(riderAnalytics);
+            this.updateDriverRatingAnalytics(driverAnalytics);
+            this.updateRatingSummaryCards(ratingSummary);
+        } catch (error) {
+            console.error('Error loading rating analytics:', error);
+            this.showNotification('Failed to load rating analytics.', 'warning');
         }
     }
 
@@ -1413,6 +1437,11 @@ class AdminInterface {
         const ctx = document.getElementById('ridesStatusChart');
         if (!ctx) return;
 
+        // Destroy existing chart if it exists
+        if (this.ridesStatusChart) {
+            this.ridesStatusChart.destroy();
+        }
+
         // Count rides by status
         const statusCounts = {};
         this.rides.forEach(ride => {
@@ -1428,7 +1457,7 @@ class AdminInterface {
             'Cancelled': '#dc3545'
         };
 
-        new Chart(ctx, {
+        this.ridesStatusChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: labels,
@@ -1443,8 +1472,19 @@ class AdminInterface {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
+                    title: {
+                        display: true,
+                        text: 'Rides by Status - All Time',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
                     }
                 }
             }
@@ -1454,6 +1494,11 @@ class AdminInterface {
     updateUsersRoleChart() {
         const ctx = document.getElementById('usersRoleChart');
         if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (this.usersRoleChart) {
+            this.usersRoleChart.destroy();
+        }
 
         // Count users by role
         const roleCounts = {};
@@ -1469,7 +1514,7 @@ class AdminInterface {
             'Rider': '#198754'
         };
 
-        new Chart(ctx, {
+        this.usersRoleChart = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: labels,
@@ -1484,11 +1529,291 @@ class AdminInterface {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
+                    title: {
+                        display: true,
+                        text: 'Users by Role - All Time',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
                     }
                 }
             }
+        });
+    }
+
+    updateRiderRatingAnalytics(analytics) {
+        // Update rider rating summary cards
+        const riderRatingCard = document.getElementById('rider-rating-summary');
+        if (riderRatingCard) {
+            riderRatingCard.innerHTML = `
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.totalRatings}</h4>
+                                <p class="mb-0">Total Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.averageRating}</h4>
+                                <p class="mb-0">Average Rating</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.ratingDistribution.five}</h4>
+                                <p class="mb-0">5-Star Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.topRiders.length}</h4>
+                                <p class="mb-0">Top Riders</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update rider rating distribution chart
+        this.updateRiderRatingChart(analytics.ratingDistribution);
+        
+        // Update top riders table
+        this.updateTopRidersTable(analytics.topRiders);
+    }
+
+    updateDriverRatingAnalytics(analytics) {
+        // Update driver rating summary cards
+        const driverRatingCard = document.getElementById('driver-rating-summary');
+        if (driverRatingCard) {
+            driverRatingCard.innerHTML = `
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.totalRatings}</h4>
+                                <p class="mb-0">Total Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.averageRating}</h4>
+                                <p class="mb-0">Average Rating</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.ratingDistribution.five}</h4>
+                                <p class="mb-0">5-Star Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <h4>${analytics.topDrivers.length}</h4>
+                                <p class="mb-0">Top Drivers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update driver rating distribution chart
+        this.updateDriverRatingChart(analytics.ratingDistribution);
+        
+        // Update top drivers table
+        this.updateTopDriversTable(analytics.topDrivers);
+    }
+
+    updateRatingSummaryCards(summary) {
+        // Update overall rating summary
+        const overallRatingCard = document.getElementById('overall-rating-summary');
+        if (overallRatingCard) {
+            overallRatingCard.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h4>${summary.riderRatings.total}</h4>
+                                <p class="mb-0">Rider Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h4>${summary.driverRatings.total}</h4>
+                                <p class="mb-0">Driver Ratings</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h4>${summary.overallAverage}</h4>
+                                <p class="mb-0">Overall Average</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    updateRiderRatingChart(distribution) {
+        const ctx = document.getElementById('riderRatingChart');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (this.riderRatingChart) {
+            this.riderRatingChart.destroy();
+        }
+
+        this.riderRatingChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+                datasets: [{
+                    data: [distribution.one, distribution.two, distribution.three, distribution.four, distribution.five],
+                    backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Rider Rating Distribution - Current Month',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    updateDriverRatingChart(distribution) {
+        const ctx = document.getElementById('driverRatingChart');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (this.driverRatingChart) {
+            this.driverRatingChart.destroy();
+        }
+
+        this.driverRatingChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+                datasets: [{
+                    data: [distribution.one, distribution.two, distribution.three, distribution.four, distribution.five],
+                    backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Driver Rating Distribution - Current Month',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    updateTopRidersTable(topRiders) {
+        const tbody = document.getElementById('top-riders-table-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        
+        if (topRiders.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="4" class="text-center text-muted">No rider ratings available for this month</td>
+            `;
+            tbody.appendChild(row);
+            return;
+        }
+
+        topRiders.forEach((rider, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${rider.riderName}</td>
+                <td>${rider.averageRating}</td>
+                <td>${rider.totalRatings}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    updateTopDriversTable(topDrivers) {
+        const tbody = document.getElementById('top-drivers-table-body');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        
+        if (topDrivers.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="4" class="text-center text-muted">No driver ratings available for this month</td>
+            `;
+            tbody.appendChild(row);
+            return;
+        }
+
+        topDrivers.forEach((driver, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${driver.driverName}</td>
+                <td>${driver.averageRating}</td>
+                <td>${driver.totalRatings}</td>
+            `;
+            tbody.appendChild(row);
         });
     }
 }

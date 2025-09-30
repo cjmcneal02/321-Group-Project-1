@@ -11,9 +11,14 @@ class ApiService {
     async createRide(rideData) {
         try {
             // Ensure riderId and riderName are included from logged-in user
+            const riderId = rideData.RiderId || this.getCurrentRiderId();
+            if (!riderId) {
+                throw new Error('Rider ID is required to create a ride');
+            }
+            
             const requestData = {
                 ...rideData,
-                RiderId: rideData.RiderId || this.getCurrentRiderId(),
+                RiderId: parseInt(riderId), // Ensure it's an integer
                 RiderName: rideData.RiderName || this.getCurrentUserName() || 'Anonymous Rider'
             };
             
@@ -367,6 +372,29 @@ class ApiService {
         }
     }
 
+    async createRider(riderData) {
+        try {
+            const response = await fetch(`${this.baseUrl}/riders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(riderData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating rider:', error);
+            throw error;
+        }
+    }
+
     async getRecentRides(riderId) {
         try {
             const response = await fetch(`${this.baseUrl}/riders/${riderId}/recent-rides`);
@@ -672,6 +700,19 @@ class ApiService {
         }
     }
 
+    async getUser(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/users/${userId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            throw error;
+        }
+    }
+
     async getUsersByRole(role) {
         try {
             const response = await fetch(`${this.baseUrl}/users/role/${role}`);
@@ -756,9 +797,20 @@ class ApiService {
         if (this.currentUserRole === 'Rider' && this.currentUserId) {
             const riderUser = localStorage.getItem('riderUser');
             if (riderUser) {
-                const userData = JSON.parse(riderUser);
-                const riderId = userData.riderId;
-                return riderId;
+                try {
+                    const userData = JSON.parse(riderUser);
+                    const riderId = userData.riderId;
+                    if (riderId) {
+                        return riderId;
+                    }
+                    // If no rider profile exists, use the user ID as fallback
+                    if (userData.id) {
+                        console.warn('No rider profile found, using user ID as fallback:', userData.id);
+                        return userData.id;
+                    }
+                } catch (error) {
+                    console.error('Error parsing riderUser from localStorage:', error);
+                }
             }
         }
         
@@ -770,9 +822,24 @@ class ApiService {
                 if (userData.riderId) {
                     return userData.riderId;
                 }
+                // If no rider profile exists, use the user ID as fallback
+                if (userData.id) {
+                    console.warn('No rider profile found, using user ID as fallback:', userData.id);
+                    return userData.id;
+                }
             } catch (error) {
                 console.error('Error parsing riderUser from localStorage:', error);
             }
+        }
+        
+        console.error('No rider ID found in localStorage');
+        return null;
+    }
+
+    getCurrentDriverId() {
+        // For drivers, return the stored driver ID
+        if (this.currentUserRole === 'Driver' && this.currentDriverId) {
+            return this.currentDriverId;
         }
         
         return null;
@@ -813,13 +880,22 @@ class ApiService {
     // Rating Methods
     async submitRating(ratingData) {
         try {
-            const response = await fetch(`${this.baseUrl}/rides/${ratingData.rideId}/rate-driver`, {
+            const riderId = this.getCurrentRiderId();
+            const driverId = ratingData.driverId;
+            
+            if (!riderId || !driverId) {
+                throw new Error('Missing rider or driver ID');
+            }
+
+            const response = await fetch(`${this.baseUrl}/ratings/driver`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     rideId: ratingData.rideId,
+                    driverId: driverId,
+                    riderId: riderId,
                     rating: ratingData.rating,
                     comments: ratingData.comments || ''
                 })
@@ -845,13 +921,22 @@ class ApiService {
 
     async submitRiderRating(ratingData) {
         try {
-            const response = await fetch(`${this.baseUrl}/rides/${ratingData.rideId}/rate-rider`, {
+            const driverId = this.getCurrentDriverId();
+            const riderId = ratingData.riderId;
+            
+            if (!driverId || !riderId) {
+                throw new Error('Missing driver or rider ID');
+            }
+
+            const response = await fetch(`${this.baseUrl}/ratings/rider`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     rideId: ratingData.rideId,
+                    driverId: driverId,
+                    riderId: riderId,
                     rating: ratingData.rating,
                     comments: ratingData.comments || ''
                 })
@@ -890,7 +975,7 @@ class ApiService {
 
     async getDriverRatingStats(driverId) {
         try {
-            const response = await fetch(`${this.baseUrl}/rideRatings/stats/driver/${driverId}`);
+            const response = await fetch(`${this.baseUrl}/ratings/driver/${driverId}/average`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -903,13 +988,53 @@ class ApiService {
 
     async getRiderRatingStats(riderId) {
         try {
-            const response = await fetch(`${this.baseUrl}/rideRatings/stats/rider/${riderId}`);
+            const response = await fetch(`${this.baseUrl}/ratings/rider/${riderId}/average`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
             console.error('Error fetching rider rating stats:', error);
+            throw error;
+        }
+    }
+
+    // Analytics Methods
+    async getRiderRatingAnalytics() {
+        try {
+            const response = await fetch(`${this.baseUrl}/analytics/rider-ratings`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rider rating analytics:', error);
+            throw error;
+        }
+    }
+
+    async getDriverRatingAnalytics() {
+        try {
+            const response = await fetch(`${this.baseUrl}/analytics/driver-ratings`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching driver rating analytics:', error);
+            throw error;
+        }
+    }
+
+    async getRatingSummary() {
+        try {
+            const response = await fetch(`${this.baseUrl}/analytics/rating-summary`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rating summary:', error);
             throw error;
         }
     }
